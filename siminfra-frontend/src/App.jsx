@@ -20,9 +20,7 @@ export default function App() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [historyEquipo, setHistoryEquipo] = useState(null);
   const [historyUsuario, setHistoryUsuario] = useState(null);
-  const [expandedHistory, setExpandedHistory] = useState({}); // <--- Estado para expandir/contraer detalles del historial
-  const [showUserPassGmail, setShowUserPassGmail] = useState(false);
-  const [showUserPassSimi, setShowUserPassSimi] = useState(false);
+  const [expandedHistory, setExpandedHistory] = useState({});
   const [usuariosList, setUsuariosList] = useState([]);
 
   const handleLogin = async (e) => {
@@ -186,7 +184,7 @@ export default function App() {
         password: '',
         correo: '',
         dpto_area: dptosList[0] || '',
-        tipo: 'ONPREMISE',
+        tipo: 'On Premise',
         estado: 'ACTIVO'
       });
     }
@@ -267,6 +265,49 @@ export default function App() {
       default:
         return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d', whiteSpace: 'nowrap', display: 'inline-block' }}>Activo</span>;
     }
+  };
+
+  const getBadgeTipoCuenta = (tipo) => {
+    if (tipo === 'O365') {
+      return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', display: 'inline-block' }}>O365</span>;
+    }
+    return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', whiteSpace: 'nowrap', display: 'inline-block' }}>On Premise</span>;
+  };
+
+  const renderHistorialDetalle = (obs) => {
+    if (!obs) return <p style={{ margin: 0, color: '#64748b' }}>Sin detalles adicionales.</p>;
+
+    if (obs.includes(':::')) {
+      const items = obs.split('||');
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+          {items.map((it, idx) => {
+            const parts = it.split(':::');
+            const campo = parts[0] || 'Campo';
+            const anterior = parts[1] || 'N/I';
+            const actual = parts[2] || 'N/I';
+
+            return (
+              <div key={idx} style={{ backgroundColor: '#fff', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>{campo}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.8rem' }}>
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Anterior</span>
+                    <span style={{ color: '#b91c1c', fontWeight: '600', wordBreak: 'break-word' }}>{anterior}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Actual</span>
+                    <span style={{ color: '#15803d', fontWeight: '600', wordBreak: 'break-word' }}>{actual}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    return <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#334155' }}>{obs}</p>;
   };
 
   if (!token) {
@@ -444,7 +485,7 @@ export default function App() {
                     <td style={{ padding: '1rem 1.2rem', fontWeight: '600' }}>{item.nombre || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{item.usuario || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace' }}>{item.password || '••••••••'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.tipo}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{getBadgeTipoCuenta(item.tipo)}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
@@ -473,7 +514,7 @@ export default function App() {
                 </div>
                 <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>{selectedUser.cargo || 'Sin cargo'} — {selectedUser.dpto_area}</p>
               </div>
-              <button onClick={() => { setSelectedUser(null); setShowUserPassGmail(false); setShowUserPassSimi(false); }} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
+              <button onClick={() => setSelectedUser(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
             </div>
 
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '75vh', overflowY: 'auto' }}>
@@ -494,39 +535,8 @@ export default function App() {
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Correo Corp.</span>
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.correo_corp}</p>
                 </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Gmail</span>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.gmail || 'Sin Gmail'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Contraseña Gmail</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2px' }}>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{showUserPassGmail ? (selectedUser.password_gmail || 'Sin Contraseña') : (selectedUser.password_gmail ? '••••••••' : 'Sin Contraseña')}</span>
-                    {selectedUser.password_gmail && (
-                      <button onClick={() => setShowUserPassGmail(!showUserPassGmail)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
-                        {showUserPassGmail ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Contraseña Simi</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2px' }}>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{showUserPassSimi ? (selectedUser.password_simi || 'Sin Contraseña') : (selectedUser.password_simi ? '••••••••' : 'Sin Contraseña')}</span>
-                    {selectedUser.password_simi && (
-                      <button onClick={() => setShowUserPassSimi(!showUserPassSimi)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
-                        {showUserPassSimi ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Teléfono / Anexo</span>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.telefono || 'Sin teléfono'} {selectedUser.anexo ? `(Anx: ${selectedUser.anexo})` : ''}</p>
-                </div>
               </div>
 
-              {/* Equipos Asignados */}
               <div>
                 <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e293b', fontSize: '0.9rem', fontWeight: 'bold' }}>Equipos Asignados</h4>
                 {selectedUser.equipos && selectedUser.equipos.length > 0 ? (
@@ -550,7 +560,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal Historial Independiente para Usuario (Con Ver Más / Ver Menos) */}
+      {/* Modal Historial Usuario */}
       {historyUsuario && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
@@ -574,7 +584,7 @@ export default function App() {
                           <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{new Date(h.fecha_movimiento).toLocaleString()}</span>
                         </div>
                         
-                        <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ marginTop: '0.5rem' }}>
                           <button 
                             onClick={() => setExpandedHistory(prev => ({ ...prev, [i]: !prev[i] }))} 
                             style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
@@ -584,11 +594,7 @@ export default function App() {
                           </button>
                         </div>
 
-                        {isExpanded && (
-                          <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#334155' }}>
-                            <strong>Modificaciones:</strong> {h.observacion}
-                          </div>
-                        )}
+                        {isExpanded && renderHistorialDetalle(h.observacion)}
                       </div>
                     );
                   })}
@@ -601,7 +607,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal Historial de Auditoría de Equipo (Con Ver Más / Ver Menos) */}
+      {/* Modal Historial de Equipo */}
       {historyEquipo && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
@@ -625,7 +631,7 @@ export default function App() {
                           <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{new Date(h.fecha_movimiento).toLocaleString()}</span>
                         </div>
 
-                        <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ marginTop: '0.5rem' }}>
                           <button 
                             onClick={() => setExpandedHistory(prev => ({ ...prev, [`eq_${i}`]: !prev[`eq_${i}`] }))} 
                             style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
@@ -635,11 +641,7 @@ export default function App() {
                           </button>
                         </div>
 
-                        {isExpanded && (
-                          <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#334155' }}>
-                            <strong>Detalles:</strong> {h.observacion}
-                          </div>
-                        )}
+                        {isExpanded && renderHistorialDetalle(h.observacion)}
                       </div>
                     );
                   })}
@@ -771,6 +773,41 @@ export default function App() {
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Fecha de Asignación</label>
                     <input type="date" value={newItem.fecha_asignacion || ''} onChange={(e) => setNewItem({ ...newItem, fecha_asignacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                </>
+              )}
+
+              {tab === 'perfiles' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre / Perfil *</label>
+                    <input type="text" required value={newItem.nombre || ''} onChange={(e) => setNewItem({ ...newItem, nombre: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario *</label>
+                    <input type="text" required value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña</label>
+                    <input type="text" value={newItem.password || ''} onChange={(e) => setNewItem({ ...newItem, password: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo Cuenta</label>
+                    <select value={newItem.tipo || 'On Premise'} onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', backgroundColor: newItem.tipo === 'O365' ? '#eff6ff' : '#f8fafc', fontWeight: 'bold', color: newItem.tipo === 'O365' ? '#1d4ed8' : '#334155' }}>
+                      <option value="On Premise">On Premise</option>
+                      <option value="O365">O365</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Asignado</label>
+                    <input type="email" value={newItem.correo || ''} onChange={(e) => setNewItem({ ...newItem, correo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
+                    <select value={newItem.dpto_area || ''} onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
+                    </select>
                   </div>
                 </>
               )}
@@ -910,6 +947,41 @@ export default function App() {
                       <option value="STOCK">Stock / Disponible</option>
                       <option value="MANTENCION">En Mantención</option>
                       <option value="BAJA">Dado de Baja</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {tab === 'perfiles' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre / Perfil *</label>
+                    <input type="text" required value={editingItem.nombre || ''} onChange={(e) => setEditingItem({ ...editingItem, nombre: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario *</label>
+                    <input type="text" required value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña</label>
+                    <input type="text" value={editingItem.password || ''} onChange={(e) => setEditingItem({ ...editingItem, password: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo Cuenta</label>
+                    <select value={editingItem.tipo || 'On Premise'} onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', backgroundColor: editingItem.tipo === 'O365' ? '#eff6ff' : '#f8fafc', fontWeight: 'bold', color: editingItem.tipo === 'O365' ? '#1d4ed8' : '#334155' }}>
+                      <option value="On Premise">On Premise</option>
+                      <option value="O365">O365</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Asignado</label>
+                    <input type="email" value={editingItem.correo || ''} onChange={(e) => setEditingItem({ ...editingItem, correo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
+                    <select value={editingItem.dpto_area || ''} onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
                     </select>
                   </div>
                 </>
