@@ -37,6 +37,25 @@ export default function App() {
     setToken(null);
   };
 
+  // Cargar la lista unificada de departamentos para los filtros y formularios desplegables
+  useEffect(() => {
+    if (token) {
+      fetchDptos();
+    }
+  }, [token]);
+
+  const fetchDptos = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/usuarios/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const unique = Array.from(new Set(response.data.map(u => u.dpto_area).filter(Boolean)));
+      setDptosList(unique.sort());
+    } catch (error) {
+      console.error('Error cargando lista de departamentos:', error);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchData();
@@ -46,22 +65,18 @@ export default function App() {
   const fetchData = async () => {
     try {
       const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
-      let url = `${API_BASE}/${endpoint}/?search=${search}`;
+      let params = new URLSearchParams();
+      
+      if (search) params.append('search', search);
       if (selectedDpto && (tab === 'usuarios' || tab === 'perfiles')) {
-        url += `&dpto_area=${encodeURIComponent(selectedDpto)}`;
+        params.append('dpto_area', selectedDpto);
       }
 
-      const response = await axios.get(url, {
+      const response = await axios.get(`${API_BASE}/${endpoint}/?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setData(response.data);
-
-      // Extraer lista única de departamentos para el filtro desplegable
-      if (tab === 'usuarios' || tab === 'perfiles') {
-        const uniqueDptos = Array.from(new Set(response.data.map(i => i.dpto_area).filter(Boolean)));
-        if (!selectedDpto) setDptosList(uniqueDptos.sort());
-      }
     } catch (error) {
       if (error.response && error.response.status === 401) {
         handleLogout();
@@ -69,15 +84,17 @@ export default function App() {
     }
   };
 
-const handleSave = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     try {
       const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
       
-      // Eliminar el campo 'equipos' anidado si es un usuario para evitar el error 400 de Django
       const payload = { ...editingItem };
-      if (tab === 'usuarios') {
-        delete payload.equipos;
+      delete payload.equipos;
+      delete payload.id;
+
+      if (payload.estado) {
+        payload.estado = payload.estado.toUpperCase();
       }
 
       await axios.patch(`${API_BASE}/${endpoint}/${editingItem.id}/`, payload, {
@@ -85,9 +102,11 @@ const handleSave = async (e) => {
       });
 
       setEditingItem(null);
-      fetchData();
+      await fetchData();
+      fetchDptos(); // Actualizar lista de áreas si se creó o reasignó una nueva
     } catch (error) {
       console.error('Error guardando cambios:', error.response?.data || error);
+      alert('Error al guardar: ' + JSON.stringify(error.response?.data || 'Verifica los datos ingresados'));
     }
   };
 
@@ -109,14 +128,14 @@ const handleSave = async (e) => {
     setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-const getBadgeEstadoUsuario = (estado) => {
+  const getBadgeEstadoUsuario = (estado) => {
     switch(estado) {
       case 'LICENCIA':
-        return <span style={{ padding: '0.25rem 0.68rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309' }}>Licencia Médica</span>;
+        return <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309' }}>Licencia Médica</span>;
       case 'BAJA':
-        return <span style={{ padding: '0.25rem 0.68rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c' }}>Dar de Baja</span>;
+        return <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c' }}>Dar de Baja</span>;
       default:
-        return <span style={{ padding: '0.25rem 0.68rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d' }}>Activo</span>;
+        return <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d' }}>Activo</span>;
     }
   };
 
@@ -198,7 +217,7 @@ const getBadgeEstadoUsuario = (estado) => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {/* Filtro por Departamento */}
+          {/* Filtro desplegable por Departamento */}
           {(tab === 'usuarios' || tab === 'perfiles') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
               <Filter size={16} color="#64748b" />
@@ -228,7 +247,7 @@ const getBadgeEstadoUsuario = (estado) => {
         </div>
       </div>
 
-      {/* Tabla Pantalla Completa */}
+      {/* Tabla Principal */}
       <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.95rem' }}>
           <thead>
@@ -236,6 +255,7 @@ const getBadgeEstadoUsuario = (estado) => {
               {tab === 'usuarios' && (
                 <>
                   <th style={{ padding: '1rem 1.2rem' }}>Nombre Completo</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Cargo</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Usuario Red</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Correo Corporativo</th>
@@ -277,6 +297,7 @@ const getBadgeEstadoUsuario = (estado) => {
                 {tab === 'usuarios' && (
                   <>
                     <td style={{ padding: '1rem 1.2rem', fontWeight: '600', color: '#2563eb' }}>{item.nombre_completo}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', color: '#64748b' }}>{item.cargo || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{getBadgeEstadoUsuario(item.estado)}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.usuario_red}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp}</td>
@@ -437,7 +458,7 @@ const getBadgeEstadoUsuario = (estado) => {
               {/* EDICIÓN PARA USUARIOS */}
               {tab === 'usuarios' && (
                 <>
-<div>
+                  <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado del Usuario</label>
                     <select 
                       value={editingItem.estado || 'ACTIVO'} 
@@ -459,6 +480,28 @@ const getBadgeEstadoUsuario = (estado) => {
                     />
                   </div>
                   <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
+                    <input 
+                      type="text" 
+                      value={editingItem.cargo || ''} 
+                      onChange={(e) => setEditingItem({ ...editingItem, cargo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
+                    <select 
+                      value={editingItem.dpto_area || ''} 
+                      onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    >
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (
+                        <option key={idx} value={dpto}>{dpto}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario de Red</label>
                     <input 
                       type="text" 
@@ -473,24 +516,6 @@ const getBadgeEstadoUsuario = (estado) => {
                       type="email" 
                       value={editingItem.correo_corp || ''} 
                       onChange={(e) => setEditingItem({ ...editingItem, correo_corp: e.target.value })}
-                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
-                    <input 
-                      type="text" 
-                      value={editingItem.dpto_area || ''} 
-                      onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })}
-                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
-                    <input 
-                      type="text" 
-                      value={editingItem.cargo || ''} 
-                      onChange={(e) => setEditingItem({ ...editingItem, cargo: e.target.value })}
                       style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
                     />
                   </div>
@@ -624,12 +649,16 @@ const getBadgeEstadoUsuario = (estado) => {
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
-                    <input 
-                      type="text" 
+                    <select 
                       value={editingItem.dpto_area || ''} 
                       onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })}
                       style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
-                    />
+                    >
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (
+                        <option key={idx} value={dpto}>{dpto}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Cuenta</label>
