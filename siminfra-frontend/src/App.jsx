@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Laptop, Smartphone, Tablet, Radio, Eye, EyeOff, Trash2, Filter } from 'lucide-react';
+import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Laptop, Smartphone, Tablet, Radio, Eye, EyeOff, Trash2, Filter, Plus } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -16,6 +16,7 @@ export default function App() {
   const [selectedDpto, setSelectedDpto] = useState('');
   const [dptosList, setDptosList] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const [newItem, setNewItem] = useState(null); // Estado para la creación de nuevos elementos
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPasswords, setShowPasswords] = useState({});
 
@@ -37,7 +38,6 @@ export default function App() {
     setToken(null);
   };
 
-  // Cargar la lista unificada de departamentos para los filtros y formularios desplegables
   useEffect(() => {
     if (token) {
       fetchDptos();
@@ -84,6 +84,66 @@ export default function App() {
     }
   };
 
+  // Función para inicializar un nuevo ítem según la pestaña
+  const handleOpenCreateModal = () => {
+    if (tab === 'usuarios') {
+      setNewItem({
+        nombre_completo: '',
+        cargo: '',
+        dpto_area: dptosList[0] || '',
+        usuario_red: '',
+        correo_corp: '',
+        ip_asignada: '',
+        hostname: '',
+        estado: 'ACTIVO'
+      });
+    } else if (tab === 'equipos') {
+      setNewItem({
+        tipo: 'NTBK',
+        marca: '',
+        modelo: '',
+        numero_serie: '',
+        af: '',
+        estado: 'ASIGNADO'
+      });
+    } else {
+      setNewItem({
+        nombre: '',
+        usuario: '',
+        password: '',
+        correo: '',
+        dpto_area: dptosList[0] || '',
+        tipo: 'ONPREMISE',
+        estado: 'ACTIVO'
+      });
+    }
+  };
+
+  const handleCreateSave = async (e) => {
+    e.preventDefault();
+    try {
+      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
+      
+      const payload = { ...newItem };
+
+      // Convertir cadenas vacías a null para campos opcionales
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') payload[key] = null;
+      });
+
+      await axios.post(`${API_BASE}/${endpoint}/`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setNewItem(null);
+      await fetchData();
+      fetchDptos();
+    } catch (error) {
+      console.error('Error creando registro:', error.response?.data || error);
+      alert('Error al crear registro: ' + JSON.stringify(error.response?.data || 'Verifica los campos requeridos'));
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -103,7 +163,7 @@ export default function App() {
 
       setEditingItem(null);
       await fetchData();
-      fetchDptos(); // Actualizar lista de áreas si se creó o reasignó una nueva
+      fetchDptos();
     } catch (error) {
       console.error('Error guardando cambios:', error.response?.data || error);
       alert('Error al guardar: ' + JSON.stringify(error.response?.data || 'Verifica los datos ingresados'));
@@ -217,6 +277,14 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {/* Botón de Creación Nuevo */}
+          <button 
+            onClick={handleOpenCreateModal} 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.2rem', borderRadius: '8px', border: 'none', backgroundColor: '#16a34a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            <Plus size={18} /> Agregar {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : 'Perfil'}
+          </button>
+
           {/* Filtro desplegable por Departamento */}
           {(tab === 'usuarios' || tab === 'perfiles') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
@@ -440,6 +508,223 @@ export default function App() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Creación */}
+      {newItem && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', width: '480px', maxWidth: '90%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, color: '#0f172a' }}>
+                Agregar Nuevo {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : 'Perfil Genérico'}
+              </h3>
+              <button onClick={() => setNewItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleCreateSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '70vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+              
+              {/* CREACIÓN DE USUARIO */}
+              {tab === 'usuarios' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre Completo *</label>
+                    <input 
+                      type="text" required
+                      value={newItem.nombre_completo} 
+                      onChange={(e) => setNewItem({ ...newItem, nombre_completo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario de Red *</label>
+                    <input 
+                      type="text" required
+                      value={newItem.usuario_red} 
+                      onChange={(e) => setNewItem({ ...newItem, usuario_red: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Corporativo *</label>
+                    <input 
+                      type="email" required
+                      value={newItem.correo_corp} 
+                      onChange={(e) => setNewItem({ ...newItem, correo_corp: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área *</label>
+                    <select 
+                      required
+                      value={newItem.dpto_area} 
+                      onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    >
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (
+                        <option key={idx} value={dpto}>{dpto}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
+                    <input 
+                      type="text" 
+                      value={newItem.cargo} 
+                      onChange={(e) => setNewItem({ ...newItem, cargo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>IP Asignada</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej: 192.168.1.50"
+                      value={newItem.ip_asignada} 
+                      onChange={(e) => setNewItem({ ...newItem, ip_asignada: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Hostname</label>
+                    <input 
+                      type="text" 
+                      value={newItem.hostname} 
+                      onChange={(e) => setNewItem({ ...newItem, hostname: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* CREACIÓN DE EQUIPO */}
+              {tab === 'equipos' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Equipo *</label>
+                    <select 
+                      value={newItem.tipo} 
+                      onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    >
+                      <option value="NTBK">Notebook (NTBK)</option>
+                      <option value="CEL">Celular (CEL)</option>
+                      <option value="TBIT">Tablet (TBIT)</option>
+                      <option value="BAM">BAM / Router (BAM)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Marca *</label>
+                    <input 
+                      type="text" required
+                      value={newItem.marca} 
+                      onChange={(e) => setNewItem({ ...newItem, marca: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Modelo *</label>
+                    <input 
+                      type="text" required
+                      value={newItem.modelo} 
+                      onChange={(e) => setNewItem({ ...newItem, modelo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>N° de Serie *</label>
+                    <input 
+                      type="text" required
+                      value={newItem.numero_serie} 
+                      onChange={(e) => setNewItem({ ...newItem, numero_serie: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Activo Fijo (AF)</label>
+                    <input 
+                      type="text" 
+                      value={newItem.af} 
+                      onChange={(e) => setNewItem({ ...newItem, af: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* CREACIÓN DE PERFIL GENÉRICO */}
+              {tab === 'perfiles' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre / Identificador</label>
+                    <input 
+                      type="text" 
+                      value={newItem.nombre} 
+                      onChange={(e) => setNewItem({ ...newItem, nombre: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario *</label>
+                    <input 
+                      type="text" required
+                      value={newItem.usuario} 
+                      onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña</label>
+                    <input 
+                      type="text" 
+                      value={newItem.password} 
+                      onChange={(e) => setNewItem({ ...newItem, password: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Asignado</label>
+                    <input 
+                      type="email" 
+                      value={newItem.correo} 
+                      onChange={(e) => setNewItem({ ...newItem, correo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
+                    <select 
+                      value={newItem.dpto_area} 
+                      onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    >
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (
+                        <option key={idx} value={dpto}>{dpto}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Cuenta</label>
+                    <select 
+                      value={newItem.tipo} 
+                      onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    >
+                      <option value="ONPREMISE">On-Premise</option>
+                      <option value="O365">Office 365</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              <button type="submit" style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>
+                <Save size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Guardar Nuevo Registro
+              </button>
+            </form>
           </div>
         </div>
       )}
