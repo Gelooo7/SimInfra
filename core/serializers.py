@@ -7,6 +7,7 @@ class EquipamientoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    # Trae la lista de equipos asignados a este usuario
     equipos = EquipamientoSerializer(many=True, read_only=True)
 
     class Meta:

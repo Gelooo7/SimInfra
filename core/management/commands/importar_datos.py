@@ -76,40 +76,47 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error procesando Usuarios/Equipos: {e}'))
 
-        # -------------------------------------------------------------
-        # 2. IMPORTAR PERFILES GENÉRICOS
+# -------------------------------------------------------------
+        # 2. IMPORTAR PERFILES GENÉRICOS (UPDATE OR CREATE)
         # -------------------------------------------------------------
         try:
-            # Encabezados en fila 4
             df_gen = pd.read_excel(file_simi, sheet_name='PERFILES GENÉRICOS', skiprows=4)
             perfiles_creados = 0
-            
+
             for _, row in df_gen.iterrows():
-                usr = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ''
-                nombre = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ''
-                
-                if not usr or usr in ['nan', 'NOMBRE DE USUARIO', 'None', '']:
-                    continue
-                
+                nombre = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else None
+                usr = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else None
+                pwd = str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else None
+                correo = str(row.iloc[3]).strip() if pd.notna(row.iloc[3]) else None
+                dpto = str(row.iloc[4]).strip() if pd.notna(row.iloc[4]) else None
                 obs = str(row.iloc[5]).strip() if len(row) > 5 and pd.notna(row.iloc[5]) else ''
+
+                # Ignorar encabezados o filas sin usuario
+                if not usr or usr in ['nan', 'NOMBRE DE USUARIO', 'None', ''] or nombre == 'NOMBRE':
+                    continue
+
+                if correo and ('@' not in correo or correo == 'CORREO'):
+                    correo = None
+
                 tipo_cuenta = 'O365' if 'Office 365' in obs or '365' in obs else 'ONPREMISE'
 
                 PerfilGenerico.objects.update_or_create(
                     usuario=usr,
                     defaults={
-                        'nombre': nombre if nombre != 'nan' else usr,
-                        'password': str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else '123456',
-                        'correo': str(row.iloc[3]).strip() if pd.notna(row.iloc[3]) else None,
-                        'dpto_area': str(row.iloc[4]).strip() if pd.notna(row.iloc[4]) else 'N/A',
+                        'nombre': nombre if nombre and nombre != 'nan' else usr,
+                        'password': pwd if pwd and pwd != 'nan' else None,
+                        'correo': correo,
+                        'dpto_area': dpto if dpto and dpto != 'nan' else None,
                         'tipo': tipo_cuenta
                     }
                 )
                 perfiles_creados += 1
-            self.stdout.write(self.style.SUCCESS(f'Perfiles Genéricos registrados: {perfiles_creados}'))
+
+            self.stdout.write(self.style.SUCCESS(f'Perfiles Genéricos procesados: {perfiles_creados}'))
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Error procesando Perfiles Genéricos: {e}'))
-
+            
         # -------------------------------------------------------------
         # 3. CRUCE BARRIDO IP (HOJAS 1 Y 2)
         # -------------------------------------------------------------

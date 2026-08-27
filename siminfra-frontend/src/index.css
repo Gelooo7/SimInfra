@@ -52,6 +52,12 @@
 
 body {
   margin: 0;
+  padding: 0;
+  width: 100vw;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
 }
 
 #root {
@@ -106,6 +112,6 @@ code,
 code {
   font-size: 15px;
   line-height: 135%;
-  padding: 4px 8px;
+  padding: 0;
   background: var(--code-bg);
 }

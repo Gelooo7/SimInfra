@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock } from 'lucide-react';
+import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Laptop, Smartphone, Tablet, Radio, Eye, EyeOff } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -14,8 +14,9 @@ export default function App() {
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showPasswords, setShowPasswords] = useState({});
 
-  // Manejo de inicio de sesión
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -34,7 +35,6 @@ export default function App() {
     setToken(null);
   };
 
-  // Cargar datos utilizando el Token JWT
   useEffect(() => {
     if (token) {
       fetchData();
@@ -69,11 +69,23 @@ export default function App() {
     }
   };
 
-  // Vista de Login si no hay Token
+  const togglePasswordVisibility = (id) => {
+    setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const getIconoEquipo = (tipo) => {
+    switch(tipo) {
+      case 'NTBK': return <Laptop size={18} color="#2563eb" />;
+      case 'CEL': return <Smartphone size={18} color="#16a34a" />;
+      case 'TBIT': return <Tablet size={18} color="#9333ea" />;
+      default: return <Radio size={18} color="#ea580c" />;
+    }
+  };
+
   if (!token) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-        <form onSubmit={handleLogin} style={{ backgroundColor: '#fff', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: '360px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0f172a', fontFamily: 'system-ui, sans-serif' }}>
+        <form onSubmit={handleLogin} style={{ backgroundColor: '#fff', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', width: '360px' }}>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <Lock size={36} color="#2563eb" />
             <h2 style={{ margin: '0.5rem 0 0 0', color: '#1e293b' }}>SimInfra Admin</h2>
@@ -112,91 +124,100 @@ export default function App() {
     );
   }
 
-  // Vista Principal de la App (Protegida)
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div style={{ padding: '1.5rem 3rem', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%' }}>
         <div>
-          <h1 style={{ fontSize: '1.8rem', color: '#1e293b', margin: 0 }}>SimInfra — Gestión de Infraestructura</h1>
-          <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Panel Administrador de Usuarios y Activos</p>
+          <h1 style={{ fontSize: '2rem', color: '#0f172a', margin: 0, fontWeight: '800' }}>SimInfra — Gestión de Infraestructura</h1>
+          <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Panel Administrador de Usuarios, Activos e IP</p>
         </div>
-        <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }}>
+        <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }}>
           <LogOut size={16} /> Cerrar Sesión
         </button>
       </header>
 
-      {/* Navegación y Filtros */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={() => setTab('usuarios')} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
-            <User size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Usuarios ({tab === 'usuarios' ? data.length : ''})
+      {/* Navegación Ancha */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => setTab('usuarios')} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
+            <User size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Usuarios ({tab === 'usuarios' ? data.length : ''})
           </button>
-          <button onClick={() => setTab('equipos')} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
-            <Monitor size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Equipos ({tab === 'equipos' ? data.length : ''})
+          <button onClick={() => setTab('equipos')} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
+            <Monitor size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Equipos ({tab === 'equipos' ? data.length : ''})
           </button>
-          <button onClick={() => setTab('perfiles')} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
-            <Key size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Perfiles Genéricos ({tab === 'perfiles' ? data.length : ''})
+          <button onClick={() => setTab('perfiles')} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
+            <Key size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Perfiles Genéricos ({tab === 'perfiles' ? data.length : ''})
           </button>
         </div>
 
-        <div style={{ position: 'relative', width: '300px' }}>
+        <div style={{ position: 'relative', width: '350px' }}>
           <input 
             type="text" 
-            placeholder="Buscar por nombre, IP, serie..." 
+            placeholder="Buscar por nombre, IP, serie, correo..." 
             value={search} 
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+            style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
       </div>
 
-      {/* Tabla de Registros */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+      {/* Tabla Pantalla Completa */}
+      <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', width: '100%' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.95rem' }}>
           <thead>
-            <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
+            <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>
               {tab === 'usuarios' && (
                 <>
-                  <th style={{ padding: '1rem' }}>Nombre</th>
-                  <th style={{ padding: '1rem' }}>Usuario Red</th>
-                  <th style={{ padding: '1rem' }}>Correo</th>
-                  <th style={{ padding: '1rem' }}>Área</th>
-                  <th style={{ padding: '1rem' }}>IP Asignada</th>
-                  <th style={{ padding: '1rem' }}>Acciones</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Nombre Completo</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Usuario Red</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Correo Corporativo</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Departamento / Área</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>IP Asignada</th>
+                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                 </>
               )}
               {tab === 'equipos' && (
                 <>
-                  <th style={{ padding: '1rem' }}>Tipo</th>
-                  <th style={{ padding: '1rem' }}>Marca / Modelo</th>
-                  <th style={{ padding: '1rem' }}>N° Serie</th>
-                  <th style={{ padding: '1rem' }}>Estado</th>
-                  <th style={{ padding: '1rem' }}>Acciones</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Tipo</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Marca / Modelo</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>N° Serie</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Activo Fijo (AF)</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
+                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                 </>
               )}
               {tab === 'perfiles' && (
                 <>
-                  <th style={{ padding: '1rem' }}>Nombre</th>
-                  <th style={{ padding: '1rem' }}>Usuario</th>
-                  <th style={{ padding: '1rem' }}>Tipo</th>
-                  <th style={{ padding: '1rem' }}>Correo</th>
-                  <th style={{ padding: '1rem' }}>Acciones</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Nombre / Perfil</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Usuario</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Contraseña</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Tipo Cuenta</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Correo Asignado</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Área</th>
+                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                 </>
               )}
             </tr>
           </thead>
           <tbody>
             {data.map((item) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', color: '#334155' }}>
+              <tr 
+                key={item.id} 
+                style={{ borderBottom: '1px solid #f1f5f9', color: '#334155', cursor: tab === 'usuarios' ? 'pointer' : 'default' }}
+                onClick={() => tab === 'usuarios' && setSelectedUser(item)}
+              >
                 {tab === 'usuarios' && (
                   <>
-                    <td style={{ padding: '1rem', fontWeight: '600' }}>{item.nombre_completo}</td>
-                    <td style={{ padding: '1rem' }}>{item.usuario_red}</td>
-                    <td style={{ padding: '1rem' }}>{item.correo_corp}</td>
-                    <td style={{ padding: '1rem' }}>{item.dpto_area}</td>
-                    <td style={{ padding: '1rem', color: item.ip_asignada ? '#16a34a' : '#94a3b8', fontWeight: 'bold' }}>{item.ip_asignada || 'Sin asignar'}</td>
-                    <td style={{ padding: '1rem' }}>
-                      <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }}>
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: '600', color: '#2563eb' }}>{item.nombre_completo}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.usuario_red}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area}</td>
+                    <td style={{ padding: '1rem 1.2rem', color: item.ip_asignada ? '#16a34a' : '#94a3b8', fontWeight: 'bold' }}>{item.ip_asignada || 'Sin asignar'}</td>
+                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setEditingItem(item); }} 
+                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }}
+                      >
                         <Edit size={18} />
                       </button>
                     </td>
@@ -204,11 +225,12 @@ export default function App() {
                 )}
                 {tab === 'equipos' && (
                   <>
-                    <td style={{ padding: '1rem', fontWeight: 'bold' }}>{item.tipo}</td>
-                    <td style={{ padding: '1rem' }}>{item.marca} {item.modelo}</td>
-                    <td style={{ padding: '1rem', fontFamily: 'monospace' }}>{item.numero_serie}</td>
-                    <td style={{ padding: '1rem' }}>{item.estado}</td>
-                    <td style={{ padding: '1rem' }}>
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{item.tipo}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.marca} {item.modelo}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace' }}>{item.numero_serie}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.af || 'N/I'}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.estado}</td>
+                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
                       <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }}>
                         <Edit size={18} />
                       </button>
@@ -217,15 +239,26 @@ export default function App() {
                 )}
                 {tab === 'perfiles' && (
                   <>
-                    <td style={{ padding: '1rem', fontWeight: '600' }}>{item.nombre}</td>
-                    <td style={{ padding: '1rem' }}>{item.usuario}</td>
-                    <td style={{ padding: '1rem' }}>
-                      <span style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.8rem', backgroundColor: item.tipo === 'O365' ? '#dbeafe' : '#fef3c7', color: item.tipo === 'O365' ? '#1e40af' : '#92400e' }}>
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: '600' }}>{item.nombre || 'N/I'}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{item.usuario}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace' }}>
+                      {item.password ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>{showPasswords[item.id] ? item.password : '••••••••'}</span>
+                          <button onClick={() => togglePasswordVisibility(item.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}>
+                            {showPasswords[item.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      ) : <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Sin contraseña</span>}
+                    </td>
+                    <td style={{ padding: '1rem 1.2rem' }}>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', backgroundColor: item.tipo === 'O365' ? '#dbeafe' : '#fef3c7', color: item.tipo === 'O365' ? '#1e40af' : '#92400e' }}>
                         {item.tipo}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem' }}>{item.correo || 'N/I'}</td>
-                    <td style={{ padding: '1rem' }}>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.correo || <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Sin correo</span>}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
+                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
                       <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }}>
                         <Edit size={18} />
                       </button>
@@ -238,12 +271,72 @@ export default function App() {
         </table>
       </div>
 
+      {/* Modal Ficha Detallada Usuario */}
+      {selectedUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '600px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
+            <div style={{ padding: '1.5rem', backgroundColor: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{selectedUser.nombre_completo}</h2>
+                <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>{selectedUser.cargo} — {selectedUser.dpto_area}</p>
+              </div>
+              <button onClick={() => setSelectedUser(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}>
+                <X size={22} />
+              </button>
+            </div>
+
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Usuario de Red</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: '600' }}>{selectedUser.usuario_red}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>IP Asignada</span>
+                  <p style={{ margin: '2px 0 0 0', fontWeight: 'bold', color: selectedUser.ip_asignada ? '#16a34a' : '#94a3b8' }}>{selectedUser.ip_asignada || 'Sin IP'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Correo Corporativo</span>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.correo_corp}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Hostname</span>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.hostname || 'N/I'}</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ margin: '0 0 0.75rem 0', color: '#0f172a' }}>Equipos y Activos Asignados ({selectedUser.equipos?.length || 0})</h4>
+                {selectedUser.equipos && selectedUser.equipos.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {selectedUser.equipos.map((eq) => (
+                      <div key={eq.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {getIconoEquipo(eq.tipo)}
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.85rem' }}>{eq.marca} {eq.modelo}</p>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace' }}>Serie: {eq.numero_serie}</span>
+                          </div>
+                        </div>
+                        {eq.af && <span style={{ fontSize: '0.75rem', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>AF: {eq.af}</span>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No tiene equipos vinculados directamente.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Edición */}
       {editingItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', width: '400px', maxWidth: '90%' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', width: '450px', maxWidth: '90%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0 }}>Editar Registro</h3>
+              <h3 style={{ margin: 0, color: '#0f172a' }}>Editar Registro</h3>
               <button onClick={() => setEditingItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
             </div>
             
@@ -256,7 +349,7 @@ export default function App() {
                       type="text" 
                       value={editingItem.ip_asignada || ''} 
                       onChange={(e) => setEditingItem({ ...editingItem, ip_asignada: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
                     />
                   </div>
                   <div>
@@ -265,7 +358,7 @@ export default function App() {
                       type="email" 
                       value={editingItem.correo_corp || ''} 
                       onChange={(e) => setEditingItem({ ...editingItem, correo_corp: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
                     />
                   </div>
                 </>
@@ -274,15 +367,22 @@ export default function App() {
               {tab === 'perfiles' && (
                 <>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Tipo de Cuenta</label>
-                    <select 
-                      value={editingItem.tipo} 
-                      onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
-                    >
-                      <option value="ONPREMISE">On-Premise</option>
-                      <option value="O365">Office 365</option>
-                    </select>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Nombre / Identificador</label>
+                    <input 
+                      type="text" 
+                      value={editingItem.nombre || ''} 
+                      onChange={(e) => setEditingItem({ ...editingItem, nombre: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Contraseña</label>
+                    <input 
+                      type="text" 
+                      value={editingItem.password || ''} 
+                      onChange={(e) => setEditingItem({ ...editingItem, password: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Correo</label>
@@ -290,13 +390,24 @@ export default function App() {
                       type="email" 
                       value={editingItem.correo || ''} 
                       onChange={(e) => setEditingItem({ ...editingItem, correo: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
                     />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Tipo de Cuenta</label>
+                    <select 
+                      value={editingItem.tipo} 
+                      onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}
+                    >
+                      <option value="ONPREMISE">On-Premise</option>
+                      <option value="O365">Office 365</option>
+                    </select>
                   </div>
                 </>
               )}
 
-              <button type="submit" style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '0.7rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>
+              <button type="submit" style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>
                 <Save size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Guardar Cambios
               </button>
             </form>

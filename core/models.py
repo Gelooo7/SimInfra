@@ -62,19 +62,14 @@ class HistorialEquipo(models.Model):
 
 
 class PerfilGenerico(models.Model):
-    TIPO_CHOICES = [
-        ('ONPREMISE', 'Onpremise'),
-        ('O365', 'Office 365'),
-    ]
-
-    nombre = models.CharField(max_length=100)
-    usuario = models.CharField(max_length=50, unique=True)
-    password = models.CharField(max_length=128)
+    nombre = models.CharField(max_length=150, null=True, blank=True)
+    usuario = models.CharField(max_length=100, unique=True)
+    password = models.CharField(max_length=100, null=True, blank=True)
     correo = models.EmailField(null=True, blank=True)
-    dpto_area = models.CharField(max_length=100)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    dpto_area = models.CharField(max_length=100, null=True, blank=True)
+    tipo = models.CharField(max_length=20, default='ONPREMISE')
 
     def __str__(self):
-        return f"{self.nombre} ({self.tipo})"
+        return f"{self.nombre or self.usuario} ({self.usuario})"
 
     
