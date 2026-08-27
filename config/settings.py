@@ -144,3 +144,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1), # El token dura 1 día en vez de 5 minutos
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
