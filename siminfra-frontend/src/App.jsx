@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, ChevronUp, Copy, Check, Phone, Smartphone, Laptop, Tablet, Radio, Cpu } from 'lucide-react';
+import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, ChevronUp, Copy, Check, Network } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -15,6 +15,7 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [selectedDpto, setSelectedDpto] = useState('');
   const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
+  const [selectedEstadoIP, setSelectedEstadoIP] = useState('');
   const [dptosList, setDptosList] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState(null);
@@ -23,8 +24,8 @@ export default function App() {
   const [historyUsuario, setHistoryUsuario] = useState(null);
   const [expandedHistory, setExpandedHistory] = useState({});
   const [usuariosList, setUsuariosList] = useState([]);
+  const [ipsList, setIpsList] = useState([]);
 
-  // Estados para contraseñas en modales
   const [showPassGmail, setShowPassGmail] = useState(false);
   const [showPassSimi, setShowPassSimi] = useState(false);
   const [copiedGmail, setCopiedGmail] = useState(false);
@@ -52,6 +53,7 @@ export default function App() {
     if (token) {
       fetchDptos();
       fetchUsuariosList();
+      fetchIpsList();
     }
   }, [token]);
 
@@ -78,20 +80,34 @@ export default function App() {
     }
   };
 
+  const fetchIpsList = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/ips/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIpsList(response.data);
+    } catch (error) {
+      console.error('Error cargando IPs:', error);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchData();
     }
-  }, [tab, search, selectedDpto, token]);
+  }, [tab, search, selectedDpto, selectedEstadoIP, token]);
 
   const fetchData = async () => {
     try {
-      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
+      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
       let params = new URLSearchParams();
       
       if (search) params.append('search', search);
       if (selectedDpto && (tab === 'usuarios' || tab === 'perfiles')) {
         params.append('dpto_area', selectedDpto);
+      }
+      if (selectedEstadoIP && tab === 'ips') {
+        params.append('estado', selectedEstadoIP);
       }
 
       const response = await axios.get(`${API_BASE}/${endpoint}/?${params.toString()}`, {
@@ -144,14 +160,25 @@ export default function App() {
     }
   };
 
+  // Función para restringir el ingreso a sólo números y puntos
+  const handleIPInputChange = (val, targetState, setTargetState) => {
+    const cleaned = val.replace(/[^0-9.]/g, '');
+    setTargetState({ ...targetState, direccion_ip: cleaned });
+  };
+
   const validateFieldsAndDuplicates = (item) => {
-    if (item.ip_asignada && /[^\d.]/.test(item.ip_asignada)) {
-      alert('La dirección IP sólo puede contener números y puntos.');
-      return false;
+    if (tab === 'ips') {
+      if (!item.direccion_ip || !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(item.direccion_ip.trim())) {
+        alert('Por favor ingrese una dirección IP válida (ejemplo: 192.168.1.50).');
+        return false;
+      }
+      const dupIP = data.find(i => i.id !== item.id && i.direccion_ip.trim() === item.direccion_ip.trim());
+      if (dupIP) { alert(`Error: La dirección IP "${item.direccion_ip}" ya existe en el sistema.`); return false; }
     }
+
     if (item.af) {
       if (item.af.length > 12 || !/^\d+$/.test(item.af)) {
-        alert('El Activo Fijo (AF) debe ser strictly numérico y tener máximo 12 dígitos.');
+        alert('El Activo Fijo (AF) debe ser estrictamente numérico y tener máximo 12 dígitos.');
         return false;
       }
     }
@@ -212,7 +239,7 @@ export default function App() {
         icloud_password: '',
         estado: 'ASIGNADO'
       });
-    } else {
+    } else if (tab === 'perfiles') {
       setNewItem({
         nombre: '',
         usuario: '',
@@ -222,6 +249,13 @@ export default function App() {
         tipo: 'On Premise',
         estado: 'ACTIVO'
       });
+    } else {
+      setNewItem({
+        direccion_ip: '',
+        estado: 'LIBRE',
+        observacion: '',
+        usuario: ''
+      });
     }
   };
 
@@ -230,10 +264,15 @@ export default function App() {
     if (!validateFieldsAndDuplicates(newItem)) return;
 
     try {
-      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
+      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
       const payload = { ...newItem };
 
       Object.keys(payload).forEach(key => { if (payload[key] === '') payload[key] = null; });
+
+      // Si asignamos un usuario a la IP en el modal de IP, se cambia su estado a RESERVADA automáticamente
+      if (tab === 'ips' && payload.usuario) {
+        payload.estado = 'RESERVADA';
+      }
 
       await axios.post(`${API_BASE}/${endpoint}/`, payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -243,6 +282,7 @@ export default function App() {
       await fetchData();
       fetchDptos();
       fetchUsuariosList();
+      fetchIpsList();
     } catch (error) {
       console.error('Error al guardar:', error.response?.data || error);
       alert('Error al guardar: ' + JSON.stringify(error.response?.data || 'Verifique los datos'));
@@ -254,13 +294,23 @@ export default function App() {
     if (!validateFieldsAndDuplicates(editingItem)) return;
 
     try {
-      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
+      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
       const payload = { ...editingItem };
       delete payload.equipos;
       delete payload.historial;
       delete payload.id;
+      delete payload.usuario_nombre;
 
-      if (payload.estado) payload.estado = payload.estado.toUpperCase();
+      if (payload.estado && tab !== 'ips') payload.estado = payload.estado.toUpperCase();
+
+      // Si vinculamos usuario desde la IP, pasa a RESERVADA; si se desvincula, a LIBRE
+      if (tab === 'ips') {
+        if (payload.usuario) {
+          payload.estado = 'RESERVADA';
+        } else if (!payload.usuario && payload.estado === 'RESERVADA') {
+          payload.estado = 'LIBRE';
+        }
+      }
 
       await axios.patch(`${API_BASE}/${endpoint}/${editingItem.id}/`, payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -270,6 +320,7 @@ export default function App() {
       await fetchData();
       fetchDptos();
       fetchUsuariosList();
+      fetchIpsList();
     } catch (error) {
       console.error('Error guardando cambios:', error.response?.data || error);
       alert('Error al guardar: ' + JSON.stringify(error.response?.data || 'Verifique los datos'));
@@ -279,12 +330,13 @@ export default function App() {
   const handleDelete = async (id, nombre) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${nombre}"?`)) {
       try {
-        const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : 'perfiles-genericos';
+        const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
         await axios.delete(`${API_BASE}/${endpoint}/${id}/`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchData();
         fetchUsuariosList();
+        fetchIpsList();
       } catch (error) {
         console.error('Error al eliminar registro:', error);
       }
@@ -307,6 +359,21 @@ export default function App() {
       return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', display: 'inline-block' }}>O365</span>;
     }
     return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', whiteSpace: 'nowrap', display: 'inline-block' }}>On Premise</span>;
+  };
+
+  const getBadgeEstadoIP = (estado) => {
+    switch(estado) {
+      case 'LIBRE':
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d', whiteSpace: 'nowrap', display: 'inline-block' }}>🟢 Libre</span>;
+      case 'RESERVADA':
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309', whiteSpace: 'nowrap', display: 'inline-block' }}>🟡 Reservada</span>;
+      case 'DUPLICADA':
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', display: 'inline-block' }}>🔵 Duplicada</span>;
+      case 'DESCONOCIDA':
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c', whiteSpace: 'nowrap', display: 'inline-block' }}>🔴 Desconocida</span>;
+      default:
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', whiteSpace: 'nowrap', display: 'inline-block' }}>⚪ Asignada</span>;
+    }
   };
 
   const renderHistorialDetalle = (obs) => {
@@ -345,7 +412,6 @@ export default function App() {
     return <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#334155' }}>{obs}</p>;
   };
 
-  // Filtrado de equipos en el frontend según categoría seleccionada
   const filteredData = data.filter(item => {
     if (tab === 'equipos' && selectedCategoriaEquipo) {
       const tipoFormatted = formatTipoEquipo(item.tipo).toLowerCase();
@@ -354,6 +420,10 @@ export default function App() {
     }
     return true;
   });
+
+  const availableIpsForUser = (currentIp) => {
+    return ipsList.filter(ip => ip.estado === 'LIBRE' || ip.direccion_ip === currentIp);
+  };
 
   if (!token) {
     return (
@@ -394,20 +464,23 @@ export default function App() {
       {/* Navegación y Filtros */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={() => { setTab('usuarios'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
+          <button onClick={() => { setTab('usuarios'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
             <User size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Usuarios ({tab === 'usuarios' ? filteredData.length : ''})
           </button>
-          <button onClick={() => { setTab('equipos'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
+          <button onClick={() => { setTab('equipos'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
             <Monitor size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Equipos ({tab === 'equipos' ? filteredData.length : ''})
           </button>
-          <button onClick={() => { setTab('perfiles'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
+          <button onClick={() => { setTab('perfiles'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
             <Key size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Perfiles Genéricos ({tab === 'perfiles' ? filteredData.length : ''})
+          </button>
+          <button onClick={() => { setTab('ips'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'ips' ? '#2563eb' : '#e2e8f0', color: tab === 'ips' ? '#fff' : '#475569' }}>
+            <Network size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Gestión de IPs ({tab === 'ips' ? filteredData.length : ''})
           </button>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <button onClick={handleOpenCreateModal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.2rem', borderRadius: '8px', border: 'none', backgroundColor: '#16a34a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
-            <Plus size={18} /> Agregar {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : 'Perfil'}
+            <Plus size={18} /> Agregar {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : tab === 'perfiles' ? 'Perfil' : 'IP'}
           </button>
 
           {(tab === 'usuarios' || tab === 'perfiles') && (
@@ -434,8 +507,21 @@ export default function App() {
             </div>
           )}
 
+          {tab === 'ips' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
+              <Filter size={16} color="#64748b" />
+              <select value={selectedEstadoIP} onChange={(e) => setSelectedEstadoIP(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer', fontWeight: 'bold' }}>
+                <option value="">Todos los Estados</option>
+                <option value="LIBRE">🟢 Libre</option>
+                <option value="RESERVADA">🟡 Reservada</option>
+                <option value="DUPLICADA">🔵 Duplicada</option>
+                <option value="DESCONOCIDA">🔴 Desconocida</option>
+              </select>
+            </div>
+          )}
+
           <div style={{ position: 'relative', width: '300px' }}>
-            <input type="text" placeholder="Buscar por nombre, IP, hostname, AF..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="text" placeholder="Buscar por IP (172.XX.X.XXX)" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} />
           </div>
         </div>
       </div>
@@ -481,6 +567,15 @@ export default function App() {
                   <th style={{ padding: '1rem 1.2rem' }}>Tipo Cuenta</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Correo Asignado</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Área</th>
+                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
+                </>
+              )}
+              {tab === 'ips' && (
+                <>
+                  <th style={{ padding: '1rem 1.2rem' }}>Dirección IP</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Usuario Asignado</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Observaciones</th>
                   <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                 </>
               )}
@@ -553,6 +648,22 @@ export default function App() {
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
                         <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }} title="Editar"><Edit size={18} /></button>
                         <button onClick={() => handleDelete(item.id, item.usuario)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }} title="Eliminar"><Trash2 size={18} /></button>
+                      </div>
+                    </td>
+                  </>
+                )}
+                {tab === 'ips' && (
+                  <>
+                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: '#0284c7' }}>{item.direccion_ip}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{getBadgeEstadoIP(item.estado)}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: item.usuario_nombre ? '#2563eb' : '#94a3b8' }}>
+                      {item.usuario_nombre || 'Sin usuario asignado'}
+                    </td>
+                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.observacion || 'Sin observaciones'}</td>
+                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
+                        <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }} title="Editar"><Edit size={18} /></button>
+                        <button onClick={() => handleDelete(item.id, item.direccion_ip)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }} title="Eliminar"><Trash2 size={18} /></button>
                       </div>
                     </td>
                   </>
@@ -772,7 +883,7 @@ export default function App() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', width: '500px', maxWidth: '90%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, color: '#0f172a' }}>Agregar Nuevo {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : 'Perfil'}</h3>
+              <h3 style={{ margin: 0, color: '#0f172a' }}>Agregar Nuevo {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : tab === 'perfiles' ? 'Perfil' : 'IP'}</h3>
               <button onClick={() => setNewItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
             </div>
             
@@ -842,9 +953,15 @@ export default function App() {
                       <input type="text" value={newItem.anexo} onChange={(e) => setNewItem({ ...newItem, anexo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>IP Asignada (Solo números y puntos)</label>
-                    <input type="text" placeholder="Ej: 192.168.1.50" value={newItem.ip_asignada} onChange={(e) => setNewItem({ ...newItem, ip_asignada: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                    <label style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 'bold' }}>Seleccionar IP Disponible</label>
+                    <select value={newItem.ip_asignada || ''} onChange={(e) => setNewItem({ ...newItem, ip_asignada: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', fontWeight: 'bold', color: '#15803d' }}>
+                      <option value="">Sin IP Asignada</option>
+                      {availableIpsForUser(newItem.ip_asignada).map((ip) => (
+                        <option key={ip.id} value={ip.direccion_ip}>{ip.direccion_ip} ({ip.observacion || 'Libre'})</option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
@@ -874,7 +991,6 @@ export default function App() {
                     <input type="text" required value={newItem.numero_serie} onChange={(e) => setNewItem({ ...newItem, numero_serie: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
 
-                  {/* CAMPOS DINÁMICOS PARA CELULAR */}
                   {formatTipoEquipo(newItem.tipo) === 'Celular' && (
                     <div style={{ backgroundColor: '#f0fdf4', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#166534', textTransform: 'uppercase' }}>Detalles de Celular</span>
@@ -895,7 +1011,6 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* CAMPOS DINÁMICOS PARA MAC */}
                   {formatTipoEquipo(newItem.tipo) === 'Mac' && (
                     <div style={{ backgroundColor: '#eff6ff', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1e40af', textTransform: 'uppercase' }}>Detalles de iCloud (Mac)</span>
@@ -963,6 +1078,35 @@ export default function App() {
                       <option value="">Selecciona un área...</option>
                       {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
                     </select>
+                  </div>
+                </>
+              )}
+
+              {tab === 'ips' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Dirección IP * (Solo números y puntos, máx. 15 caracteres)</label>
+                    <input type="text" required placeholder="Ej: 192.168.1.50" maxLength={15} value={newItem.direccion_ip || ''} onChange={(e) => handleIPInputChange(e.target.value, newItem, setNewItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado de la IP *</label>
+                    <select value={newItem.estado || 'LIBRE'} onChange={(e) => setNewItem({ ...newItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="LIBRE">🟢 Libre</option>
+                      <option value="RESERVADA">🟡 Reservada</option>
+                      <option value="DUPLICADA">🔵 Duplicada</option>
+                      <option value="DESCONOCIDA">🔴 Desconocida</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Usuario Asignado (Opcional)</label>
+                    <select value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value || null })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="">Sin Asignar (Ninguno)</option>
+                      {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Observaciones</label>
+                    <input type="text" placeholder="Ej: Reservada para Impresora Piso 2" value={newItem.observacion || ''} onChange={(e) => setNewItem({ ...newItem, observacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                 </>
               )}
@@ -1050,9 +1194,15 @@ export default function App() {
                       <input type="text" value={editingItem.anexo || ''} onChange={(e) => setEditingItem({ ...editingItem, anexo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>IP Asignada (Solo números y puntos)</label>
-                    <input type="text" value={editingItem.ip_asignada || ''} onChange={(e) => setEditingItem({ ...editingItem, ip_asignada: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                    <label style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 'bold' }}>Seleccionar IP Asignada</label>
+                    <select value={editingItem.ip_asignada || ''} onChange={(e) => setEditingItem({ ...editingItem, ip_asignada: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', fontWeight: 'bold', color: '#15803d' }}>
+                      <option value="">Sin IP Asignada</option>
+                      {availableIpsForUser(editingItem.ip_asignada).map((ip) => (
+                        <option key={ip.id} value={ip.direccion_ip}>{ip.direccion_ip} ({ip.observacion || 'Libre'})</option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
@@ -1082,7 +1232,6 @@ export default function App() {
                     <input type="text" value={editingItem.numero_serie || ''} onChange={(e) => setEditingItem({ ...editingItem, numero_serie: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
 
-                  {/* CAMPOS DINÁMICOS PARA CELULAR */}
                   {formatTipoEquipo(editingItem.tipo) === 'Celular' && (
                     <div style={{ backgroundColor: '#f0fdf4', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#166534', textTransform: 'uppercase' }}>Detalles de Celular</span>
@@ -1103,7 +1252,6 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* CAMPOS DINÁMICOS PARA MAC */}
                   {formatTipoEquipo(editingItem.tipo) === 'Mac' && (
                     <div style={{ backgroundColor: '#eff6ff', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1e40af', textTransform: 'uppercase' }}>Detalles de iCloud (Mac)</span>
@@ -1180,6 +1328,35 @@ export default function App() {
                       <option value="">Selecciona un área...</option>
                       {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
                     </select>
+                  </div>
+                </>
+              )}
+
+              {tab === 'ips' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Dirección IP * (Solo números y puntos, máx. 15 caracteres)</label>
+                    <input type="text" required value={editingItem.direccion_ip || ''} maxLength={15} onChange={(e) => handleIPInputChange(e.target.value, editingItem, setEditingItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado de la IP *</label>
+                    <select value={editingItem.estado || 'LIBRE'} onChange={(e) => setEditingItem({ ...editingItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="LIBRE">🟢 Libre</option>
+                      <option value="RESERVADA">🟡 Reservada</option>
+                      <option value="DUPLICADA">🔵 Duplicada</option>
+                      <option value="DESCONOCIDA">🔴 Desconocida</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Usuario Asignado</label>
+                    <select value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value || null })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="">Sin Asignar (Ninguno)</option>
+                      {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Observaciones</label>
+                    <input type="text" value={editingItem.observacion || ''} onChange={(e) => setEditingItem({ ...editingItem, observacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                 </>
               )}

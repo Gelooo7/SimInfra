@@ -8,15 +8,15 @@ from rest_framework_simplejwt.views import (
 from core.views import (
     UsuarioViewSet, 
     EquipamientoViewSet, 
-    HistorialEquipoViewSet, 
-    PerfilGenericoViewSet
+    PerfilGenericoViewSet,
+    IPViewSet
 )
 
 router = DefaultRouter()
-router.register(r'usuarios', UsuarioViewSet)
-router.register(r'equipos', EquipamientoViewSet)
-router.register(r'historial', HistorialEquipoViewSet)
-router.register(r'perfiles-genericos', PerfilGenericoViewSet)
+router.register(r'usuarios', UsuarioViewSet, basename='usuario')
+router.register(r'equipos', EquipamientoViewSet, basename='equipo')
+router.register(r'perfiles-genericos', PerfilGenericoViewSet, basename='perfilgenerico')
+router.register(r'ips', IPViewSet, basename='ip')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
