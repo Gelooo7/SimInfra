@@ -50,12 +50,20 @@ class Usuario(models.Model):
     celular = models.CharField(max_length=30, null=True, blank=True)
     telefono = models.CharField(max_length=30, null=True, blank=True)
     anexo = models.CharField(max_length=10, null=True, blank=True)
+    sif = models.BooleanField(default=False)
+    vpn_cisco = models.BooleanField(default=False)
+    password_vpn = models.CharField(max_length=255, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.password_gmail and not self.password_gmail.startswith('ENC::'):
             self.password_gmail = encrypt_val(self.password_gmail)
+
         if self.password_simi and not self.password_simi.startswith('ENC::'):
             self.password_simi = encrypt_val(self.password_simi)
+
+        if self.password_vpn and not self.password_vpn.startswith('ENC::'):
+            self.password_vpn = encrypt_val(self.password_vpn)
+
         super().save(*args, **kwargs)
 
     def __str__(self):

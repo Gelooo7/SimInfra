@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import Usuario, Equipamiento, HistorialEquipo, HistorialUsuario, PerfilGenerico, IP
 from .crypto import decrypt_val
 
-
 class IPSerializer(serializers.ModelSerializer):
     usuario_nombre = serializers.ReadOnlyField(source='usuario.nombre_completo')
 
@@ -55,22 +54,39 @@ class EquipamientoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     equipos = EquipamientoSerializer(many=True, read_only=True)
     historial = HistorialUsuarioSerializer(many=True, read_only=True)
-    password_gmail = serializers.SerializerMethodField()
-    password_simi = serializers.SerializerMethodField()
+    password_gmail = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
+    password_simi = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
+    password_vpn = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
 
     class Meta:
         model = Usuario
         fields = '__all__'
 
-    def get_password_gmail(self, obj):
-        if obj.password_gmail and obj.password_gmail.startswith('ENC::'):
-            return decrypt_val(obj.password_gmail)
-        return obj.password_gmail
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
 
-    def get_password_simi(self, obj):
-        if obj.password_simi and obj.password_simi.startswith('ENC::'):
-            return decrypt_val(obj.password_simi)
-        return obj.password_simi
+        if instance.password_gmail and instance.password_gmail.startswith('ENC::'):
+            data['password_gmail'] = decrypt_val(instance.password_gmail)
+
+        if instance.password_simi and instance.password_simi.startswith('ENC::'):
+            data['password_simi'] = decrypt_val(instance.password_simi)
+
+        if instance.password_vpn and instance.password_vpn.startswith('ENC::'):
+            data['password_vpn'] = decrypt_val(instance.password_vpn)
+
+        return data
 
     def validate(self, attrs):
         instance = getattr(self, 'instance', None)
@@ -78,17 +94,37 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user_red = attrs.get('usuario_red')
         correo = attrs.get('correo_corp')
 
-        if nombre and Usuario.objects.filter(nombre_completo__iexact=nombre.strip()).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"nombre_completo": "Ya existe un usuario registrado con este Nombre Completo."})
+        if nombre and Usuario.objects.filter(
+            nombre_completo__iexact=nombre.strip()
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError({
+                "nombre_completo":
+                "Ya existe un usuario registrado con este Nombre Completo."
+            })
 
-        if user_red and Usuario.objects.filter(usuario_red__iexact=user_red.strip()).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"usuario_red": "Ya existe un usuario con este Usuario de Red."})
+        if user_red and Usuario.objects.filter(
+            usuario_red__iexact=user_red.strip()
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError({
+                "usuario_red":
+                "Ya existe un usuario con este Usuario de Red."
+            })
 
-        if correo and Usuario.objects.filter(correo_corp__iexact=correo.strip()).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"correo_corp": "Ya existe un usuario con este Correo Corporativo."})
+        if correo and Usuario.objects.filter(
+            correo_corp__iexact=correo.strip()
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError({
+                "correo_corp":
+                "Ya existe un usuario con este Correo Corporativo."
+            })
 
         return attrs
-
 
 class PerfilGenericoSerializer(serializers.ModelSerializer):
     password = serializers.SerializerMethodField()
@@ -105,6 +141,14 @@ class PerfilGenericoSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         instance = getattr(self, 'instance', None)
         usuario = attrs.get('usuario')
-        if usuario and PerfilGenerico.objects.filter(usuario__iexact=usuario.strip()).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"usuario": "Ya existe un Perfil Genérico registrado con este Usuario."})
+
+        if usuario and PerfilGenerico.objects.filter(
+            usuario__iexact=usuario.strip()
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError({
+                "usuario": "Ya existe un Perfil Genérico registrado con este Usuario."
+            })
+
         return attrs

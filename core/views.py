@@ -37,3 +37,4 @@ class PerfilGenericoViewSet(viewsets.ModelViewSet):
         if dpto and dpto.strip():
             queryset = queryset.filter(dpto_area__icontains=dpto.strip())
         return queryset
+
