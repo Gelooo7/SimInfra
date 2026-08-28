@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Laptop, Smartphone, Tablet, Radio, Eye, EyeOff, Trash2, Filter, Plus, History, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, ChevronUp, Copy, Check, Phone, Smartphone } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -22,6 +22,12 @@ export default function App() {
   const [historyUsuario, setHistoryUsuario] = useState(null);
   const [expandedHistory, setExpandedHistory] = useState({});
   const [usuariosList, setUsuariosList] = useState([]);
+
+  // Estados para contraseñas en el modal de usuario
+  const [showPassGmail, setShowPassGmail] = useState(false);
+  const [showPassSimi, setShowPassSimi] = useState(false);
+  const [copiedGmail, setCopiedGmail] = useState(false);
+  const [copiedSimi, setCopiedSimi] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -99,6 +105,18 @@ export default function App() {
     }
   };
 
+  const copyToClipboard = (text, type) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    if (type === 'gmail') {
+      setCopiedGmail(true);
+      setTimeout(() => setCopiedGmail(false), 2000);
+    } else if (type === 'simi') {
+      setCopiedSimi(true);
+      setTimeout(() => setCopiedSimi(false), 2000);
+    }
+  };
+
   const handleHostnameEquipoChange = (hostnameVal, targetState, setTargetState) => {
     const matchUser = usuariosList.find(u => u.hostname && u.hostname.trim().toLowerCase() === hostnameVal.trim().toLowerCase());
     
@@ -160,6 +178,7 @@ export default function App() {
         gmail: '',
         password_gmail: '',
         password_simi: '',
+        celular: '',
         telefono: '',
         anexo: '',
         ip_asignada: ''
@@ -394,6 +413,7 @@ export default function App() {
                   <th style={{ padding: '1rem 1.2rem' }}>Usuario Red</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Hostname</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Correo Corp.</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Celular</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Anexo</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Departamento / Área</th>
                   <th style={{ padding: '1rem 1.2rem' }}>IP Asignada</th>
@@ -447,6 +467,7 @@ export default function App() {
                     <td style={{ padding: '1rem 1.2rem' }}>{item.usuario_red || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold' }}>{item.hostname || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp || 'N/I'}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', fontWeight: '500' }}>{item.celular || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.telefono || item.anexo ? `${item.telefono || ''} ${item.anexo ? `(Anx: ${item.anexo})` : ''}` : 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', color: item.ip_asignada ? '#16a34a' : '#94a3b8', fontWeight: 'bold' }}>{item.ip_asignada || 'Sin asignar'}</td>
@@ -502,10 +523,10 @@ export default function App() {
         </table>
       </div>
 
-      {/* Modal Ficha Detallada de Usuario */}
+      {/* Modal Ficha Detallada de Usuario (Con vista/copiado de contraseñas) */}
       {selectedUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '600px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
             <div style={{ padding: '1.5rem', backgroundColor: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -514,7 +535,7 @@ export default function App() {
                 </div>
                 <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>{selectedUser.cargo || 'Sin cargo'} — {selectedUser.dpto_area}</p>
               </div>
-              <button onClick={() => setSelectedUser(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
+              <button onClick={() => { setSelectedUser(null); setShowPassGmail(false); setShowPassSimi(false); }} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
             </div>
 
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '75vh', overflowY: 'auto' }}>
@@ -535,6 +556,58 @@ export default function App() {
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Correo Corp.</span>
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.correo_corp}</p>
                 </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Celular</span>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem', fontWeight: '500' }}>{selectedUser.celular || 'N/I'}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Teléfono Fijo / Anexo</span>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.telefono || 'Sin teléfono'} {selectedUser.anexo ? `(Anx: ${selectedUser.anexo})` : ''}</p>
+                </div>
+                
+                {/* Visualización / Copiado Contraseña Gmail */}
+                <div style={{ gridColumn: 'span 2', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Gmail & Contraseña</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{selectedUser.gmail || 'Sin Gmail'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9rem', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                        {showPassGmail ? (selectedUser.password_gmail || 'Sin Contraseña') : (selectedUser.password_gmail ? '••••••••' : 'Sin Contraseña')}
+                      </span>
+                      {selectedUser.password_gmail && (
+                        <>
+                          <button onClick={() => setShowPassGmail(!showPassGmail)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }} title="Mostrar / Ocultar">
+                            {showPassGmail ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                          <button onClick={() => copyToClipboard(selectedUser.password_gmail, 'gmail')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: copiedGmail ? '#16a34a' : '#64748b' }} title="Copiar Contraseña">
+                            {copiedGmail ? <Check size={16} /> : <Copy size={16} />}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visualización / Copiado Contraseña Simi */}
+                <div style={{ gridColumn: 'span 2', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Contraseña SIMI</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9rem', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                      {showPassSimi ? (selectedUser.password_simi || 'Sin Contraseña') : (selectedUser.password_simi ? '••••••••' : 'Sin Contraseña')}
+                    </span>
+                    {selectedUser.password_simi && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button onClick={() => setShowPassSimi(!showPassSimi)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }} title="Mostrar / Ocultar">
+                          {showPassSimi ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                        <button onClick={() => copyToClipboard(selectedUser.password_simi, 'simi')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: copiedSimi ? '#16a34a' : '#64748b' }} title="Copiar Contraseña">
+                          {copiedSimi ? <Check size={16} /> : <Copy size={16} />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               <div>
@@ -715,9 +788,13 @@ export default function App() {
                       <input type="text" value={newItem.password_simi} onChange={(e) => setNewItem({ ...newItem, password_simi: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Celular</label>
+                    <input type="text" placeholder="Ej: +56912345678" value={newItem.celular} onChange={(e) => setNewItem({ ...newItem, celular: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                     <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Teléfono</label>
+                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Teléfono Fijo</label>
                       <input type="text" value={newItem.telefono} onChange={(e) => setNewItem({ ...newItem, telefono: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                     </div>
                     <div>
@@ -881,9 +958,13 @@ export default function App() {
                       <input type="text" value={editingItem.password_simi || ''} onChange={(e) => setEditingItem({ ...editingItem, password_simi: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                     </div>
                   </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Celular</label>
+                    <input type="text" value={editingItem.celular || ''} onChange={(e) => setEditingItem({ ...editingItem, celular: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                     <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Teléfono</label>
+                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Teléfono Fijo</label>
                       <input type="text" value={editingItem.telefono || ''} onChange={(e) => setEditingItem({ ...editingItem, telefono: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                     </div>
                     <div>
