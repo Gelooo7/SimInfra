@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, ChevronUp, Copy, Check, Phone, Smartphone } from 'lucide-react';
+import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, ChevronUp, Copy, Check, Phone, Smartphone, Laptop, Tablet, Radio, Cpu } from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -14,6 +14,7 @@ export default function App() {
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedDpto, setSelectedDpto] = useState('');
+  const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
   const [dptosList, setDptosList] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState(null);
@@ -23,7 +24,7 @@ export default function App() {
   const [expandedHistory, setExpandedHistory] = useState({});
   const [usuariosList, setUsuariosList] = useState([]);
 
-  // Estados para contraseñas en el modal de usuario
+  // Estados para contraseñas en modales
   const [showPassGmail, setShowPassGmail] = useState(false);
   const [showPassSimi, setShowPassSimi] = useState(false);
   const [copiedGmail, setCopiedGmail] = useState(false);
@@ -117,6 +118,17 @@ export default function App() {
     }
   };
 
+  const formatTipoEquipo = (tipo) => {
+    if (!tipo) return 'N/I';
+    const t = tipo.toUpperCase();
+    if (t === 'NTBK' || t === 'NOTEBOOK') return 'Notebook';
+    if (t === 'CEL' || t === 'CELULAR') return 'Celular';
+    if (t === 'TBIT' || t === 'TABLET') return 'Tablet';
+    if (t === 'MAC') return 'Mac';
+    if (t === 'BAM' || t === 'BAM / ROUTER') return 'BAM / Router';
+    return tipo;
+  };
+
   const handleHostnameEquipoChange = (hostnameVal, targetState, setTargetState) => {
     const matchUser = usuariosList.find(u => u.hostname && u.hostname.trim().toLowerCase() === hostnameVal.trim().toLowerCase());
     
@@ -139,7 +151,7 @@ export default function App() {
     }
     if (item.af) {
       if (item.af.length > 12 || !/^\d+$/.test(item.af)) {
-        alert('El Activo Fijo (AF) debe ser estrictamente numérico y tener máximo 12 dígitos.');
+        alert('El Activo Fijo (AF) debe ser strictly numérico y tener máximo 12 dígitos.');
         return false;
       }
     }
@@ -185,7 +197,7 @@ export default function App() {
       });
     } else if (tab === 'equipos') {
       setNewItem({
-        tipo: 'NTBK',
+        tipo: 'Notebook',
         marca: '',
         modelo: '',
         numero_serie: '',
@@ -194,6 +206,10 @@ export default function App() {
         usuario: '',
         fecha_asignacion: '',
         numero_telefono: '',
+        imei: '',
+        pin: '',
+        icloud_cuenta: '',
+        icloud_password: '',
         estado: 'ASIGNADO'
       });
     } else {
@@ -329,6 +345,16 @@ export default function App() {
     return <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#334155' }}>{obs}</p>;
   };
 
+  // Filtrado de equipos en el frontend según categoría seleccionada
+  const filteredData = data.filter(item => {
+    if (tab === 'equipos' && selectedCategoriaEquipo) {
+      const tipoFormatted = formatTipoEquipo(item.tipo).toLowerCase();
+      const selFormatted = formatTipoEquipo(selectedCategoriaEquipo).toLowerCase();
+      return tipoFormatted === selFormatted;
+    }
+    return true;
+  });
+
   if (!token) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0f172a', fontFamily: 'system-ui, sans-serif' }}>
@@ -368,14 +394,14 @@ export default function App() {
       {/* Navegación y Filtros */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={() => { setTab('usuarios'); setSelectedDpto(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
-            <User size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Usuarios ({tab === 'usuarios' ? data.length : ''})
+          <button onClick={() => { setTab('usuarios'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
+            <User size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Usuarios ({tab === 'usuarios' ? filteredData.length : ''})
           </button>
-          <button onClick={() => { setTab('equipos'); setSelectedDpto(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
-            <Monitor size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Equipos ({tab === 'equipos' ? data.length : ''})
+          <button onClick={() => { setTab('equipos'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
+            <Monitor size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Equipos ({tab === 'equipos' ? filteredData.length : ''})
           </button>
-          <button onClick={() => { setTab('perfiles'); setSelectedDpto(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
-            <Key size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Perfiles Genéricos ({tab === 'perfiles' ? data.length : ''})
+          <button onClick={() => { setTab('perfiles'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
+            <Key size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Perfiles Genéricos ({tab === 'perfiles' ? filteredData.length : ''})
           </button>
         </div>
 
@@ -390,6 +416,20 @@ export default function App() {
               <select value={selectedDpto} onChange={(e) => setSelectedDpto(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer' }}>
                 <option value="">Todos los Departamentos</option>
                 {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
+              </select>
+            </div>
+          )}
+
+          {tab === 'equipos' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
+              <Filter size={16} color="#64748b" />
+              <select value={selectedCategoriaEquipo} onChange={(e) => setSelectedCategoriaEquipo(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer', fontWeight: 'bold' }}>
+                <option value="">Todas las Categorías</option>
+                <option value="Notebook">Notebook</option>
+                <option value="Celular">Celular</option>
+                <option value="Tablet">Tablet</option>
+                <option value="Mac">Mac</option>
+                <option value="BAM / Router">BAM / Router</option>
               </select>
             </div>
           )}
@@ -447,7 +487,7 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {data.map((item) => (
+            {filteredData.map((item) => (
               <tr 
                 key={item.id} 
                 onClick={() => tab === 'usuarios' && setSelectedUser(item)}
@@ -482,13 +522,13 @@ export default function App() {
                 )}
                 {tab === 'equipos' && (
                   <>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{item.tipo || 'N/I'}</td>
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{formatTipoEquipo(item.tipo)}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.marca || ''} {item.modelo || ''}</td>
                     <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace' }}>{item.numero_serie || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold' }}>{item.af || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: '#0284c7' }}>{item.hostname || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: item.usuario_red ? '#2563eb' : '#94a3b8' }}>
-                      {item.usuario_red ? `${item.usuario_nombre} (${item.usuario_red})` : 'Disponible (Stock)'}
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: item.usuario_nombre ? '#2563eb' : '#94a3b8' }}>
+                      {item.usuario_nombre || 'Disponible (Stock)'}
                     </td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.fecha_asignacion || 'N/A'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.estado || 'ASIGNADO'}</td>
@@ -523,7 +563,7 @@ export default function App() {
         </table>
       </div>
 
-      {/* Modal Ficha Detallada de Usuario (Con vista/copiado de contraseñas) */}
+      {/* Modal Ficha Detallada de Usuario */}
       {selectedUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
@@ -565,7 +605,7 @@ export default function App() {
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.telefono || 'Sin teléfono'} {selectedUser.anexo ? `(Anx: ${selectedUser.anexo})` : ''}</p>
                 </div>
                 
-                {/* Visualización / Copiado Contraseña Gmail */}
+                {/* Gmail */}
                 <div style={{ gridColumn: 'span 2', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Gmail & Contraseña</span>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
@@ -588,7 +628,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Visualización / Copiado Contraseña Simi */}
+                {/* SIMI */}
                 <div style={{ gridColumn: 'span 2', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Contraseña SIMI</span>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
@@ -617,7 +657,7 @@ export default function App() {
                     {selectedUser.equipos.map((eq) => (
                       <div key={eq.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f1f5f9', padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem' }}>
                         <div>
-                          <strong>[{eq.tipo}] {eq.marca} {eq.modelo}</strong>
+                          <strong>[{formatTipoEquipo(eq.tipo)}] {eq.marca} {eq.modelo}</strong>
                           <span style={{ color: '#64748b', marginLeft: '8px', fontFamily: 'monospace' }}>S/N: {eq.numero_serie}</span>
                         </div>
                         <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#0284c7' }}>AF: {eq.af || 'N/I'}</span>
@@ -813,11 +853,12 @@ export default function App() {
                 <>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Equipo *</label>
-                    <select value={newItem.tipo} onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="NTBK">Notebook (NTBK)</option>
-                      <option value="CEL">Celular (CEL)</option>
-                      <option value="TBIT">Tablet (TBIT)</option>
-                      <option value="BAM">BAM / Router (BAM)</option>
+                    <select value={formatTipoEquipo(newItem.tipo)} onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="Notebook">Notebook</option>
+                      <option value="Celular">Celular</option>
+                      <option value="Tablet">Tablet</option>
+                      <option value="Mac">Mac</option>
+                      <option value="BAM / Router">BAM / Router</option>
                     </select>
                   </div>
                   <div>
@@ -832,6 +873,43 @@ export default function App() {
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>N° de Serie *</label>
                     <input type="text" required value={newItem.numero_serie} onChange={(e) => setNewItem({ ...newItem, numero_serie: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
+
+                  {/* CAMPOS DINÁMICOS PARA CELULAR */}
+                  {formatTipoEquipo(newItem.tipo) === 'Celular' && (
+                    <div style={{ backgroundColor: '#f0fdf4', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#166534', textTransform: 'uppercase' }}>Detalles de Celular</span>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>Número de Teléfono</label>
+                        <input type="text" value={newItem.numero_telefono || ''} onChange={(e) => setNewItem({ ...newItem, numero_telefono: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>IMEI</label>
+                          <input type="text" value={newItem.imei || ''} onChange={(e) => setNewItem({ ...newItem, imei: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>PIN</label>
+                          <input type="text" value={newItem.pin || ''} onChange={(e) => setNewItem({ ...newItem, pin: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CAMPOS DINÁMICOS PARA MAC */}
+                  {formatTipoEquipo(newItem.tipo) === 'Mac' && (
+                    <div style={{ backgroundColor: '#eff6ff', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1e40af', textTransform: 'uppercase' }}>Detalles de iCloud (Mac)</span>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Cuenta iCloud</label>
+                        <input type="email" value={newItem.icloud_cuenta || ''} onChange={(e) => setNewItem({ ...newItem, icloud_cuenta: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Contraseña iCloud</label>
+                        <input type="text" value={newItem.icloud_password || ''} onChange={(e) => setNewItem({ ...newItem, icloud_password: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname (Autocompleta usuario asignado)</label>
                     <input type="text" value={newItem.hostname} onChange={(e) => handleHostnameEquipoChange(e.target.value, newItem, setNewItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
@@ -983,11 +1061,12 @@ export default function App() {
                 <>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Equipo</label>
-                    <select value={editingItem.tipo || 'NTBK'} onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="NTBK">Notebook (NTBK)</option>
-                      <option value="CEL">Celular (CEL)</option>
-                      <option value="TBIT">Tablet (TBIT)</option>
-                      <option value="BAM">BAM / Router (BAM)</option>
+                    <select value={formatTipoEquipo(editingItem.tipo)} onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="Notebook">Notebook</option>
+                      <option value="Celular">Celular</option>
+                      <option value="Tablet">Tablet</option>
+                      <option value="Mac">Mac</option>
+                      <option value="BAM / Router">BAM / Router</option>
                     </select>
                   </div>
                   <div>
@@ -1002,6 +1081,43 @@ export default function App() {
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>N° de Serie</label>
                     <input type="text" value={editingItem.numero_serie || ''} onChange={(e) => setEditingItem({ ...editingItem, numero_serie: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
+
+                  {/* CAMPOS DINÁMICOS PARA CELULAR */}
+                  {formatTipoEquipo(editingItem.tipo) === 'Celular' && (
+                    <div style={{ backgroundColor: '#f0fdf4', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#166534', textTransform: 'uppercase' }}>Detalles de Celular</span>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>Número de Teléfono</label>
+                        <input type="text" value={editingItem.numero_telefono || ''} onChange={(e) => setEditingItem({ ...editingItem, numero_telefono: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>IMEI</label>
+                          <input type="text" value={editingItem.imei || ''} onChange={(e) => setEditingItem({ ...editingItem, imei: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>PIN</label>
+                          <input type="text" value={editingItem.pin || ''} onChange={(e) => setEditingItem({ ...editingItem, pin: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CAMPOS DINÁMICOS PARA MAC */}
+                  {formatTipoEquipo(editingItem.tipo) === 'Mac' && (
+                    <div style={{ backgroundColor: '#eff6ff', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1e40af', textTransform: 'uppercase' }}>Detalles de iCloud (Mac)</span>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Cuenta iCloud</label>
+                        <input type="email" value={editingItem.icloud_cuenta || ''} onChange={(e) => setEditingItem({ ...editingItem, icloud_cuenta: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Contraseña iCloud</label>
+                        <input type="text" value={editingItem.icloud_password || ''} onChange={(e) => setEditingItem({ ...editingItem, icloud_password: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
                     <input type="text" value={editingItem.hostname || ''} onChange={(e) => handleHostnameEquipoChange(e.target.value, editingItem, setEditingItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
