@@ -8,7 +8,7 @@ class IPViewSet(viewsets.ModelViewSet):
     serializer_class = IPSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['estado']
-    search_fields = ['direccion_ip', 'observacion', 'usuario__nombre_completo']
+    search_fields = ['direccion_ip', 'observacion', 'usuario__nombre_completo', 'asignado_otro']
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()

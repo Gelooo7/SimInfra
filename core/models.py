@@ -67,6 +67,7 @@ class IP(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADOS_IP, default='LIBRE')
     observacion = models.CharField(max_length=255, null=True, blank=True)
     usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='ips')
+    asignado_otro = models.CharField(max_length=150, null=True, blank=True)
 
     class Meta:
         verbose_name = 'IP'
@@ -141,7 +142,37 @@ class PerfilGenerico(models.Model):
         super().save(*args, **kwargs)
 
 
-# --- AUDITORÍA Y SINCRONIZACIÓN USUARIOS ---
+# --- SINCRONIZACIÓN Y RESTRICCIÓN DE DUPLICIDAD IP ---
+
+@receiver(pre_save, sender=IP)
+def sync_ip_con_usuario(sender, instance, **kwargs):
+    if instance.usuario:
+        instance.asignado_otro = None
+        if instance.estado == 'LIBRE':
+            instance.estado = 'RESERVADA'
+        
+        # Desasignar la IP previa que tenía ese usuario
+        Usuario.objects.filter(ip_asignada=instance.direccion_ip).exclude(pk=instance.usuario.pk).update(ip_asignada=None)
+        
+        # Asignar esta IP al usuario
+        usr = instance.usuario
+        if usr.ip_asignada != instance.direccion_ip:
+            # Liberar la IP previa del usuario si tenía otra
+            if usr.ip_asignada:
+                IP.objects.filter(direccion_ip=usr.ip_asignada).exclude(pk=instance.pk).update(estado='LIBRE', usuario=None)
+            usr.ip_asignada = instance.direccion_ip
+            usr.save(update_fields=['ip_asignada'])
+    elif instance.asignado_otro and instance.asignado_otro.strip():
+        if instance.estado == 'LIBRE':
+            instance.estado = 'RESERVADA'
+        if instance.direccion_ip:
+            Usuario.objects.filter(ip_asignada=instance.direccion_ip).update(ip_asignada=None)
+    else:
+        if instance.pk:
+            ip_prev = IP.objects.filter(pk=instance.pk).first()
+            if ip_prev and ip_prev.usuario:
+                Usuario.objects.filter(pk=ip_prev.usuario.pk, ip_asignada=ip_prev.direccion_ip).update(ip_asignada=None)
+
 
 @receiver(pre_save, sender=Usuario)
 def track_historial_usuario(sender, instance, **kwargs):
@@ -152,12 +183,11 @@ def track_historial_usuario(sender, instance, **kwargs):
             usr_previo = None
 
         if usr_previo:
-            # Sincronización de IPs al cambiar la IP asignada
             if usr_previo.ip_asignada != instance.ip_asignada:
                 if usr_previo.ip_asignada:
                     IP.objects.filter(direccion_ip=usr_previo.ip_asignada).update(estado='LIBRE', usuario=None)
                 if instance.ip_asignada:
-                    IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='ASIGNADA', usuario=instance)
+                    IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='RESERVADA', usuario=instance, asignado_otro=None)
 
             cambios = []
             def add_cambio(campo, ant, act):
@@ -189,58 +219,7 @@ def track_historial_usuario(sender, instance, **kwargs):
                 )
     else:
         if instance.ip_asignada:
-            IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='ASIGNADA', usuario=instance)
-
-
-# --- AUDITORÍA EQUIPOS ---
-
-@receiver(pre_save, sender=Usuario)
-def track_historial_usuario(sender, instance, **kwargs):
-    if instance.pk:
-        try:
-            usr_previo = Usuario.objects.get(pk=instance.pk)
-        except Usuario.DoesNotExist:
-            usr_previo = None
-
-        if usr_previo:
-            # Sincronización de IPs
-            if usr_previo.ip_asignada != instance.ip_asignada:
-                if usr_previo.ip_asignada:
-                    IP.objects.filter(direccion_ip=usr_previo.ip_asignada).update(estado='LIBRE', usuario=None)
-                if instance.ip_asignada:
-                    IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='RESERVADA', usuario=instance)
-
-            cambios = []
-            def add_cambio(campo, ant, act):
-                if str(ant) != str(act):
-                    cambios.append(f"{campo}:::{ant or 'N/I'}:::{act or 'N/I'}")
-
-            add_cambio("Nombre Completo", usr_previo.nombre_completo, instance.nombre_completo)
-            add_cambio("Estado", usr_previo.estado, instance.estado)
-            add_cambio("Hostname", usr_previo.hostname, instance.hostname)
-            add_cambio("Cargo", usr_previo.cargo, instance.cargo)
-            add_cambio("Departamento", usr_previo.dpto_area, instance.dpto_area)
-            add_cambio("Usuario Red", usr_previo.usuario_red, instance.usuario_red)
-            add_cambio("Correo Corp.", usr_previo.correo_corp, instance.correo_corp)
-            add_cambio("Gmail", usr_previo.gmail, instance.gmail)
-            if usr_previo.password_gmail != instance.password_gmail:
-                add_cambio("Contraseña Gmail", "••••••••", "••••••••")
-            if usr_previo.password_simi != instance.password_simi:
-                add_cambio("Contraseña Simi", "••••••••", "••••••••")
-            add_cambio("Teléfono", usr_previo.telefono, instance.telefono)
-            add_cambio("Celular", usr_previo.celular, instance.celular)
-            add_cambio("Anexo", usr_previo.anexo, instance.anexo)
-            add_cambio("IP Asignada", usr_previo.ip_asignada, instance.ip_asignada)
-
-            if cambios:
-                HistorialUsuario.objects.create(
-                    usuario=instance,
-                    accion="MODIFICACION",
-                    observacion="||".join(cambios)
-                )
-    else:
-        if instance.ip_asignada:
-            IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='RESERVADA', usuario=instance)
+            IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='RESERVADA', usuario=instance, asignado_otro=None)
 
 
 @receiver(post_save, sender=Usuario)

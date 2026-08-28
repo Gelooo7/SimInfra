@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, ChevronUp, Copy, Check, Network } from 'lucide-react';
+import { 
+  Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, 
+  Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, 
+  ChevronUp, Copy, Check, Network, Menu 
+} from 'lucide-react';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -11,6 +15,7 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   const [tab, setTab] = useState('usuarios');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedDpto, setSelectedDpto] = useState('');
@@ -160,7 +165,6 @@ export default function App() {
     }
   };
 
-  // Función para restringir el ingreso a sólo números y puntos
   const handleIPInputChange = (val, targetState, setTargetState) => {
     const cleaned = val.replace(/[^0-9.]/g, '');
     setTargetState({ ...targetState, direccion_ip: cleaned });
@@ -178,7 +182,7 @@ export default function App() {
 
     if (item.af) {
       if (item.af.length > 12 || !/^\d+$/.test(item.af)) {
-        alert('El Activo Fijo (AF) debe ser estrictamente numérico y tener máximo 12 dígitos.');
+        alert('El Activo Fijo (AF) debe ser numérico y tener máximo 12 dígitos.');
         return false;
       }
     }
@@ -254,7 +258,8 @@ export default function App() {
         direccion_ip: '',
         estado: 'LIBRE',
         observacion: '',
-        usuario: ''
+        usuario: '',
+        asignado_otro: ''
       });
     }
   };
@@ -269,9 +274,10 @@ export default function App() {
 
       Object.keys(payload).forEach(key => { if (payload[key] === '') payload[key] = null; });
 
-      // Si asignamos un usuario a la IP en el modal de IP, se cambia su estado a RESERVADA automáticamente
-      if (tab === 'ips' && payload.usuario) {
-        payload.estado = 'RESERVADA';
+      if (tab === 'ips') {
+        if (payload.usuario || payload.asignado_otro) {
+          payload.estado = 'RESERVADA';
+        }
       }
 
       await axios.post(`${API_BASE}/${endpoint}/`, payload, {
@@ -303,11 +309,10 @@ export default function App() {
 
       if (payload.estado && tab !== 'ips') payload.estado = payload.estado.toUpperCase();
 
-      // Si vinculamos usuario desde la IP, pasa a RESERVADA; si se desvincula, a LIBRE
       if (tab === 'ips') {
-        if (payload.usuario) {
+        if (payload.usuario || (payload.asignado_otro && payload.asignado_otro.trim())) {
           payload.estado = 'RESERVADA';
-        } else if (!payload.usuario && payload.estado === 'RESERVADA') {
+        } else if (!payload.usuario && !payload.asignado_otro && payload.estado === 'RESERVADA') {
           payload.estado = 'LIBRE';
         }
       }
@@ -361,16 +366,17 @@ export default function App() {
     return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', whiteSpace: 'nowrap', display: 'inline-block' }}>On Premise</span>;
   };
 
+  // CAMBIO 2: INTERCAMBIO DE COLORES (RESERVADA -> ROJO, DESCONOCIDA -> AMARILLO)
   const getBadgeEstadoIP = (estado) => {
     switch(estado) {
       case 'LIBRE':
         return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d', whiteSpace: 'nowrap', display: 'inline-block' }}>🟢 Libre</span>;
       case 'RESERVADA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309', whiteSpace: 'nowrap', display: 'inline-block' }}>🟡 Reservada</span>;
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c', whiteSpace: 'nowrap', display: 'inline-block' }}>🔴 Reservada</span>;
       case 'DUPLICADA':
         return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', display: 'inline-block' }}>🔵 Duplicada</span>;
       case 'DESCONOCIDA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c', whiteSpace: 'nowrap', display: 'inline-block' }}>🔴 Desconocida</span>;
+        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309', whiteSpace: 'nowrap', display: 'inline-block' }}>🟡 Desconocida</span>;
       default:
         return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', whiteSpace: 'nowrap', display: 'inline-block' }}>⚪ Asignada</span>;
     }
@@ -425,6 +431,14 @@ export default function App() {
     return ipsList.filter(ip => ip.estado === 'LIBRE' || ip.direccion_ip === currentIp);
   };
 
+  const handleSelectTab = (selectedTab) => {
+    setTab(selectedTab);
+    setSelectedDpto('');
+    setSelectedCategoriaEquipo('');
+    setSelectedEstadoIP('');
+    setSidebarOpen(false);
+  };
+
   if (!token) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0f172a', fontFamily: 'system-ui, sans-serif' }}>
@@ -451,32 +465,129 @@ export default function App() {
 
   return (
     <div style={{ padding: '1.5rem 3rem', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%' }}>
+      
+      {/* CAPA DE FONDO OSCURO PARA EL SIDEBAR */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)} 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', zIndex: 1100, backdropFilter: 'blur(2px)', transition: 'opacity 0.3s' }}
+        />
+      )}
+
+      {/* PANEL LATERAL DESLIZABLE */}
+      <aside style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '280px',
+        height: '100vh',
+        backgroundColor: '#0f172a',
+        color: '#fff',
+        zIndex: 1200,
+        padding: '1.5rem',
+        boxSizing: 'border-box',
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '4px 0 25px rgba(0,0,0,0.3)',
+        display: 'flex',
+        flexDirection: 'column',
+        justify: 'space-between'
+      }}>
         <div>
-          <h1 style={{ fontSize: '2rem', color: '#0f172a', margin: 0, fontWeight: '800' }}>SimInfra — Gestión de Infraestructura</h1>
-          <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Panel Administrador de Usuarios, Activos e IP</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: 'bold' }}>SimInfra</h2>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Módulos del Sistema</p>
+            </div>
+            <button onClick={() => setSidebarOpen(false)} style={{ border: 'none', background: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button 
+              onClick={() => handleSelectTab('usuarios')} 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
+                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
+                backgroundColor: tab === 'usuarios' ? '#2563eb' : 'transparent',
+                color: tab === 'usuarios' ? '#fff' : '#cbd5e1'
+              }}
+            >
+              <User size={18} /> Usuarios ({tab === 'usuarios' ? filteredData.length : ''})
+            </button>
+
+            <button 
+              onClick={() => handleSelectTab('equipos')} 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
+                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
+                backgroundColor: tab === 'equipos' ? '#2563eb' : 'transparent',
+                color: tab === 'equipos' ? '#fff' : '#cbd5e1'
+              }}
+            >
+              <Monitor size={18} /> Equipos ({tab === 'equipos' ? filteredData.length : ''})
+            </button>
+
+            <button 
+              onClick={() => handleSelectTab('perfiles')} 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
+                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
+                backgroundColor: tab === 'perfiles' ? '#2563eb' : 'transparent',
+                color: tab === 'perfiles' ? '#fff' : '#cbd5e1'
+              }}
+            >
+              <Key size={18} /> Perfiles Genéricos ({tab === 'perfiles' ? filteredData.length : ''})
+            </button>
+
+            <button 
+              onClick={() => handleSelectTab('ips')} 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
+                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
+                backgroundColor: tab === 'ips' ? '#2563eb' : 'transparent',
+                color: tab === 'ips' ? '#fff' : '#cbd5e1'
+              }}
+            >
+              <Network size={18} /> Gestión de IPs ({tab === 'ips' ? filteredData.length : ''})
+            </button>
+          </nav>
         </div>
+
+        <div style={{ borderTop: '1px solid #334155', paddingTop: '1rem' }}>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>SimInfra v2.0 — 2026</p>
+        </div>
+      </aside>
+
+      {/* ENCABEZADO */}
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button 
+            onClick={() => setSidebarOpen(true)} 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+            title="Abrir Menú de Módulos"
+          >
+            <Menu size={20} color="#2563eb" />
+            <span>Módulos</span>
+          </button>
+
+          <div>
+            <h1 style={{ fontSize: '1.8rem', color: '#0f172a', margin: 0, fontWeight: '800' }}>
+              SimInfra — {tab === 'usuarios' ? 'Usuarios' : tab === 'equipos' ? 'Equipos' : tab === 'perfiles' ? 'Perfiles Genéricos' : 'Gestión de IPs'}
+            </h1>
+            <p style={{ color: '#64748b', marginTop: '0.1rem', fontSize: '0.9rem' }}>Panel Administrador de Infraestructura y Redes</p>
+          </div>
+        </div>
+
         <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }}>
           <LogOut size={16} /> Cerrar Sesión
         </button>
       </header>
 
-      {/* Navegación y Filtros */}
+      {/* FILTROS Y ACCIONES SUPERIORES */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={() => { setTab('usuarios'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'usuarios' ? '#2563eb' : '#e2e8f0', color: tab === 'usuarios' ? '#fff' : '#475569' }}>
-            <User size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Usuarios ({tab === 'usuarios' ? filteredData.length : ''})
-          </button>
-          <button onClick={() => { setTab('equipos'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'equipos' ? '#2563eb' : '#e2e8f0', color: tab === 'equipos' ? '#fff' : '#475569' }}>
-            <Monitor size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Equipos ({tab === 'equipos' ? filteredData.length : ''})
-          </button>
-          <button onClick={() => { setTab('perfiles'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'perfiles' ? '#2563eb' : '#e2e8f0', color: tab === 'perfiles' ? '#fff' : '#475569' }}>
-            <Key size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Perfiles Genéricos ({tab === 'perfiles' ? filteredData.length : ''})
-          </button>
-          <button onClick={() => { setTab('ips'); setSelectedDpto(''); setSelectedCategoriaEquipo(''); setSelectedEstadoIP(''); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold', backgroundColor: tab === 'ips' ? '#2563eb' : '#e2e8f0', color: tab === 'ips' ? '#fff' : '#475569' }}>
-            <Network size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Gestión de IPs ({tab === 'ips' ? filteredData.length : ''})
-          </button>
-        </div>
+        <div></div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <button onClick={handleOpenCreateModal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.2rem', borderRadius: '8px', border: 'none', backgroundColor: '#16a34a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
@@ -507,33 +618,36 @@ export default function App() {
             </div>
           )}
 
+          {/* CAMBIO 2: ACTUALIZACIÓN DE ICONOS/COLORES EN EL FILTRO DE IPS */}
           {tab === 'ips' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
               <Filter size={16} color="#64748b" />
               <select value={selectedEstadoIP} onChange={(e) => setSelectedEstadoIP(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer', fontWeight: 'bold' }}>
                 <option value="">Todos los Estados</option>
                 <option value="LIBRE">🟢 Libre</option>
-                <option value="RESERVADA">🟡 Reservada</option>
+                <option value="RESERVADA">🔴 Reservada</option>
                 <option value="DUPLICADA">🔵 Duplicada</option>
-                <option value="DESCONOCIDA">🔴 Desconocida</option>
+                <option value="DESCONOCIDA">🟡 Desconocida</option>
               </select>
             </div>
           )}
 
           <div style={{ position: 'relative', width: '300px' }}>
-            <input type="text" placeholder="Buscar por IP (172.XX.X.XXX)" value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="text" placeholder="Buscar por nombre, IP, hostname, AF..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} />
           </div>
         </div>
       </div>
 
-      {/* Tabla Principal */}
+      {/* TABLA PRINCIPAL */}
       <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', width: '100%' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.95rem' }}>
           <thead>
             <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>
+              {/* CAMBIO 1: ORDEN DE COLUMNAS DE USUARIOS */}
               {tab === 'usuarios' && (
                 <>
                   <th style={{ padding: '1rem 1.2rem' }}>Nombre Completo</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Departamento / Área</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Cargo</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Usuario Red</th>
@@ -541,7 +655,6 @@ export default function App() {
                   <th style={{ padding: '1rem 1.2rem' }}>Correo Corp.</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Celular</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Anexo</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Departamento / Área</th>
                   <th style={{ padding: '1rem 1.2rem' }}>IP Asignada</th>
                   <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                 </>
@@ -574,7 +687,7 @@ export default function App() {
                 <>
                   <th style={{ padding: '1rem 1.2rem' }}>Dirección IP</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Usuario Asignado</th>
+                  <th style={{ padding: '1rem 1.2rem' }}>Asignado a</th>
                   <th style={{ padding: '1rem 1.2rem' }}>Observaciones</th>
                   <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                 </>
@@ -594,9 +707,11 @@ export default function App() {
                 onMouseEnter={(e) => { if (tab === 'usuarios') e.currentTarget.style.backgroundColor = '#f1f5f9'; }}
                 onMouseLeave={(e) => { if (tab === 'usuarios') e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
+                {/* CAMBIO 1: ORDEN DE CELDAS DE USUARIOS */}
                 {tab === 'usuarios' && (
                   <>
                     <td style={{ padding: '1rem 1.2rem', fontWeight: '600', color: '#2563eb' }}>{item.nombre_completo || 'N/I'}</td>
+                    <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', color: '#64748b' }}>{item.cargo || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{getBadgeEstadoUsuario(item.estado)}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.usuario_red || 'N/I'}</td>
@@ -604,7 +719,6 @@ export default function App() {
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', fontWeight: '500' }}>{item.celular || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.telefono || item.anexo ? `${item.telefono || ''} ${item.anexo ? `(Anx: ${item.anexo})` : ''}` : 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', color: item.ip_asignada ? '#16a34a' : '#94a3b8', fontWeight: 'bold' }}>{item.ip_asignada || 'Sin asignar'}</td>
                     <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem' }}>
@@ -656,8 +770,8 @@ export default function App() {
                   <>
                     <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: '#0284c7' }}>{item.direccion_ip}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{getBadgeEstadoIP(item.estado)}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: item.usuario_nombre ? '#2563eb' : '#94a3b8' }}>
-                      {item.usuario_nombre || 'Sin usuario asignado'}
+                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: (item.usuario_nombre || item.asignado_otro) ? '#2563eb' : '#94a3b8' }}>
+                      {item.usuario_nombre || item.asignado_otro || 'Sin asignar'}
                     </td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.observacion || 'Sin observaciones'}</td>
                     <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
@@ -903,19 +1017,19 @@ export default function App() {
                     <input type="text" required value={newItem.nombre_completo} onChange={(e) => setNewItem({ ...newItem, nombre_completo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
-                    <input type="text" placeholder="Ej: LAPTOP-FIN-01" value={newItem.hostname} onChange={(e) => setNewItem({ ...newItem, hostname: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área *</label>
+                    <select required value={newItem.dpto_area} onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
+                    </select>
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
                     <input type="text" value={newItem.cargo} onChange={(e) => setNewItem({ ...newItem, cargo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área *</label>
-                    <select required value={newItem.dpto_area} onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Selecciona un área...</option>
-                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-                    </select>
+                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
+                    <input type="text" placeholder="Ej: LAPTOP-FIN-01" value={newItem.hostname} onChange={(e) => setNewItem({ ...newItem, hostname: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario de Red *</label>
@@ -1082,6 +1196,7 @@ export default function App() {
                 </>
               )}
 
+              {/* CAMBIO 2: Opciones en el Modal de Creación de IPs */}
               {tab === 'ips' && (
                 <>
                   <div>
@@ -1092,18 +1207,24 @@ export default function App() {
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado de la IP *</label>
                     <select value={newItem.estado || 'LIBRE'} onChange={(e) => setNewItem({ ...newItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
                       <option value="LIBRE">🟢 Libre</option>
-                      <option value="RESERVADA">🟡 Reservada</option>
+                      <option value="RESERVADA">🔴 Reservada</option>
                       <option value="DUPLICADA">🔵 Duplicada</option>
-                      <option value="DESCONOCIDA">🔴 Desconocida</option>
+                      <option value="DESCONOCIDA">🟡 Desconocida</option>
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Usuario Asignado (Opcional)</label>
-                    <select value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value || null })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Asignado a (Usuario)</label>
+                    <select value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value || null, asignado_otro: '' })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
                       <option value="">Sin Asignar (Ninguno)</option>
                       {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
                     </select>
                   </div>
+                  {!newItem.usuario && (
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Otros (Servidor, CCTV, Impresora, etc.)</label>
+                      <input type="text" placeholder="Ej: Servidor DB / CCTV Piso 1" value={newItem.asignado_otro || ''} onChange={(e) => setNewItem({ ...newItem, asignado_otro: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                    </div>
+                  )}
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Observaciones</label>
                     <input type="text" placeholder="Ej: Reservada para Impresora Piso 2" value={newItem.observacion || ''} onChange={(e) => setNewItem({ ...newItem, observacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
@@ -1144,19 +1265,19 @@ export default function App() {
                     <input type="text" value={editingItem.nombre_completo || ''} onChange={(e) => setEditingItem({ ...editingItem, nombre_completo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
-                    <input type="text" value={editingItem.hostname || ''} onChange={(e) => setEditingItem({ ...editingItem, hostname: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
+                    <select value={editingItem.dpto_area || ''} onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                      <option value="">Selecciona un área...</option>
+                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
+                    </select>
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
                     <input type="text" value={editingItem.cargo || ''} onChange={(e) => setEditingItem({ ...editingItem, cargo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
-                    <select value={editingItem.dpto_area || ''} onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Selecciona un área...</option>
-                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-                    </select>
+                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
+                    <input type="text" value={editingItem.hostname || ''} onChange={(e) => setEditingItem({ ...editingItem, hostname: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario de Red</label>
@@ -1332,6 +1453,7 @@ export default function App() {
                 </>
               )}
 
+              {/* CAMBIO 2: Opciones en el Modal de Edición de IPs */}
               {tab === 'ips' && (
                 <>
                   <div>
@@ -1342,18 +1464,24 @@ export default function App() {
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado de la IP *</label>
                     <select value={editingItem.estado || 'LIBRE'} onChange={(e) => setEditingItem({ ...editingItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
                       <option value="LIBRE">🟢 Libre</option>
-                      <option value="RESERVADA">🟡 Reservada</option>
+                      <option value="RESERVADA">🔴 Reservada</option>
                       <option value="DUPLICADA">🔵 Duplicada</option>
-                      <option value="DESCONOCIDA">🔴 Desconocida</option>
+                      <option value="DESCONOCIDA">🟡 Desconocida</option>
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Usuario Asignado</label>
-                    <select value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value || null })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
+                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Asignado a (Usuario)</label>
+                    <select value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value || null, asignado_otro: '' })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
                       <option value="">Sin Asignar (Ninguno)</option>
                       {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
                     </select>
                   </div>
+                  {!editingItem.usuario && (
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Otros (Servidor, CCTV, Impresora, etc.)</label>
+                      <input type="text" placeholder="Ej: Servidor DB / CCTV Piso 1" value={editingItem.asignado_otro || ''} onChange={(e) => setEditingItem({ ...editingItem, asignado_otro: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
+                    </div>
+                  )}
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Observaciones</label>
                     <input type="text" value={editingItem.observacion || ''} onChange={(e) => setEditingItem({ ...editingItem, observacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
