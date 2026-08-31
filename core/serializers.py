@@ -54,17 +54,27 @@ class EquipamientoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     equipos = EquipamientoSerializer(many=True, read_only=True)
     historial = HistorialUsuarioSerializer(many=True, read_only=True)
+
     ip_actual = serializers.SerializerMethodField()
+
+    ip_seleccionada = serializers.IPAddressField(
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+
     password_gmail = serializers.CharField(
         required=False,
         allow_blank=True,
         allow_null=True
     )
+
     password_simi = serializers.CharField(
         required=False,
         allow_blank=True,
         allow_null=True
     )
+
     password_vpn = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -80,6 +90,96 @@ class UsuarioSerializer(serializers.ModelSerializer):
             return obj.ip.direccion_ip
         except IP.DoesNotExist:
             return None
+
+    def validate_ip_seleccionada(self, value):
+        if value is None:
+            return None
+
+        try:
+            ip = IP.objects.get(direccion_ip=value)
+        except IP.DoesNotExist:
+            raise serializers.ValidationError(
+                "La IP seleccionada no existe en Gestión de IPs."
+            )
+
+        # Permitirla si ya pertenece al mismo usuario
+        if ip.usuario:
+            if not self.instance or ip.usuario_id != self.instance.id:
+                raise serializers.ValidationError(
+                    "Esta IP ya está asignada a otro usuario."
+                )
+
+        if ip.asignado_otro:
+            raise serializers.ValidationError(
+                "Esta IP está reservada para otro dispositivo o servicio."
+            )
+
+        return value
+
+    def _asignar_ip(self, usuario, direccion_ip):
+        # Liberar cualquier IP anterior
+        IP.objects.filter(usuario=usuario).exclude(
+            direccion_ip=direccion_ip
+        ).update(
+            usuario=None,
+            estado='LIBRE'
+        )
+
+        # Asignar nueva IP
+        if direccion_ip:
+            IP.objects.filter(
+                direccion_ip=direccion_ip
+            ).update(
+                usuario=usuario,
+                estado='RESERVADA',
+                asignado_otro=None
+            )
+
+        # Compatibilidad temporal con ip_asignada
+        Usuario.objects.filter(
+            pk=usuario.pk
+        ).update(
+            ip_asignada=direccion_ip
+        )
+
+        usuario.ip_asignada = direccion_ip
+
+    def create(self, validated_data):
+        ip_seleccionada = validated_data.pop(
+            'ip_seleccionada',
+            None
+        )
+
+        usuario = super().create(validated_data)
+
+        if ip_seleccionada is not None:
+            self._asignar_ip(
+                usuario,
+                ip_seleccionada
+            )
+
+        return usuario
+
+    def update(self, instance, validated_data):
+        ip_enviada = 'ip_seleccionada' in validated_data
+
+        ip_seleccionada = validated_data.pop(
+        'ip_seleccionada',
+        None
+    )
+
+        usuario = super().update(
+        instance,
+        validated_data
+    )
+
+        if ip_enviada:
+            self._asignar_ip(
+            usuario,
+            ip_seleccionada
+        )
+
+        return usuario
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

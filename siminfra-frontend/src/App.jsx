@@ -210,22 +210,22 @@ export default function App() {
 
   const handleOpenCreateModal = () => {
     if (tab === 'usuarios') {
-      setNewItem({
-        estado: 'ACTIVO',
-        nombre_completo: '',
-        hostname: '',
-        cargo: '',
-        dpto_area: dptosList[0] || '',
-        usuario_red: '',
-        correo_corp: '',
-        gmail: '',
-        password_gmail: '',
-        password_simi: '',
-        celular: '',
-        telefono: '',
-        anexo: '',
-        ip_asignada: ''
-      });
+  setNewItem({
+    estado: 'ACTIVO',
+    nombre_completo: '',
+    hostname: '',
+    cargo: '',
+    dpto_area: dptosList[0] || '',
+    usuario_red: '',
+    correo_corp: '',
+    gmail: '',
+    password_gmail: '',
+    password_simi: '',
+    celular: '',
+    telefono: '',
+    anexo: '',
+    ip_asignada: ''
+  });
     } else if (tab === 'equipos') {
       setNewItem({
         tipo: 'Notebook',
@@ -295,46 +295,107 @@ export default function App() {
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!validateFieldsAndDuplicates(editingItem)) return;
+const handleSave = async (e) => {
+  e.preventDefault();
 
-    try {
-      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
-      const payload = { ...editingItem };
-      delete payload.equipos;
-      delete payload.historial;
-      delete payload.id;
-      delete payload.usuario_nombre;
-      delete payload.ip_actual;
-      if (tab === 'usuarios' && payload.ip_asignada === '') {
-  payload.ip_asignada = null;
+  if (!validateFieldsAndDuplicates(editingItem)) return;
+
+  try {
+    const endpoint =
+      tab === 'usuarios'
+        ? 'usuarios'
+        : tab === 'equipos'
+        ? 'equipos'
+        : tab === 'perfiles'
+        ? 'perfiles-genericos'
+        : 'ips';
+
+    const payload = { ...editingItem };
+
+    // Campos que no deben enviarse al backend
+    delete payload.equipos;
+    delete payload.historial;
+    delete payload.id;
+    delete payload.usuario_nombre;
+    delete payload.ip_actual;
+
+    // USUARIOS
+    if (tab === 'usuarios') {
+      delete payload.ip_asignada;
+
+      // Si el usuario selecciona "Sin IP Asignada"
+      if (payload.ip_seleccionada === '') {
+        payload.ip_seleccionada = null;
       }
+    }
 
-      if (payload.estado && tab !== 'ips') payload.estado = payload.estado.toUpperCase();
+    // EQUIPOS - Normalizar tipos antiguos
+    if (tab === 'equipos' && payload.tipo) {
+      payload.tipo = formatTipoEquipo(payload.tipo);
+    }
 
-      if (tab === 'ips') {
-        if (payload.usuario || (payload.asignado_otro && payload.asignado_otro.trim())) {
-          payload.estado = 'RESERVADA';
-        } else if (!payload.usuario && !payload.asignado_otro && payload.estado === 'RESERVADA') {
-          payload.estado = 'LIBRE';
+    // EQUIPOS - Coherencia entre usuario y estado
+    if (tab === 'equipos') {
+      if (!payload.usuario) {
+        payload.estado = 'STOCK';
+        payload.fecha_asignacion = null;
+      } else if (payload.estado === 'STOCK') {
+        payload.estado = 'ASIGNADO';
+      }
+    }
+
+    // Normalizar estados
+    if (payload.estado && tab !== 'ips') {
+      payload.estado = payload.estado.toUpperCase();
+    }
+
+    // IPS
+    if (tab === 'ips') {
+      if (
+        payload.usuario ||
+        (payload.asignado_otro && payload.asignado_otro.trim())
+      ) {
+        payload.estado = 'RESERVADA';
+      } else if (
+        !payload.usuario &&
+        !payload.asignado_otro &&
+        payload.estado === 'RESERVADA'
+      ) {
+        payload.estado = 'LIBRE';
+      }
+    }
+
+    await axios.patch(
+      `${API_BASE}/${endpoint}/${editingItem.id}/`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
       }
+    );
 
-      await axios.patch(`${API_BASE}/${endpoint}/${editingItem.id}/`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    setEditingItem(null);
 
-      setEditingItem(null);
-      await fetchData();
-      fetchDptos();
-      fetchUsuariosList();
-      fetchIpsList();
-    } catch (error) {
-      console.error('Error guardando cambios:', error.response?.data || error);
-      alert('Error al guardar: ' + JSON.stringify(error.response?.data || 'Verifique los datos'));
-    }
-  };
+    await fetchData();
+    fetchDptos();
+    fetchUsuariosList();
+    fetchIpsList();
+
+  } catch (error) {
+    console.error(
+      'Error guardando cambios:',
+      error.response?.data || error
+    );
+
+    alert(
+      'Error al guardar: ' +
+      JSON.stringify(
+        error.response?.data || 'Verifique los datos'
+      )
+    );
+  }
+};
 
   const handleDelete = async (id, nombre) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${nombre}"?`)) {
@@ -723,10 +784,7 @@ export default function App() {
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', fontWeight: '500' }}>{item.celular || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.telefono || item.anexo ? `${item.telefono || ''} ${item.anexo ? `(Anx: ${item.anexo})` : ''}` : 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', color: (item.ip_actual || item.ip_asignada) ? '#16a34a' : '#94a3b8', fontWeight: 'bold'}}
->
-  {item.ip_actual || item.ip_asignada || 'Sin asignar'}
-</td>
+                    <td style={{ padding: '1rem 1.2rem', color: item.ip_actual ? '#16a34a' : '#94a3b8', fontWeight: 'bold'}} > {item.ip_actual || 'Sin asignar'} </td>
                     <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem' }}>
                         <button onClick={() => setHistoryUsuario(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#d97706' }} title="Ver Historial de Modificaciones"><History size={18} /></button>
@@ -822,8 +880,15 @@ export default function App() {
                 </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>IP Asignada</span>
-                <p  style={{ margin: '2px 0 0 0', fontWeight: 'bold', color: (selectedUser.ip_actual || selectedUser.ip_asignada) ? '#16a34a' : '#94a3b8'}} > {selectedUser.ip_actual || selectedUser.ip_asignada || 'Sin IP'} </p>
-                </div>
+                  <p
+                    style={{
+                      margin: '2px 0 0 0',
+                      fontWeight: 'bold',
+                      color: selectedUser.ip_actual ? '#16a34a' : '#94a3b8'
+                    }}
+                  >
+                    {selectedUser.ip_actual || 'Sin IP'}
+                  </p>                </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Correo Corp.</span>
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.correo_corp}</p>
@@ -1075,15 +1140,54 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 'bold' }}>Seleccionar IP Disponible</label>
-                    <select value={newItem.ip_asignada || ''} onChange={(e) => setNewItem({ ...newItem, ip_asignada: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', fontWeight: 'bold', color: '#15803d' }}>
-                      <option value="">Sin IP Asignada</option>
-                      {availableIpsForUser(newItem.ip_asignada).map((ip) => (
-                        <option key={ip.id} value={ip.direccion_ip}>{ip.direccion_ip} ({ip.observacion || 'Libre'})</option>
-                      ))}
-                    </select>
-                  </div>
+<div>
+  <label
+    style={{
+      fontSize: '0.8rem',
+      color: '#16a34a',
+      fontWeight: 'bold'
+    }}
+  >
+    Seleccionar IP Asignada
+  </label>
+
+  <select
+    value={
+      editingItem.ip_seleccionada !== undefined
+        ? (editingItem.ip_seleccionada ?? '')
+        : (editingItem.ip_actual ?? '')
+    }
+    onChange={(e) =>
+      setEditingItem({
+        ...editingItem,
+        ip_seleccionada: e.target.value || null
+      })
+    }
+    style={{
+      width: '100%',
+      padding: '0.6rem',
+      borderRadius: '6px',
+      border: '1px solid #cbd5e1',
+      marginTop: '4px',
+      boxSizing: 'border-box',
+      fontWeight: 'bold',
+      color: '#15803d'
+    }}
+  >
+    <option value="">
+      Sin IP Asignada
+    </option>
+
+    {availableIpsForUser(editingItem.ip_actual).map((ip) => (
+      <option
+        key={ip.id}
+        value={ip.direccion_ip}
+      >
+        {ip.direccion_ip} ({ip.observacion || 'Libre'})
+      </option>
+    ))}
+  </select>
+</div>
                 </>
               )}
 
@@ -1325,12 +1429,33 @@ export default function App() {
 
                   <div>
                     <label style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 'bold' }}>Seleccionar IP Asignada</label>
-                    <select value={editingItem.ip_asignada || ''} onChange={(e) => setEditingItem({ ...editingItem, ip_asignada: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', fontWeight: 'bold', color: '#15803d' }}>
-                      <option value="">Sin IP Asignada</option>
-                      {availableIpsForUser(editingItem.ip_asignada).map((ip) => (
-                        <option key={ip.id} value={ip.direccion_ip}>{ip.direccion_ip} ({ip.observacion || 'Libre'})</option>
-                      ))}
-                    </select>
+                 <select
+  value={editingItem.ip_seleccionada ?? editingItem.ip_actual ?? ''}
+  onChange={(e) =>
+    setEditingItem({
+      ...editingItem,
+      ip_seleccionada: e.target.value || null
+    })
+  }
+  style={{
+    width: '100%',
+    padding: '0.6rem',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    marginTop: '4px',
+    boxSizing: 'border-box',
+    fontWeight: 'bold',
+    color: '#15803d'
+  }}
+>
+  <option value="">Sin IP Asignada</option>
+
+  {availableIpsForUser(editingItem.ip_actual).map((ip) => (
+    <option key={ip.id} value={ip.direccion_ip}>
+      {ip.direccion_ip} ({ip.observacion || 'Libre'})
+    </option>
+  ))}
+</select>
                   </div>
                 </>
               )}

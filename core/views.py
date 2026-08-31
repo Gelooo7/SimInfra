@@ -15,7 +15,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['dpto_area', 'estado']
-    search_fields = ['nombre_completo', 'usuario_red', 'correo_corp', 'hostname', 'ip_asignada']
+    search_fields = ['nombre_completo', 'usuario_red', 'correo_corp', 'hostname', 'ip__direccion_ip']
 
 class EquipamientoViewSet(viewsets.ModelViewSet):
     queryset = Equipamiento.objects.all()

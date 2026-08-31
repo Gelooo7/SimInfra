@@ -103,26 +103,92 @@ class HistorialUsuario(models.Model):
 
 
 class Equipamiento(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='equipos')
-    tipo = models.CharField(max_length=30, choices=TIPOS_EQUIPO, default='Notebook')
+    usuario = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='equipos'
+    )
+
+    tipo = models.CharField(
+        max_length=30,
+        choices=TIPOS_EQUIPO,
+        default='Notebook'
+    )
+
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
     numero_serie = models.CharField(max_length=100, unique=True)
-    hostname = models.CharField(max_length=50, null=True, blank=True)
-    af = models.CharField(max_length=12, null=True, blank=True)
-    fecha_asignacion = models.DateField(null=True, blank=True)
-    estado = models.CharField(max_length=20, choices=ESTADOS_EQUIPO, default='ASIGNADO')
-    
-    numero_telefono = models.CharField(max_length=30, null=True, blank=True)
-    imei = models.CharField(max_length=50, null=True, blank=True)
-    pin = models.CharField(max_length=20, null=True, blank=True)
 
-    icloud_cuenta = models.EmailField(null=True, blank=True)
-    icloud_password = models.CharField(max_length=255, null=True, blank=True)
+    hostname = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    af = models.CharField(
+        max_length=12,
+        null=True,
+        blank=True
+    )
+
+    fecha_asignacion = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS_EQUIPO,
+        default='ASIGNADO'
+    )
+
+    numero_telefono = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True
+    )
+
+    imei = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    pin = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True
+    )
+
+    icloud_cuenta = models.EmailField(
+        null=True,
+        blank=True
+    )
+
+    icloud_password = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
 
     def save(self, *args, **kwargs):
+        # Equipo sin usuario no puede quedar como ASIGNADO
+        if not self.usuario_id:
+            if self.estado == 'ASIGNADO':
+                self.estado = 'STOCK'
+
+            self.fecha_asignacion = None
+
+        # Equipo con usuario no puede quedar como STOCK
+        elif self.estado == 'STOCK':
+            self.estado = 'ASIGNADO'
+
+        # Encriptar contraseña iCloud
         if self.icloud_password and not self.icloud_password.startswith('ENC::'):
             self.icloud_password = encrypt_val(self.icloud_password)
+
         super().save(*args, **kwargs)
 
     def __str__(self):
