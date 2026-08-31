@@ -74,7 +74,13 @@ class IP(models.Model):
     direccion_ip = models.GenericIPAddressField(unique=True)
     estado = models.CharField(max_length=20, choices=ESTADOS_IP, default='LIBRE')
     observacion = models.CharField(max_length=255, null=True, blank=True)
-    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='ips')
+    usuario = models.OneToOneField(
+    Usuario,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name='ip'
+)
     asignado_otro = models.CharField(max_length=150, null=True, blank=True)
 
     class Meta:
@@ -212,12 +218,26 @@ def track_historial_usuario(sender, instance, **kwargs):
             add_cambio("Gmail", usr_previo.gmail, instance.gmail)
             if usr_previo.password_gmail != instance.password_gmail:
                 add_cambio("Contraseña Gmail", "••••••••", "••••••••")
+
             if usr_previo.password_simi != instance.password_simi:
                 add_cambio("Contraseña Simi", "••••••••", "••••••••")
-            add_cambio("Teléfono", usr_previo.telefono, instance.telefono)
-            add_cambio("Celular", usr_previo.celular, instance.celular)
-            add_cambio("Anexo", usr_previo.anexo, instance.anexo)
-            add_cambio("IP Asignada", usr_previo.ip_asignada, instance.ip_asignada)
+
+            add_cambio(
+                "SIF",
+                "Sí" if usr_previo.sif else "No",
+                "Sí" if instance.sif else "No"
+            )
+            add_cambio(
+                "VPN Cisco",
+                "Sí" if usr_previo.vpn_cisco else "No",
+                "Sí" if instance.vpn_cisco else "No"
+            )
+            if usr_previo.password_vpn != instance.password_vpn:
+                add_cambio("Contraseña VPN", "••••••••", "••••••••")
+                add_cambio("Teléfono", usr_previo.telefono, instance.telefono)
+                add_cambio("Celular", usr_previo.celular, instance.celular)
+                add_cambio("Anexo", usr_previo.anexo, instance.anexo)
+                add_cambio("IP Asignada", usr_previo.ip_asignada, instance.ip_asignada)
 
             if cambios:
                 HistorialUsuario.objects.create(
@@ -225,20 +245,70 @@ def track_historial_usuario(sender, instance, **kwargs):
                     accion="MODIFICACION",
                     observacion="||".join(cambios)
                 )
-    else:
-        if instance.ip_asignada:
-            IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='RESERVADA', usuario=instance, asignado_otro=None)
-
 
 @receiver(post_save, sender=Usuario)
 def auto_sync_usuario(sender, instance, created, **kwargs):
-    if instance.estado == 'BAJA':
-        Equipamiento.objects.filter(usuario=instance).update(usuario=None, estado='STOCK', fecha_asignacion=None)
-        if instance.ip_asignada:
-            IP.objects.filter(direccion_ip=instance.ip_asignada).update(estado='LIBRE', usuario=None)
 
+    # Si el usuario está dado de baja, liberar recursos asociados
+    if instance.estado == 'BAJA':
+
+        Equipamiento.objects.filter(usuario=instance).update(
+            usuario=None,
+            estado='STOCK',
+            fecha_asignacion=None
+        )
+
+        if instance.ip_asignada:
+            IP.objects.filter(
+                direccion_ip=instance.ip_asignada
+            ).update(
+                estado='LIBRE',
+                usuario=None
+            )
+
+            # Limpiar también la IP guardada en el usuario
+            Usuario.objects.filter(pk=instance.pk).update(
+                ip_asignada=None
+            )
+
+        return
+
+    # Sincronizar IP del usuario
+    if instance.ip_asignada:
+
+        # Evitar que otro usuario conserve la misma IP
+        Usuario.objects.filter(
+            ip_asignada=instance.ip_asignada
+        ).exclude(
+            pk=instance.pk
+        ).update(
+            ip_asignada=None
+        )
+
+        # Liberar cualquier otra IP asociada anteriormente a este usuario
+        IP.objects.filter(
+            usuario=instance
+        ).exclude(
+            direccion_ip=instance.ip_asignada
+        ).update(
+            usuario=None,
+            estado='LIBRE'
+        )
+
+        # Asignar la IP seleccionada
+        IP.objects.filter(
+            direccion_ip=instance.ip_asignada
+        ).update(
+            usuario=instance,
+            estado='RESERVADA',
+            asignado_otro=None
+        )
+
+    # Sincronizar equipamiento mediante hostname
     if instance.hostname:
-        Equipamiento.objects.filter(hostname__iexact=instance.hostname.strip()).update(
-            usuario=instance, 
+        Equipamiento.objects.filter(
+            hostname__iexact=instance.hostname.strip()
+        ).update(
+            usuario=instance,
             estado='ASIGNADO'
         )
