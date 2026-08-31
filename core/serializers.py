@@ -54,6 +54,7 @@ class EquipamientoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     equipos = EquipamientoSerializer(many=True, read_only=True)
     historial = HistorialUsuarioSerializer(many=True, read_only=True)
+    ip_actual = serializers.SerializerMethodField()
     password_gmail = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -73,6 +74,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = '__all__'
+
+    def get_ip_actual(self, obj):
+        try:
+            return obj.ip.direccion_ip
+        except IP.DoesNotExist:
+            return None
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

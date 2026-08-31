@@ -306,6 +306,10 @@ export default function App() {
       delete payload.historial;
       delete payload.id;
       delete payload.usuario_nombre;
+      delete payload.ip_actual;
+      if (tab === 'usuarios' && payload.ip_asignada === '') {
+  payload.ip_asignada = null;
+      }
 
       if (payload.estado && tab !== 'ips') payload.estado = payload.estado.toUpperCase();
 
@@ -719,7 +723,10 @@ export default function App() {
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', fontWeight: '500' }}>{item.celular || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.telefono || item.anexo ? `${item.telefono || ''} ${item.anexo ? `(Anx: ${item.anexo})` : ''}` : 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', color: item.ip_asignada ? '#16a34a' : '#94a3b8', fontWeight: 'bold' }}>{item.ip_asignada || 'Sin asignar'}</td>
+                    <td style={{ padding: '1rem 1.2rem', color: (item.ip_actual || item.ip_asignada) ? '#16a34a' : '#94a3b8', fontWeight: 'bold'}}
+>
+  {item.ip_actual || item.ip_asignada || 'Sin asignar'}
+</td>
                     <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem' }}>
                         <button onClick={() => setHistoryUsuario(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#d97706' }} title="Ver Historial de Modificaciones"><History size={18} /></button>
@@ -815,7 +822,7 @@ export default function App() {
                 </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>IP Asignada</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 'bold', color: selectedUser.ip_asignada ? '#16a34a' : '#94a3b8' }}>{selectedUser.ip_asignada || 'Sin IP'}</p>
+                <p  style={{ margin: '2px 0 0 0', fontWeight: 'bold', color: (selectedUser.ip_actual || selectedUser.ip_asignada) ? '#16a34a' : '#94a3b8'}} > {selectedUser.ip_actual || selectedUser.ip_asignada || 'Sin IP'} </p>
                 </div>
                 <div>
                   <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Correo Corp.</span>
