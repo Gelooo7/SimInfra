@@ -117,23 +117,23 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return value
 
     def _asignar_ip(self, usuario, direccion_ip):
-        # Liberar cualquier IP anterior
-        IP.objects.filter(usuario=usuario).exclude(
-            direccion_ip=direccion_ip
-        ).update(
-            usuario=None,
-            estado='LIBRE'
-        )
+        IP.objects.filter(
+        usuario=usuario
+    ).exclude(
+        direccion_ip=direccion_ip
+    ).update(
+        usuario=None,
+        estado='LIBRE'
+    )
 
-        # Asignar nueva IP
         if direccion_ip:
             IP.objects.filter(
-                direccion_ip=direccion_ip
-            ).update(
-                usuario=usuario,
-                estado='RESERVADA',
-                asignado_otro=None
-            )
+            direccion_ip=direccion_ip
+        ).update(
+            usuario=usuario,
+            estado='RESERVADA',
+            asignado_otro=None
+        )
 
         # Compatibilidad temporal con ip_asignada
         Usuario.objects.filter(

@@ -226,30 +226,45 @@ class PerfilGenerico(models.Model):
 
 @receiver(pre_save, sender=IP)
 def sync_ip_con_usuario(sender, instance, **kwargs):
-    if instance.usuario:
+
+    # IP asignada directamente a un usuario
+    if instance.usuario_id:
+
+        # Una IP de usuario no puede estar reservada para "Otro"
         instance.asignado_otro = None
+
+        # Si estaba libre, pasa automáticamente a reservada
         if instance.estado == 'LIBRE':
             instance.estado = 'RESERVADA'
-        
-        # Desasignar la IP previa que tenía ese usuario
-        Usuario.objects.filter(ip_asignada=instance.direccion_ip).exclude(pk=instance.usuario.pk).update(ip_asignada=None)
-        
-        # Asignar esta IP al usuario
-        usr = instance.usuario
-        if usr.ip_asignada != instance.direccion_ip:
-            # Liberar la IP previa del usuario si tenía otra
-            if usr.ip_asignada:
-                IP.objects.filter(direccion_ip=usr.ip_asignada).exclude(pk=instance.pk).update(estado='LIBRE', usuario=None)
-            usr.ip_asignada = instance.direccion_ip
-            usr.save(update_fields=['ip_asignada'])
+
+        # Un usuario solo puede tener una IP.
+        # Si ya tenía otra, liberarla antes de guardar la nueva.
+        IP.objects.filter(
+            usuario_id=instance.usuario_id
+        ).exclude(
+            pk=instance.pk
+        ).update(
+            usuario=None,
+            estado='LIBRE',
+            asignado_otro=None
+        )
+
+    # IP reservada para impresora, servidor, CCTV, etc.
     elif instance.asignado_otro and instance.asignado_otro.strip():
+
         if instance.estado == 'LIBRE':
             instance.estado = 'RESERVADA'
+
+    # IP sin usuario ni otro dispositivo
+    else:
+
+        if instance.estado == 'RESERVADA':
+            instance.estado = 'LIBRE'
         if instance.direccion_ip:
             Usuario.objects.filter(ip_asignada=instance.direccion_ip).update(ip_asignada=None)
-    else:
-        if instance.pk:
-            ip_prev = IP.objects.filter(pk=instance.pk).first()
+        else:
+            if instance.pk:
+             ip_prev = IP.objects.filter(pk=instance.pk).first()
             if ip_prev and ip_prev.usuario:
                 Usuario.objects.filter(pk=ip_prev.usuario.pk, ip_asignada=ip_prev.direccion_ip).update(ip_asignada=None)
 
@@ -315,62 +330,27 @@ def track_historial_usuario(sender, instance, **kwargs):
 @receiver(post_save, sender=Usuario)
 def auto_sync_usuario(sender, instance, created, **kwargs):
 
-    # Si el usuario está dado de baja, liberar recursos asociados
+    # Si el usuario se da de baja, liberar sus equipos e IP
     if instance.estado == 'BAJA':
-
-        Equipamiento.objects.filter(usuario=instance).update(
+        Equipamiento.objects.filter(
+            usuario=instance
+        ).update(
             usuario=None,
             estado='STOCK',
             fecha_asignacion=None
         )
 
-        if instance.ip_asignada:
-            IP.objects.filter(
-                direccion_ip=instance.ip_asignada
-            ).update(
-                estado='LIBRE',
-                usuario=None
-            )
-
-            # Limpiar también la IP guardada en el usuario
-            Usuario.objects.filter(pk=instance.pk).update(
-                ip_asignada=None
-            )
-
-        return
-
-    # Sincronizar IP del usuario
-    if instance.ip_asignada:
-
-        # Evitar que otro usuario conserve la misma IP
-        Usuario.objects.filter(
-            ip_asignada=instance.ip_asignada
-        ).exclude(
-            pk=instance.pk
-        ).update(
-            ip_asignada=None
-        )
-
-        # Liberar cualquier otra IP asociada anteriormente a este usuario
         IP.objects.filter(
             usuario=instance
-        ).exclude(
-            direccion_ip=instance.ip_asignada
         ).update(
             usuario=None,
-            estado='LIBRE'
-        )
-
-        # Asignar la IP seleccionada
-        IP.objects.filter(
-            direccion_ip=instance.ip_asignada
-        ).update(
-            usuario=instance,
-            estado='RESERVADA',
+            estado='LIBRE',
             asignado_otro=None
         )
 
-    # Sincronizar equipamiento mediante hostname
+        return
+
+    # Vincular automáticamente equipamiento por hostname
     if instance.hostname:
         Equipamiento.objects.filter(
             hostname__iexact=instance.hostname.strip()

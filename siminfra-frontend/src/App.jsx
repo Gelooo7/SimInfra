@@ -224,7 +224,7 @@ export default function App() {
     celular: '',
     telefono: '',
     anexo: '',
-    ip_asignada: ''
+    ip_seleccionada: null
   });
     } else if (tab === 'equipos') {
       setNewItem({
@@ -1148,18 +1148,14 @@ const handleSave = async (e) => {
       fontWeight: 'bold'
     }}
   >
-    Seleccionar IP Asignada
+    Seleccionar IP Disponible
   </label>
 
   <select
-    value={
-      editingItem.ip_seleccionada !== undefined
-        ? (editingItem.ip_seleccionada ?? '')
-        : (editingItem.ip_actual ?? '')
-    }
+    value={newItem.ip_seleccionada ?? ''}
     onChange={(e) =>
-      setEditingItem({
-        ...editingItem,
+      setNewItem({
+        ...newItem,
         ip_seleccionada: e.target.value || null
       })
     }
@@ -1178,7 +1174,7 @@ const handleSave = async (e) => {
       Sin IP Asignada
     </option>
 
-    {availableIpsForUser(editingItem.ip_actual).map((ip) => (
+    {availableIpsForUser(newItem.ip_seleccionada).map((ip) => (
       <option
         key={ip.id}
         value={ip.direccion_ip}
@@ -1428,35 +1424,53 @@ const handleSave = async (e) => {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 'bold' }}>Seleccionar IP Asignada</label>
-                 <select
-  value={editingItem.ip_seleccionada ?? editingItem.ip_actual ?? ''}
-  onChange={(e) =>
-    setEditingItem({
-      ...editingItem,
-      ip_seleccionada: e.target.value || null
-    })
-  }
-  style={{
-    width: '100%',
-    padding: '0.6rem',
-    borderRadius: '6px',
-    border: '1px solid #cbd5e1',
-    marginTop: '4px',
-    boxSizing: 'border-box',
-    fontWeight: 'bold',
-    color: '#15803d'
-  }}
->
-  <option value="">Sin IP Asignada</option>
+  <label
+    style={{
+      fontSize: '0.8rem',
+      color: '#16a34a',
+      fontWeight: 'bold'
+    }}
+  >
+    Seleccionar IP Asignada
+  </label>
 
-  {availableIpsForUser(editingItem.ip_actual).map((ip) => (
-    <option key={ip.id} value={ip.direccion_ip}>
-      {ip.direccion_ip} ({ip.observacion || 'Libre'})
+  <select
+    value={
+      editingItem.ip_seleccionada !== undefined
+        ? (editingItem.ip_seleccionada ?? '')
+        : (editingItem.ip_actual ?? '')
+    }
+    onChange={(e) =>
+      setEditingItem({
+        ...editingItem,
+        ip_seleccionada: e.target.value || null
+      })
+    }
+    style={{
+      width: '100%',
+      padding: '0.6rem',
+      borderRadius: '6px',
+      border: '1px solid #cbd5e1',
+      marginTop: '4px',
+      boxSizing: 'border-box',
+      fontWeight: 'bold',
+      color: '#15803d'
+    }}
+  >
+    <option value="">
+      Sin IP Asignada
     </option>
-  ))}
-</select>
-                  </div>
+
+    {availableIpsForUser(editingItem.ip_actual).map((ip) => (
+      <option
+        key={ip.id}
+        value={ip.direccion_ip}
+      >
+        {ip.direccion_ip} ({ip.observacion || 'Libre'})
+      </option>
+    ))}
+  </select>
+</div>
                 </>
               )}
 
