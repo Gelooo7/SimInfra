@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import apiClient from './api/client';
+import {
+  getUsuarios,
+  createUsuario,
+  updateUsuario,
+  deleteUsuario,
+} from './api/usuariosApi';
+import { getIps } from './api/ipsApi';
+import { getEquipos } from './api/equiposApi';
+import { getPerfiles } from './api/perfilesApi';
 import { 
   Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, 
   Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, 
   ChevronUp, Copy, Check, Network, Menu 
 } from 'lucide-react';
+
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -36,19 +47,26 @@ export default function App() {
   const [copiedGmail, setCopiedGmail] = useState(false);
   const [copiedSimi, setCopiedSimi] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError('');
-    try {
-      const response = await axios.post(`${API_BASE}/token/`, { username, password });
-      const accessToken = response.data.access;
-      localStorage.setItem('access_token', accessToken);
-      setToken(accessToken);
-    } catch (error) {
-      setLoginError('Credenciales inválidas. Verifica tu usuario y contraseña.');
-    }
-  };
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoginError('');
 
+  try {
+    const response = await apiClient.post('/token/', {
+      username,
+      password
+    });
+
+    const accessToken = response.data.access;
+
+    localStorage.setItem('access_token', accessToken);
+    setToken(accessToken);
+  } catch (error) {
+    setLoginError(
+      'Credenciales inválidas. Verifica tu usuario y contraseña.'
+    );
+  }
+};
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     setToken(null);
@@ -62,39 +80,41 @@ export default function App() {
     }
   }, [token]);
 
-  const fetchDptos = async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/usuarios/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const unique = Array.from(new Set(response.data.map(u => u.dpto_area).filter(Boolean)));
-      setDptosList(unique.sort());
-    } catch (error) {
-      console.error('Error cargando departamentos:', error);
-    }
-  };
+const fetchDptos = async () => {
+  try {
+    const usuarios = await getUsuarios();
 
-  const fetchUsuariosList = async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/usuarios/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsuariosList(response.data);
-    } catch (error) {
-      console.error('Error cargando usuarios:', error);
-    }
-  };
+    const unique = Array.from(
+      new Set(
+        usuarios
+          .map((usuario) => usuario.dpto_area)
+          .filter(Boolean)
+      )
+    );
 
-  const fetchIpsList = async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/ips/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setIpsList(response.data);
-    } catch (error) {
-      console.error('Error cargando IPs:', error);
-    }
-  };
+    setDptosList(unique.sort());
+  } catch (error) {
+    console.error('Error cargando departamentos:', error);
+  }
+};
+
+const fetchUsuariosList = async () => {
+  try {
+    const usuarios = await getUsuarios();
+    setUsuariosList(usuarios);
+  } catch (error) {
+    console.error('Error cargando usuarios:', error);
+  }
+};
+
+const fetchIpsList = async () => {
+  try {
+    const ips = await getIps();
+    setIpsList(ips);
+  } catch (error) {
+    console.error('Error cargando IPs:', error);
+  }
+};
 
   useEffect(() => {
     if (token) {
@@ -103,29 +123,55 @@ export default function App() {
   }, [tab, search, selectedDpto, selectedEstadoIP, token]);
 
   const fetchData = async () => {
-    try {
-      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
-      let params = new URLSearchParams();
-      
-      if (search) params.append('search', search);
-      if (selectedDpto && (tab === 'usuarios' || tab === 'perfiles')) {
-        params.append('dpto_area', selectedDpto);
-      }
-      if (selectedEstadoIP && tab === 'ips') {
-        params.append('estado', selectedEstadoIP);
-      }
+  try {
+    const params = {};
 
-      const response = await axios.get(`${API_BASE}/${endpoint}/?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setData(response.data);
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        handleLogout();
-      }
+    if (search) {
+      params.search = search;
     }
-  };
+
+    if (selectedDpto && (tab === 'usuarios' || tab === 'perfiles')) {
+      params.dpto_area = selectedDpto;
+    }
+
+    if (selectedEstadoIP && tab === 'ips') {
+      params.estado = selectedEstadoIP;
+    }
+
+    let result = [];
+
+    switch (tab) {
+      case 'usuarios':
+        result = await getUsuarios(params);
+        break;
+
+      case 'equipos':
+        result = await getEquipos(params);
+        break;
+
+      case 'perfiles':
+        result = await getPerfiles(params);
+        break;
+
+      case 'ips':
+        result = await getIps(params);
+        break;
+
+      default:
+        result = [];
+    }
+
+    setData(result);
+
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      handleLogout();
+      return;
+    }
+
+    console.error('Error cargando datos:', error);
+  }
+};
 
   const copyToClipboard = (text, type) => {
     if (!text) return;
@@ -265,40 +311,9 @@ export default function App() {
   };
 
   const handleCreateSave = async (e) => {
-    e.preventDefault();
-    if (!validateFieldsAndDuplicates(newItem)) return;
-
-    try {
-      const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
-      const payload = { ...newItem };
-
-      Object.keys(payload).forEach(key => { if (payload[key] === '') payload[key] = null; });
-
-      if (tab === 'ips') {
-        if (payload.usuario || payload.asignado_otro) {
-          payload.estado = 'RESERVADA';
-        }
-      }
-
-      await axios.post(`${API_BASE}/${endpoint}/`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setNewItem(null);
-      await fetchData();
-      fetchDptos();
-      fetchUsuariosList();
-      fetchIpsList();
-    } catch (error) {
-      console.error('Error al guardar:', error.response?.data || error);
-      alert('Error al guardar: ' + JSON.stringify(error.response?.data || 'Verifique los datos'));
-    }
-  };
-
-const handleSave = async (e) => {
   e.preventDefault();
 
-  if (!validateFieldsAndDuplicates(editingItem)) return;
+  if (!validateFieldsAndDuplicates(newItem)) return;
 
   try {
     const endpoint =
@@ -310,72 +325,35 @@ const handleSave = async (e) => {
         ? 'perfiles-genericos'
         : 'ips';
 
-    const payload = { ...editingItem };
+    const payload = { ...newItem };
 
-    // Campos que no deben enviarse al backend
-    delete payload.equipos;
-    delete payload.historial;
-    delete payload.id;
-    delete payload.usuario_nombre;
-    delete payload.ip_actual;
-
-    // USUARIOS
-    if (tab === 'usuarios') {
-      delete payload.ip_asignada;
-
-      // Si el usuario selecciona "Sin IP Asignada"
-      if (payload.ip_seleccionada === '') {
-        payload.ip_seleccionada = null;
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === '') {
+        payload[key] = null;
       }
-    }
+    });
 
-    // EQUIPOS - Normalizar tipos antiguos
-    if (tab === 'equipos' && payload.tipo) {
-      payload.tipo = formatTipoEquipo(payload.tipo);
-    }
-
-    // EQUIPOS - Coherencia entre usuario y estado
-    if (tab === 'equipos') {
-      if (!payload.usuario) {
-        payload.estado = 'STOCK';
-        payload.fecha_asignacion = null;
-      } else if (payload.estado === 'STOCK') {
-        payload.estado = 'ASIGNADO';
-      }
-    }
-
-    // Normalizar estados
-    if (payload.estado && tab !== 'ips') {
-      payload.estado = payload.estado.toUpperCase();
-    }
-
-    // IPS
     if (tab === 'ips') {
-      if (
-        payload.usuario ||
-        (payload.asignado_otro && payload.asignado_otro.trim())
-      ) {
+      if (payload.usuario || payload.asignado_otro) {
         payload.estado = 'RESERVADA';
-      } else if (
-        !payload.usuario &&
-        !payload.asignado_otro &&
-        payload.estado === 'RESERVADA'
-      ) {
-        payload.estado = 'LIBRE';
       }
     }
 
-    await axios.patch(
-      `${API_BASE}/${endpoint}/${editingItem.id}/`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+    if (tab === 'usuarios') {
+      await createUsuario(payload);
+    } else {
+      await axios.post(
+        `${API_BASE}/${endpoint}/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      }
-    );
+      );
+    }
 
-    setEditingItem(null);
+    setNewItem(null);
 
     await fetchData();
     fetchDptos();
@@ -384,7 +362,7 @@ const handleSave = async (e) => {
 
   } catch (error) {
     console.error(
-      'Error guardando cambios:',
+      'Error al guardar:',
       error.response?.data || error
     );
 
@@ -401,9 +379,15 @@ const handleSave = async (e) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${nombre}"?`)) {
       try {
         const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
+      if (tab === 'usuarios') {
+        await deleteUsuario(id);
+      } else {
         await axios.delete(`${API_BASE}/${endpoint}/${id}/`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
+      }
         fetchData();
         fetchUsuariosList();
         fetchIpsList();
