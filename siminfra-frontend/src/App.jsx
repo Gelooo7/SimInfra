@@ -8,7 +8,12 @@ import {
   deleteUsuario,
 } from './api/usuariosApi';
 import { getIps } from './api/ipsApi';
-import { getEquipos } from './api/equiposApi';
+import {
+  getEquipos,
+  createEquipo,
+  updateEquipo,
+  deleteEquipo,
+} from './api/equiposApi';
 import { getPerfiles } from './api/perfilesApi';
 import { 
   Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, 
@@ -340,18 +345,22 @@ const fetchIpsList = async () => {
     }
 
     if (tab === 'usuarios') {
-      await createUsuario(payload);
-    } else {
-      await axios.post(
-        `${API_BASE}/${endpoint}/`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+  await createUsuario(payload);
+
+} else if (tab === 'equipos') {
+  await createEquipo(payload);
+
+} else {
+  await axios.post(
+    `${API_BASE}/${endpoint}/`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     }
+  );
+}
 
     setNewItem(null);
 
@@ -374,28 +383,167 @@ const fetchIpsList = async () => {
     );
   }
 };
+const handleSave = async (e) => {
+  e.preventDefault();
 
-  const handleDelete = async (id, nombre) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${nombre}"?`)) {
-      try {
-        const endpoint = tab === 'usuarios' ? 'usuarios' : tab === 'equipos' ? 'equipos' : tab === 'perfiles' ? 'perfiles-genericos' : 'ips';
-      if (tab === 'usuarios') {
-        await deleteUsuario(id);
-      } else {
-        await axios.delete(`${API_BASE}/${endpoint}/${id}/`, {
+  if (!validateFieldsAndDuplicates(editingItem)) return;
+
+  try {
+    const endpoint =
+      tab === 'usuarios'
+        ? 'usuarios'
+        : tab === 'equipos'
+        ? 'equipos'
+        : tab === 'perfiles'
+        ? 'perfiles-genericos'
+        : 'ips';
+
+    const payload = { ...editingItem };
+
+    // Campos que no deben enviarse al backend
+    delete payload.equipos;
+    delete payload.historial;
+    delete payload.id;
+    delete payload.usuario_nombre;
+    delete payload.ip_actual;
+
+    // USUARIOS
+    if (tab === 'usuarios') {
+      delete payload.ip_asignada;
+
+      if (payload.ip_seleccionada === '') {
+        payload.ip_seleccionada = null;
+      }
+    }
+
+    // EQUIPOS - Normalizar tipos antiguos
+    if (tab === 'equipos' && payload.tipo) {
+      payload.tipo = formatTipoEquipo(payload.tipo);
+    }
+
+    // EQUIPOS - Coherencia entre usuario y estado
+    if (tab === 'equipos') {
+      if (!payload.usuario) {
+        payload.estado = 'STOCK';
+        payload.fecha_asignacion = null;
+      } else if (payload.estado === 'STOCK') {
+        payload.estado = 'ASIGNADO';
+      }
+    }
+
+    // Normalizar estados
+    if (payload.estado && tab !== 'ips') {
+      payload.estado = payload.estado.toUpperCase();
+    }
+
+    // IPS
+    if (tab === 'ips') {
+      if (
+        payload.usuario ||
+        (payload.asignado_otro && payload.asignado_otro.trim())
+      ) {
+        payload.estado = 'RESERVADA';
+      } else if (
+        !payload.usuario &&
+        !payload.asignado_otro &&
+        payload.estado === 'RESERVADA'
+      ) {
+        payload.estado = 'LIBRE';
+      }
+    }
+
+    if (tab === 'usuarios') {
+      await updateUsuario(editingItem.id, payload);
+
+    } else if (tab === 'equipos') {
+      await updateEquipo(editingItem.id, payload);
+
+    } else {
+      await axios.patch(
+        `${API_BASE}/${endpoint}/${editingItem.id}/`,
+        payload,
+        {
           headers: {
             Authorization: `Bearer ${token}`
           }
-        });
-      }
-        fetchData();
-        fetchUsuariosList();
-        fetchIpsList();
-      } catch (error) {
-        console.error('Error al eliminar registro:', error);
-      }
+        }
+      );
     }
-  };
+
+    setEditingItem(null);
+
+    await fetchData();
+    fetchDptos();
+    fetchUsuariosList();
+    fetchIpsList();
+
+  } catch (error) {
+    console.error(
+      'Error guardando cambios:',
+      error.response?.data || error
+    );
+
+    alert(
+      'Error al guardar: ' +
+      JSON.stringify(
+        error.response?.data || 'Verifique los datos'
+      )
+    );
+  }
+};
+
+const handleDelete = async (id, nombre) => {
+  if (
+    window.confirm(
+      `¿Estás seguro de que deseas eliminar permanentemente a "${nombre}"?`
+    )
+  ) {
+    try {
+      const endpoint =
+        tab === 'usuarios'
+          ? 'usuarios'
+          : tab === 'equipos'
+          ? 'equipos'
+          : tab === 'perfiles'
+          ? 'perfiles-genericos'
+          : 'ips';
+
+      if (tab === 'usuarios') {
+        await deleteUsuario(id);
+
+      } else if (tab === 'equipos') {
+        await deleteEquipo(id);
+
+      } else {
+        await axios.delete(
+          `${API_BASE}/${endpoint}/${id}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+      }
+
+      await fetchData();
+      fetchUsuariosList();
+      fetchIpsList();
+
+    } catch (error) {
+      console.error(
+        'Error al eliminar registro:',
+        error.response?.data || error
+      );
+
+      alert(
+        'Error al eliminar: ' +
+        JSON.stringify(
+          error.response?.data || 'No se pudo eliminar el registro'
+        )
+      );
+    }
+  }
+};
 
   const getBadgeEstadoUsuario = (estado) => {
     switch(estado) {

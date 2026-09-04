@@ -221,6 +221,131 @@ class PerfilGenerico(models.Model):
             self.password = encrypt_val(self.password)
         super().save(*args, **kwargs)
 
+# --- HISTORIAL DE EQUIPAMIENTO ---
+
+@receiver(pre_save, sender=Equipamiento)
+def track_historial_equipo(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+
+    try:
+        equipo_previo = Equipamiento.objects.get(pk=instance.pk)
+    except Equipamiento.DoesNotExist:
+        return
+
+    cambios = []
+
+    def add_cambio(campo, anterior, actual):
+        if str(anterior) != str(actual):
+            cambios.append(
+                f"{campo}:::{anterior or 'N/I'}:::{actual or 'N/I'}"
+            )
+
+    add_cambio(
+        "Tipo",
+        equipo_previo.tipo,
+        instance.tipo
+    )
+
+    add_cambio(
+        "Marca",
+        equipo_previo.marca,
+        instance.marca
+    )
+
+    add_cambio(
+        "Modelo",
+        equipo_previo.modelo,
+        instance.modelo
+    )
+
+    add_cambio(
+        "Número de Serie",
+        equipo_previo.numero_serie,
+        instance.numero_serie
+    )
+
+    add_cambio(
+        "Hostname",
+        equipo_previo.hostname,
+        instance.hostname
+    )
+
+    add_cambio(
+        "AF",
+        equipo_previo.af,
+        instance.af
+    )
+
+    add_cambio(
+        "Estado",
+        equipo_previo.estado,
+        instance.estado
+    )
+
+    add_cambio(
+        "Fecha Asignación",
+        equipo_previo.fecha_asignacion,
+        instance.fecha_asignacion
+    )
+
+    add_cambio(
+        "Número Teléfono",
+        equipo_previo.numero_telefono,
+        instance.numero_telefono
+    )
+
+    add_cambio(
+        "IMEI",
+        equipo_previo.imei,
+        instance.imei
+    )
+
+    add_cambio(
+        "PIN",
+        equipo_previo.pin,
+        instance.pin
+    )
+
+    add_cambio(
+        "Cuenta iCloud",
+        equipo_previo.icloud_cuenta,
+        instance.icloud_cuenta
+    )
+
+    if equipo_previo.icloud_password != instance.icloud_password:
+        add_cambio(
+            "Contraseña iCloud",
+            "••••••••",
+            "••••••••"
+        )
+
+    usuario_anterior = (
+        equipo_previo.usuario.nombre_completo
+        if equipo_previo.usuario
+        else "Sin asignar"
+    )
+
+    usuario_nuevo = (
+        instance.usuario.nombre_completo
+        if instance.usuario
+        else "Sin asignar"
+    )
+
+    add_cambio(
+        "Usuario Asignado",
+        usuario_anterior,
+        usuario_nuevo
+    )
+
+    if cambios:
+        HistorialEquipo.objects.create(
+            equipo=instance,
+            usuario_anterior=usuario_anterior,
+            usuario_nuevo=usuario_nuevo,
+            accion="MODIFICACION",
+            observacion="||".join(cambios)
+        )
 
 # --- SINCRONIZACIÓN Y RESTRICCIÓN DE DUPLICIDAD IP ---
 
