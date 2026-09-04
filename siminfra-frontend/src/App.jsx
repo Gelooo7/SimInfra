@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import apiClient from './api/client';
 import {
   getUsuarios,
@@ -32,8 +31,6 @@ import {
 } from 'lucide-react';
 
 
-const API_BASE = 'http://127.0.0.1:8000/api';
-
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('access_token') || null);
   const [username, setUsername] = useState('');
@@ -59,6 +56,7 @@ export default function App() {
 
   const [showPassGmail, setShowPassGmail] = useState(false);
   const [showPassSimi, setShowPassSimi] = useState(false);
+  const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
   const [copiedGmail, setCopiedGmail] = useState(false);
   const [copiedSimi, setCopiedSimi] = useState(false);
 
@@ -325,58 +323,41 @@ const fetchIpsList = async () => {
     }
   };
 
-  const handleCreateSave = async (e) => {
+const handleCreateSave = async (e) => {
   e.preventDefault();
 
   if (!validateFieldsAndDuplicates(newItem)) return;
 
   try {
-    const endpoint =
-      tab === 'usuarios'
-        ? 'usuarios'
-        : tab === 'equipos'
-        ? 'equipos'
-        : tab === 'perfiles'
-        ? 'perfiles-genericos'
-        : 'ips';
-
     const payload = { ...newItem };
 
+    // Convertir strings vacíos en null
     Object.keys(payload).forEach((key) => {
       if (payload[key] === '') {
         payload[key] = null;
       }
     });
 
+    // IP asignada o reservada
     if (tab === 'ips') {
       if (payload.usuario || payload.asignado_otro) {
         payload.estado = 'RESERVADA';
       }
     }
 
-      if (tab === 'usuarios') {
-        await createUsuario(payload);
+    // Crear según módulo
+    if (tab === 'usuarios') {
+      await createUsuario(payload);
 
-      } else if (tab === 'equipos') {
-        await createEquipo(payload);
+    } else if (tab === 'equipos') {
+      await createEquipo(payload);
 
-      } else if (tab === 'ips') {
-        await createIp(payload);
+    } else if (tab === 'ips') {
+      await createIp(payload);
 
-      } else if (tab === 'perfiles') {
-        await createPerfil(payload);
-
-      } else {
-        await axios.post(
-          `${API_BASE}/${endpoint}/`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-      }
+    } else if (tab === 'perfiles') {
+      await createPerfil(payload);
+    }
 
     setNewItem(null);
 
@@ -399,21 +380,13 @@ const fetchIpsList = async () => {
     );
   }
 };
+
 const handleSave = async (e) => {
   e.preventDefault();
 
   if (!validateFieldsAndDuplicates(editingItem)) return;
 
   try {
-    const endpoint =
-      tab === 'usuarios'
-        ? 'usuarios'
-        : tab === 'equipos'
-        ? 'equipos'
-        : tab === 'perfiles'
-        ? 'perfiles-genericos'
-        : 'ips';
-
     const payload = { ...editingItem };
 
     // Campos que no deben enviarse al backend
@@ -442,6 +415,7 @@ const handleSave = async (e) => {
       if (!payload.usuario) {
         payload.estado = 'STOCK';
         payload.fecha_asignacion = null;
+
       } else if (payload.estado === 'STOCK') {
         payload.estado = 'ASIGNADO';
       }
@@ -459,6 +433,7 @@ const handleSave = async (e) => {
         (payload.asignado_otro && payload.asignado_otro.trim())
       ) {
         payload.estado = 'RESERVADA';
+
       } else if (
         !payload.usuario &&
         !payload.asignado_otro &&
@@ -468,29 +443,31 @@ const handleSave = async (e) => {
       }
     }
 
-      if (tab === 'usuarios') {
-        await updateUsuario(editingItem.id, payload);
+    // Actualizar según módulo
+    if (tab === 'usuarios') {
+      await updateUsuario(
+        editingItem.id,
+        payload
+      );
 
-      } else if (tab === 'equipos') {
-        await updateEquipo(editingItem.id, payload);
+    } else if (tab === 'equipos') {
+      await updateEquipo(
+        editingItem.id,
+        payload
+      );
 
-      } else if (tab === 'ips') {
-        await updateIp(editingItem.id, payload);
+    } else if (tab === 'ips') {
+      await updateIp(
+        editingItem.id,
+        payload
+      );
 
-      } else if (tab === 'perfiles') {
-        await updatePerfil(editingItem.id, payload);
-
-      } else {
-        await axios.patch(
-          `${API_BASE}/${endpoint}/${editingItem.id}/`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-      }
+    } else if (tab === 'perfiles') {
+      await updatePerfil(
+        editingItem.id,
+        payload
+      );
+    }
 
     setEditingItem(null);
 
@@ -521,36 +498,18 @@ const handleDelete = async (id, nombre) => {
     )
   ) {
     try {
-      const endpoint =
-        tab === 'usuarios'
-          ? 'usuarios'
-          : tab === 'equipos'
-          ? 'equipos'
-          : tab === 'perfiles'
-          ? 'perfiles-genericos'
-          : 'ips';
 
       if (tab === 'usuarios') {
         await deleteUsuario(id);
 
       } else if (tab === 'equipos') {
         await deleteEquipo(id);
-      
+
       } else if (tab === 'ips') {
         await deleteIp(id);
-      
+
       } else if (tab === 'perfiles') {
         await deletePerfil(id);
-
-      } else {
-        await axios.delete(
-          `${API_BASE}/${endpoint}/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
       }
 
       await fetchData();
@@ -566,7 +525,8 @@ const handleDelete = async (id, nombre) => {
       alert(
         'Error al eliminar: ' +
         JSON.stringify(
-          error.response?.data || 'No se pudo eliminar el registro'
+          error.response?.data ||
+          'No se pudo eliminar el registro'
         )
       );
     }
@@ -979,7 +939,68 @@ const handleDelete = async (id, nombre) => {
                   <>
                     <td style={{ padding: '1rem 1.2rem', fontWeight: '600' }}>{item.nombre || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{item.usuario || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace' }}>{item.password || '••••••••'}</td>
+<td
+  style={{
+    padding: '1rem 1.2rem',
+    fontFamily: 'monospace'
+  }}
+>
+  {item.password ? (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}
+    >
+      <span style={{ fontWeight: 'bold' }}>
+        {visibleProfilePasswords[item.id]
+          ? item.password
+          : '••••••••'}
+      </span>
+
+      <button
+        type="button"
+        onClick={() =>
+          setVisibleProfilePasswords((prev) => ({
+            ...prev,
+            [item.id]: !prev[item.id]
+          }))
+        }
+        style={{
+          border: 'none',
+          background: 'none',
+          cursor: 'pointer',
+          color: '#64748b',
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center'
+        }}
+        title={
+          visibleProfilePasswords[item.id]
+            ? 'Ocultar contraseña'
+            : 'Mostrar contraseña'
+        }
+      >
+        {visibleProfilePasswords[item.id] ? (
+          <EyeOff size={16} />
+        ) : (
+          <Eye size={16} />
+        )}
+      </button>
+    </div>
+  ) : (
+    <span
+      style={{
+        color: '#94a3b8',
+        fontFamily: 'system-ui, sans-serif',
+        fontStyle: 'italic'
+      }}
+    >
+      Sin contraseña
+    </span>
+  )}
+</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{getBadgeTipoCuenta(item.tipo)}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.correo || 'N/I'}</td>
                     <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>

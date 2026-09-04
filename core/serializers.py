@@ -234,16 +234,23 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return attrs
 
 class PerfilGenericoSerializer(serializers.ModelSerializer):
-    password = serializers.SerializerMethodField()
+    password = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
 
     class Meta:
         model = PerfilGenerico
         fields = '__all__'
 
-    def get_password(self, obj):
-        if obj.password and obj.password.startswith('ENC::'):
-            return decrypt_val(obj.password)
-        return obj.password
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if instance.password and instance.password.startswith('ENC::'):
+            data['password'] = decrypt_val(instance.password)
+
+        return data
 
     def validate(self, attrs):
         instance = getattr(self, 'instance', None)
@@ -255,7 +262,8 @@ class PerfilGenericoSerializer(serializers.ModelSerializer):
             pk=getattr(instance, 'pk', None)
         ).exists():
             raise serializers.ValidationError({
-                "usuario": "Ya existe un Perfil Genérico registrado con este Usuario."
+                "usuario":
+                "Ya existe un Perfil Genérico registrado con este Usuario."
             })
 
         return attrs
