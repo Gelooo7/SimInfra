@@ -3,6 +3,10 @@ import apiClient from './api/client';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ModuleToolbar from './components/layout/ModuleToolbar';
+import UsuariosTable from './features/usuarios/components/UsuariosTable';
+import EquiposTable from './features/equipos/components/EquiposTable';
+import PerfilesTable from './features/perfiles/components/PerfilesTable';
+import IpsTable from './features/ips/components/IpsTable';
 import {
   getUsuarios,
   createUsuario,
@@ -685,215 +689,57 @@ const handleDelete = async (id, nombre) => {
       />
 
       {/* TABLA PRINCIPAL */}
-      <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', width: '100%' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.95rem' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>
-              {/* CAMBIO 1: ORDEN DE COLUMNAS DE USUARIOS */}
-              {tab === 'usuarios' && (
-                <>
-                  <th style={{ padding: '1rem 1.2rem' }}>Nombre Completo</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Departamento / Área</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Cargo</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Usuario Red</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Hostname</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Correo Corp.</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Celular</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Anexo</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>IP Asignada</th>
-                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
-                </>
-              )}
-              {tab === 'equipos' && (
-                <>
-                  <th style={{ padding: '1rem 1.2rem' }}>Tipo</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Marca / Modelo</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>N° Serie</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Activo Fijo (AF)</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Hostname</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Asignado a</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Fecha Asignación</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
-                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
-                </>
-              )}
-              {tab === 'perfiles' && (
-                <>
-                  <th style={{ padding: '1rem 1.2rem' }}>Nombre / Perfil</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Usuario</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Contraseña</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Tipo Cuenta</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Correo Asignado</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Área</th>
-                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
-                </>
-              )}
-              {tab === 'ips' && (
-                <>
-                  <th style={{ padding: '1rem 1.2rem' }}>Dirección IP</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Estado</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Asignado a</th>
-                  <th style={{ padding: '1rem 1.2rem' }}>Observaciones</th>
-                  <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((item) => (
-              <tr 
-                key={item.id} 
-                onClick={() => tab === 'usuarios' && setSelectedUser(item)}
-                style={{ 
-                  borderBottom: '1px solid #f1f5f9', 
-                  color: '#334155', 
-                  cursor: tab === 'usuarios' ? 'pointer' : 'default'
-                }}
-                onMouseEnter={(e) => { if (tab === 'usuarios') e.currentTarget.style.backgroundColor = '#f1f5f9'; }}
-                onMouseLeave={(e) => { if (tab === 'usuarios') e.currentTarget.style.backgroundColor = 'transparent'; }}
-              >
-                {/* CAMBIO 1: ORDEN DE CELDAS DE USUARIOS */}
-                {tab === 'usuarios' && (
-                  <>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: '600', color: '#2563eb' }}>{item.nombre_completo || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', color: '#64748b' }}>{item.cargo || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{getBadgeEstadoUsuario(item.estado)}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.usuario_red || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold' }}>{item.hostname || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.correo_corp || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem', fontWeight: '500' }}>{item.celular || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.telefono || item.anexo ? `${item.telefono || ''} ${item.anexo ? `(Anx: ${item.anexo})` : ''}` : 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', color: item.ip_actual ? '#16a34a' : '#94a3b8', fontWeight: 'bold'}} > {item.ip_actual || 'Sin asignar'} </td>
-                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem' }}>
-                        <button onClick={() => setHistoryUsuario(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#d97706' }} title="Ver Historial de Modificaciones"><History size={18} /></button>
-                        <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }} title="Editar"><Edit size={18} /></button>
-                        <button onClick={() => handleDelete(item.id, item.nombre_completo)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }} title="Eliminar"><Trash2 size={18} /></button>
-                      </div>
-                    </td>
-                  </>
-                )}
-                {tab === 'equipos' && (
-                  <>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{formatTipoEquipo(item.tipo)}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.marca || ''} {item.modelo || ''}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace' }}>{item.numero_serie || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold' }}>{item.af || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: '#0284c7' }}>{item.hostname || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: item.usuario_nombre ? '#2563eb' : '#94a3b8' }}>
-                      {item.usuario_nombre || 'Disponible (Stock)'}
-                    </td>
-                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.fecha_asignacion || 'N/A'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.estado || 'ASIGNADO'}</td>
-                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem' }}>
-                        <button onClick={() => setHistoryEquipo(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#d97706' }} title="Ver Historial Auditoría"><History size={18} /></button>
-                        <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }} title="Editar"><Edit size={18} /></button>
-                        <button onClick={() => handleDelete(item.id, `${item.marca || ''} ${item.modelo || ''}`)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }} title="Eliminar"><Trash2 size={18} /></button>
-                      </div>
-                    </td>
-                  </>
-                )}
-                {tab === 'perfiles' && (
-                  <>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: '600' }}>{item.nombre || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold' }}>{item.usuario || 'N/I'}</td>
-<td
+<div
   style={{
-    padding: '1rem 1.2rem',
-    fontFamily: 'monospace'
+    backgroundColor: '#fff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    overflowX: 'auto',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+    width: '100%'
   }}
 >
-  {item.password ? (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
-      }}
-    >
-      <span style={{ fontWeight: 'bold' }}>
-        {visibleProfilePasswords[item.id]
-          ? item.password
-          : '••••••••'}
-      </span>
-
-      <button
-        type="button"
-        onClick={() =>
-          setVisibleProfilePasswords((prev) => ({
-            ...prev,
-            [item.id]: !prev[item.id]
-          }))
-        }
-        style={{
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          color: '#64748b',
-          padding: 0,
-          display: 'flex',
-          alignItems: 'center'
-        }}
-        title={
-          visibleProfilePasswords[item.id]
-            ? 'Ocultar contraseña'
-            : 'Mostrar contraseña'
-        }
-      >
-        {visibleProfilePasswords[item.id] ? (
-          <EyeOff size={16} />
-        ) : (
-          <Eye size={16} />
-        )}
-      </button>
-    </div>
-  ) : (
-    <span
-      style={{
-        color: '#94a3b8',
-        fontFamily: 'system-ui, sans-serif',
-        fontStyle: 'italic'
-      }}
-    >
-      Sin contraseña
-    </span>
+  {tab === 'usuarios' && (
+    <UsuariosTable
+      usuarios={filteredData}
+      onSelectUser={setSelectedUser}
+      onShowHistory={setHistoryUsuario}
+      onEdit={setEditingItem}
+      onDelete={handleDelete}
+      renderStatusBadge={getBadgeEstadoUsuario}
+    />
   )}
-</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{getBadgeTipoCuenta(item.tipo)}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.correo || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{item.dpto_area || 'N/I'}</td>
-                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
-                        <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }} title="Editar"><Edit size={18} /></button>
-                        <button onClick={() => handleDelete(item.id, item.usuario)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }} title="Eliminar"><Trash2 size={18} /></button>
-                      </div>
-                    </td>
-                  </>
-                )}
-                {tab === 'ips' && (
-                  <>
-                    <td style={{ padding: '1rem 1.2rem', fontFamily: 'monospace', fontWeight: 'bold', color: '#0284c7' }}>{item.direccion_ip}</td>
-                    <td style={{ padding: '1rem 1.2rem' }}>{getBadgeEstadoIP(item.estado)}</td>
-                    <td style={{ padding: '1rem 1.2rem', fontWeight: 'bold', color: (item.usuario_nombre || item.asignado_otro) ? '#2563eb' : '#94a3b8' }}>
-                      {item.usuario_nombre || item.asignado_otro || 'Sin asignar'}
-                    </td>
-                    <td style={{ padding: '1rem 1.2rem', fontSize: '0.85rem' }}>{item.observacion || 'Sin observaciones'}</td>
-                    <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
-                        <button onClick={() => setEditingItem(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#2563eb' }} title="Editar"><Edit size={18} /></button>
-                        <button onClick={() => handleDelete(item.id, item.direccion_ip)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }} title="Eliminar"><Trash2 size={18} /></button>
-                      </div>
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+  {tab === 'equipos' && (
+    <EquiposTable
+      equipos={filteredData}
+      formatEquipmentType={formatTipoEquipo}
+      onShowHistory={setHistoryEquipo}
+      onEdit={setEditingItem}
+      onDelete={handleDelete}
+    />
+  )}
+
+  {tab === 'perfiles' && (
+    <PerfilesTable
+      perfiles={filteredData}
+      visiblePasswords={visibleProfilePasswords}
+      setVisiblePasswords={setVisibleProfilePasswords}
+      renderAccountTypeBadge={getBadgeTipoCuenta}
+      onEdit={setEditingItem}
+      onDelete={handleDelete}
+    />
+  )}
+
+  {tab === 'ips' && (
+    <IpsTable
+      ips={filteredData}
+      renderIpStatusBadge={getBadgeEstadoIP}
+      onEdit={setEditingItem}
+      onDelete={handleDelete}
+    />
+  )}
+</div>
 
       {/* Modal Ficha Detallada de Usuario */}
       {selectedUser && (
