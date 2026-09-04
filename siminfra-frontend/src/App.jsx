@@ -19,7 +19,12 @@ import {
   updateEquipo,
   deleteEquipo,
 } from './api/equiposApi';
-import { getPerfiles } from './api/perfilesApi';
+import {
+  getPerfiles,
+  createPerfil,
+  updatePerfil,
+  deletePerfil,
+} from './api/perfilesApi';
 import { 
   Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, 
   Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, 
@@ -358,6 +363,9 @@ const fetchIpsList = async () => {
       } else if (tab === 'ips') {
         await createIp(payload);
 
+      } else if (tab === 'perfiles') {
+        await createPerfil(payload);
+
       } else {
         await axios.post(
           `${API_BASE}/${endpoint}/`,
@@ -469,6 +477,9 @@ const handleSave = async (e) => {
       } else if (tab === 'ips') {
         await updateIp(editingItem.id, payload);
 
+      } else if (tab === 'perfiles') {
+        await updatePerfil(editingItem.id, payload);
+
       } else {
         await axios.patch(
           `${API_BASE}/${endpoint}/${editingItem.id}/`,
@@ -527,6 +538,9 @@ const handleDelete = async (id, nombre) => {
       
       } else if (tab === 'ips') {
         await deleteIp(id);
+      
+      } else if (tab === 'perfiles') {
+        await deletePerfil(id);
 
       } else {
         await axios.delete(
