@@ -7,7 +7,12 @@ import {
   updateUsuario,
   deleteUsuario,
 } from './api/usuariosApi';
-import { getIps } from './api/ipsApi';
+import {
+  getIps,
+  createIp,
+  updateIp,
+  deleteIp,
+} from './api/ipsApi';
 import {
   getEquipos,
   createEquipo,
@@ -344,23 +349,26 @@ const fetchIpsList = async () => {
       }
     }
 
-    if (tab === 'usuarios') {
-  await createUsuario(payload);
+      if (tab === 'usuarios') {
+        await createUsuario(payload);
 
-} else if (tab === 'equipos') {
-  await createEquipo(payload);
+      } else if (tab === 'equipos') {
+        await createEquipo(payload);
 
-} else {
-  await axios.post(
-    `${API_BASE}/${endpoint}/`,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
+      } else if (tab === 'ips') {
+        await createIp(payload);
+
+      } else {
+        await axios.post(
+          `${API_BASE}/${endpoint}/`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
       }
-    }
-  );
-}
 
     setNewItem(null);
 
@@ -452,23 +460,26 @@ const handleSave = async (e) => {
       }
     }
 
-    if (tab === 'usuarios') {
-      await updateUsuario(editingItem.id, payload);
+      if (tab === 'usuarios') {
+        await updateUsuario(editingItem.id, payload);
 
-    } else if (tab === 'equipos') {
-      await updateEquipo(editingItem.id, payload);
+      } else if (tab === 'equipos') {
+        await updateEquipo(editingItem.id, payload);
 
-    } else {
-      await axios.patch(
-        `${API_BASE}/${endpoint}/${editingItem.id}/`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
+      } else if (tab === 'ips') {
+        await updateIp(editingItem.id, payload);
+
+      } else {
+        await axios.patch(
+          `${API_BASE}/${endpoint}/${editingItem.id}/`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
-        }
-      );
-    }
+        );
+      }
 
     setEditingItem(null);
 
@@ -513,6 +524,9 @@ const handleDelete = async (id, nombre) => {
 
       } else if (tab === 'equipos') {
         await deleteEquipo(id);
+      
+      } else if (tab === 'ips') {
+        await deleteIp(id);
 
       } else {
         await axios.delete(
