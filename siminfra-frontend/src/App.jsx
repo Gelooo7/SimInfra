@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from './api/client';
+import Sidebar from './components/layout/Sidebar';
+import Header from './components/layout/Header';
+import ModuleToolbar from './components/layout/ModuleToolbar';
 import {
   getUsuarios,
   createUsuario,
@@ -650,178 +653,36 @@ const handleDelete = async (id, nombre) => {
 
   return (
     <div style={{ padding: '1.5rem 3rem', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box' }}>
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        activeTab={tab}
+        activeCount={filteredData.length}
+        onClose={() => setSidebarOpen(false)}
+        onSelectTab={handleSelectTab}
+      />
       
-      {/* CAPA DE FONDO OSCURO PARA EL SIDEBAR */}
-      {sidebarOpen && (
-        <div 
-          onClick={() => setSidebarOpen(false)} 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', zIndex: 1100, backdropFilter: 'blur(2px)', transition: 'opacity 0.3s' }}
-        />
-      )}
-
-      {/* PANEL LATERAL DESLIZABLE */}
-      <aside style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '280px',
-        height: '100vh',
-        backgroundColor: '#0f172a',
-        color: '#fff',
-        zIndex: 1200,
-        padding: '1.5rem',
-        boxSizing: 'border-box',
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: '4px 0 25px rgba(0,0,0,0.3)',
-        display: 'flex',
-        flexDirection: 'column',
-        justify: 'space-between'
-      }}>
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: 'bold' }}>SimInfra</h2>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Módulos del Sistema</p>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} style={{ border: 'none', background: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}>
-              <X size={20} />
-            </button>
-          </div>
-
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button 
-              onClick={() => handleSelectTab('usuarios')} 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
-                backgroundColor: tab === 'usuarios' ? '#2563eb' : 'transparent',
-                color: tab === 'usuarios' ? '#fff' : '#cbd5e1'
-              }}
-            >
-              <User size={18} /> Usuarios ({tab === 'usuarios' ? filteredData.length : ''})
-            </button>
-
-            <button 
-              onClick={() => handleSelectTab('equipos')} 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
-                backgroundColor: tab === 'equipos' ? '#2563eb' : 'transparent',
-                color: tab === 'equipos' ? '#fff' : '#cbd5e1'
-              }}
-            >
-              <Monitor size={18} /> Equipos ({tab === 'equipos' ? filteredData.length : ''})
-            </button>
-
-            <button 
-              onClick={() => handleSelectTab('perfiles')} 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
-                backgroundColor: tab === 'perfiles' ? '#2563eb' : 'transparent',
-                color: tab === 'perfiles' ? '#fff' : '#cbd5e1'
-              }}
-            >
-              <Key size={18} /> Perfiles Genéricos ({tab === 'perfiles' ? filteredData.length : ''})
-            </button>
-
-            <button 
-              onClick={() => handleSelectTab('ips')} 
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none',
-                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'left',
-                backgroundColor: tab === 'ips' ? '#2563eb' : 'transparent',
-                color: tab === 'ips' ? '#fff' : '#cbd5e1'
-              }}
-            >
-              <Network size={18} /> Gestión de IPs ({tab === 'ips' ? filteredData.length : ''})
-            </button>
-          </nav>
-        </div>
-
-        <div style={{ borderTop: '1px solid #334155', paddingTop: '1rem' }}>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>SimInfra v2.0 — 2026</p>
-        </div>
-      </aside>
-
       {/* ENCABEZADO */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', width: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button 
-            onClick={() => setSidebarOpen(true)} 
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
-            title="Abrir Menú de Módulos"
-          >
-            <Menu size={20} color="#2563eb" />
-            <span>Módulos</span>
-          </button>
-
-          <div>
-            <h1 style={{ fontSize: '1.8rem', color: '#0f172a', margin: 0, fontWeight: '800' }}>
-              SimInfra — {tab === 'usuarios' ? 'Usuarios' : tab === 'equipos' ? 'Equipos' : tab === 'perfiles' ? 'Perfiles Genéricos' : 'Gestión de IPs'}
-            </h1>
-            <p style={{ color: '#64748b', marginTop: '0.1rem', fontSize: '0.9rem' }}>Panel Administrador de Infraestructura y Redes</p>
-          </div>
-        </div>
-
-        <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }}>
-          <LogOut size={16} /> Cerrar Sesión
-        </button>
-      </header>
+        <Header
+          activeTab={tab}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onLogout={handleLogout}
+        />
 
       {/* FILTROS Y ACCIONES SUPERIORES */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
-        <div></div>
-
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button onClick={handleOpenCreateModal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.2rem', borderRadius: '8px', border: 'none', backgroundColor: '#16a34a', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
-            <Plus size={18} /> Agregar {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : tab === 'perfiles' ? 'Perfil' : 'IP'}
-          </button>
-
-          {(tab === 'usuarios' || tab === 'perfiles') && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
-              <Filter size={16} color="#64748b" />
-              <select value={selectedDpto} onChange={(e) => setSelectedDpto(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer' }}>
-                <option value="">Todos los Departamentos</option>
-                {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-              </select>
-            </div>
-          )}
-
-          {tab === 'equipos' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
-              <Filter size={16} color="#64748b" />
-              <select value={selectedCategoriaEquipo} onChange={(e) => setSelectedCategoriaEquipo(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer', fontWeight: 'bold' }}>
-                <option value="">Todas las Categorías</option>
-                <option value="Notebook">Notebook</option>
-                <option value="Celular">Celular</option>
-                <option value="Tablet">Tablet</option>
-                <option value="Mac">Mac</option>
-                <option value="BAM / Router">BAM / Router</option>
-              </select>
-            </div>
-          )}
-
-          {/* CAMBIO 2: ACTUALIZACIÓN DE ICONOS/COLORES EN EL FILTRO DE IPS */}
-          {tab === 'ips' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#fff', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
-              <Filter size={16} color="#64748b" />
-              <select value={selectedEstadoIP} onChange={(e) => setSelectedEstadoIP(e.target.value)} style={{ border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.85rem', color: '#334155', cursor: 'pointer', fontWeight: 'bold' }}>
-                <option value="">Todos los Estados</option>
-                <option value="LIBRE">🟢 Libre</option>
-                <option value="RESERVADA">🔴 Reservada</option>
-                <option value="DUPLICADA">🔵 Duplicada</option>
-                <option value="DESCONOCIDA">🟡 Desconocida</option>
-              </select>
-            </div>
-          )}
-
-          <div style={{ position: 'relative', width: '300px' }}>
-            <input type="text" placeholder="Buscar por nombre, IP, hostname, AF..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', boxSizing: 'border-box' }} />
-          </div>
-        </div>
-      </div>
+      <ModuleToolbar
+        activeTab={tab}
+        departments={dptosList}
+        selectedDepartment={selectedDpto}
+        onDepartmentChange={setSelectedDpto}
+        selectedEquipmentCategory={selectedCategoriaEquipo}
+        onEquipmentCategoryChange={setSelectedCategoriaEquipo}
+        selectedIpStatus={selectedEstadoIP}
+        onIpStatusChange={setSelectedEstadoIP}
+        search={search}
+        onSearchChange={setSearch}
+        onCreate={handleOpenCreateModal}
+      />
 
       {/* TABLA PRINCIPAL */}
       <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', width: '100%' }}>
