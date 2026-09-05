@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from './api/client';
+import EditModal from './components/common/EditModal';
+
+import UsuarioEditForm from './features/usuarios/components/UsuarioEditForm';
+import EquipoEditForm from './features/equipos/components/EquipoEditForm';
+import PerfilEditForm from './features/perfiles/components/PerfilEditForm';
+import IpEditForm from './features/ips/components/IpEditForm';
+
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ModuleToolbar from './components/layout/ModuleToolbar';
+import CreateModal from './components/common/CreateModal';
+
+import UsuarioCreateForm from './features/usuarios/components/UsuarioCreateForm';
 import UsuariosTable from './features/usuarios/components/UsuariosTable';
 import UsuarioDetailModal from './features/usuarios/components/UsuarioDetailModal';
 import UsuarioHistoryModal from './features/usuarios/components/UsuarioHistoryModal';
+
+import EquipoCreateForm from './features/equipos/components/EquipoCreateForm';
 import EquiposTable from './features/equipos/components/EquiposTable';
-import EquipoHistoryModal from './features/usuarios/components/EquipoHistoryModal';
+import EquipoHistoryModal from './features/equipos/components/EquipoHistoryModal';
+
+import PerfilCreateForm from './features/perfiles/components/PerfilCreateForm';
 import PerfilesTable from './features/perfiles/components/PerfilesTable';
+
 import IpsTable from './features/ips/components/IpsTable';
+import IpCreateForm from './features/ips/components/IpCreateForm';
 import {
   getUsuarios,
   createUsuario,
@@ -708,584 +724,139 @@ const handleDelete = async (id, nombre) => {
   onClose={() => setHistoryEquipo(null)}
 />
 
-      {/* Modal de Creación COMPLETO */}
-      {newItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', width: '500px', maxWidth: '90%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, color: '#0f172a' }}>Agregar Nuevo {tab === 'usuarios' ? 'Usuario' : tab === 'equipos' ? 'Equipo' : tab === 'perfiles' ? 'Perfil' : 'IP'}</h3>
-              <button onClick={() => setNewItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-            
-            <form onSubmit={handleCreateSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '70vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
-              {tab === 'usuarios' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado del Usuario</label>
-                    <select value={newItem.estado || 'ACTIVO'} onChange={(e) => setNewItem({ ...newItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="ACTIVO">Activo</option>
-                      <option value="LICENCIA">Licencia Médica</option>
-                      <option value="BAJA">Dar de Baja</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre Completo *</label>
-                    <input type="text" required value={newItem.nombre_completo} onChange={(e) => setNewItem({ ...newItem, nombre_completo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área *</label>
-                    <select required value={newItem.dpto_area} onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Selecciona un área...</option>
-                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
-                    <input type="text" value={newItem.cargo} onChange={(e) => setNewItem({ ...newItem, cargo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
-                    <input type="text" placeholder="Ej: LAPTOP-FIN-01" value={newItem.hostname} onChange={(e) => setNewItem({ ...newItem, hostname: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario de Red *</label>
-                    <input type="text" required value={newItem.usuario_red} onChange={(e) => setNewItem({ ...newItem, usuario_red: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Corp. *</label>
-                    <input type="email" required value={newItem.correo_corp} onChange={(e) => setNewItem({ ...newItem, correo_corp: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Gmail</label>
-                    <input type="email" value={newItem.gmail} onChange={(e) => setNewItem({ ...newItem, gmail: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña Gmail</label>
-                      <input type="text" value={newItem.password_gmail} onChange={(e) => setNewItem({ ...newItem, password_gmail: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña Simi</label>
-                      <input type="text" value={newItem.password_simi} onChange={(e) => setNewItem({ ...newItem, password_simi: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Celular</label>
-                    <input type="text" placeholder="Ej: +56912345678" value={newItem.celular} onChange={(e) => setNewItem({ ...newItem, celular: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Teléfono Fijo</label>
-                      <input type="text" value={newItem.telefono} onChange={(e) => setNewItem({ ...newItem, telefono: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Anexo</label>
-                      <input type="text" value={newItem.anexo} onChange={(e) => setNewItem({ ...newItem, anexo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                  </div>
-
-<div>
-  <label
-    style={{
-      fontSize: '0.8rem',
-      color: '#16a34a',
-      fontWeight: 'bold'
-    }}
-  >
-    Seleccionar IP Disponible
-  </label>
-
-  <select
-    value={newItem.ip_seleccionada ?? ''}
-    onChange={(e) =>
-      setNewItem({
-        ...newItem,
-        ip_seleccionada: e.target.value || null
-      })
+{/* Modal de Creación */}
+{newItem && (
+  <CreateModal
+    title={
+      tab === 'usuarios'
+        ? 'Nuevo Usuario'
+        : tab === 'equipos'
+        ? 'Nuevo Equipo'
+        : tab === 'perfiles'
+        ? 'Nuevo Perfil Genérico'
+        : 'Nueva Dirección IP'
     }
-    style={{
-      width: '100%',
-      padding: '0.6rem',
-      borderRadius: '6px',
-      border: '1px solid #cbd5e1',
-      marginTop: '4px',
-      boxSizing: 'border-box',
-      fontWeight: 'bold',
-      color: '#15803d'
-    }}
+    onClose={() => setNewItem(null)}
+    onSubmit={handleCreateSave}
   >
-    <option value="">
-      Sin IP Asignada
-    </option>
+    {tab === 'usuarios' && (
+      <UsuarioCreateForm
+        usuario={newItem}
+        onChange={setNewItem}
+        departments={dptosList}
+        availableIps={availableIpsForUser(
+          newItem.ip_seleccionada
+        )}
+      />
+    )}
 
-    {availableIpsForUser(newItem.ip_seleccionada).map((ip) => (
-      <option
-        key={ip.id}
-        value={ip.direccion_ip}
-      >
-        {ip.direccion_ip} ({ip.observacion || 'Libre'})
-      </option>
-    ))}
-  </select>
-</div>
-                </>
-              )}
+    {tab === 'equipos' && (
+      <EquipoCreateForm
+        equipo={newItem}
+        onChange={setNewItem}
+        usuarios={usuariosList}
+        formatEquipmentType={formatTipoEquipo}
+        onHostnameChange={(value) =>
+          handleHostnameEquipoChange(
+            value,
+            newItem,
+            setNewItem
+          )
+        }
+      />
+    )}
 
-              {tab === 'equipos' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Equipo *</label>
-                    <select value={formatTipoEquipo(newItem.tipo)} onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="Notebook">Notebook</option>
-                      <option value="Celular">Celular</option>
-                      <option value="Tablet">Tablet</option>
-                      <option value="Mac">Mac</option>
-                      <option value="BAM / Router">BAM / Router</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Marca *</label>
-                    <input type="text" required value={newItem.marca} onChange={(e) => setNewItem({ ...newItem, marca: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Modelo *</label>
-                    <input type="text" required value={newItem.modelo} onChange={(e) => setNewItem({ ...newItem, modelo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>N° de Serie *</label>
-                    <input type="text" required value={newItem.numero_serie} onChange={(e) => setNewItem({ ...newItem, numero_serie: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
+    {tab === 'perfiles' && (
+      <PerfilCreateForm
+        perfil={newItem}
+        onChange={setNewItem}
+        departments={dptosList}
+      />
+    )}
 
-                  {formatTipoEquipo(newItem.tipo) === 'Celular' && (
-                    <div style={{ backgroundColor: '#f0fdf4', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#166534', textTransform: 'uppercase' }}>Detalles de Celular</span>
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>Número de Teléfono</label>
-                        <input type="text" value={newItem.numero_telefono || ''} onChange={(e) => setNewItem({ ...newItem, numero_telefono: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>IMEI</label>
-                          <input type="text" value={newItem.imei || ''} onChange={(e) => setNewItem({ ...newItem, imei: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>PIN</label>
-                          <input type="text" value={newItem.pin || ''} onChange={(e) => setNewItem({ ...newItem, pin: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+    {tab === 'ips' && (
+      <IpCreateForm
+        ip={newItem}
+        onChange={setNewItem}
+        usuarios={usuariosList}
+        onIpChange={(value) =>
+          handleIPInputChange(
+            value,
+            newItem,
+            setNewItem
+          )
+        }
+      />
+    )}
+  </CreateModal>
+)}
 
-                  {formatTipoEquipo(newItem.tipo) === 'Mac' && (
-                    <div style={{ backgroundColor: '#eff6ff', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1e40af', textTransform: 'uppercase' }}>Detalles de iCloud (Mac)</span>
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Cuenta iCloud</label>
-                        <input type="email" value={newItem.icloud_cuenta || ''} onChange={(e) => setNewItem({ ...newItem, icloud_cuenta: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Contraseña iCloud</label>
-                        <input type="text" value={newItem.icloud_password || ''} onChange={(e) => setNewItem({ ...newItem, icloud_password: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname (Autocompleta usuario asignado)</label>
-                    <input type="text" value={newItem.hostname} onChange={(e) => handleHostnameEquipoChange(e.target.value, newItem, setNewItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Activo Fijo (AF - Máx 12 dígitos)</label>
-                    <input type="text" maxLength={12} value={newItem.af} onChange={(e) => setNewItem({ ...newItem, af: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Asignar a Usuario</label>
-                    <select value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value || null })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Sin Asignar (Stock)</option>
-                      {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Fecha de Asignación</label>
-                    <input type="date" value={newItem.fecha_asignacion || ''} onChange={(e) => setNewItem({ ...newItem, fecha_asignacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                </>
-              )}
-
-              {tab === 'perfiles' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre / Perfil *</label>
-                    <input type="text" required value={newItem.nombre || ''} onChange={(e) => setNewItem({ ...newItem, nombre: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario *</label>
-                    <input type="text" required value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña</label>
-                    <input type="text" value={newItem.password || ''} onChange={(e) => setNewItem({ ...newItem, password: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo Cuenta</label>
-                    <select value={newItem.tipo || 'On Premise'} onChange={(e) => setNewItem({ ...newItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', backgroundColor: newItem.tipo === 'O365' ? '#eff6ff' : '#f8fafc', fontWeight: 'bold', color: newItem.tipo === 'O365' ? '#1d4ed8' : '#334155' }}>
-                      <option value="On Premise">On Premise</option>
-                      <option value="O365">O365</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Asignado</label>
-                    <input type="email" value={newItem.correo || ''} onChange={(e) => setNewItem({ ...newItem, correo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
-                    <select value={newItem.dpto_area || ''} onChange={(e) => setNewItem({ ...newItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Selecciona un área...</option>
-                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {/* CAMBIO 2: Opciones en el Modal de Creación de IPs */}
-              {tab === 'ips' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Dirección IP * (Solo números y puntos, máx. 15 caracteres)</label>
-                    <input type="text" required placeholder="Ej: 192.168.1.50" maxLength={15} value={newItem.direccion_ip || ''} onChange={(e) => handleIPInputChange(e.target.value, newItem, setNewItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado de la IP *</label>
-                    <select value={newItem.estado || 'LIBRE'} onChange={(e) => setNewItem({ ...newItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="LIBRE">🟢 Libre</option>
-                      <option value="RESERVADA">🔴 Reservada</option>
-                      <option value="DUPLICADA">🔵 Duplicada</option>
-                      <option value="DESCONOCIDA">🟡 Desconocida</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Asignado a (Usuario)</label>
-                    <select value={newItem.usuario || ''} onChange={(e) => setNewItem({ ...newItem, usuario: e.target.value || null, asignado_otro: '' })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Sin Asignar (Ninguno)</option>
-                      {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
-                    </select>
-                  </div>
-                  {!newItem.usuario && (
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Otros (Servidor, CCTV, Impresora, etc.)</label>
-                      <input type="text" placeholder="Ej: Servidor DB / CCTV Piso 1" value={newItem.asignado_otro || ''} onChange={(e) => setNewItem({ ...newItem, asignado_otro: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                  )}
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Observaciones</label>
-                    <input type="text" placeholder="Ej: Reservada para Impresora Piso 2" value={newItem.observacion || ''} onChange={(e) => setNewItem({ ...newItem, observacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                </>
-              )}
-
-              <button type="submit" style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>
-                <Save size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Guardar Nuevo Registro
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Edición COMPLETO */}
-      {editingItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '12px', width: '500px', maxWidth: '90%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, color: '#0f172a' }}>Editar Registro</h3>
-              <button onClick={() => setEditingItem(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-            
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '70vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
-              {tab === 'usuarios' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado del Usuario</label>
-                    <select value={editingItem.estado || 'ACTIVO'} onChange={(e) => setEditingItem({ ...editingItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="ACTIVO">Activo</option>
-                      <option value="LICENCIA">Licencia Médica</option>
-                      <option value="BAJA">Dar de Baja</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre Completo</label>
-                    <input type="text" value={editingItem.nombre_completo || ''} onChange={(e) => setEditingItem({ ...editingItem, nombre_completo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
-                    <select value={editingItem.dpto_area || ''} onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Selecciona un área...</option>
-                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Cargo</label>
-                    <input type="text" value={editingItem.cargo || ''} onChange={(e) => setEditingItem({ ...editingItem, cargo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
-                    <input type="text" value={editingItem.hostname || ''} onChange={(e) => setEditingItem({ ...editingItem, hostname: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario de Red</label>
-                    <input type="text" value={editingItem.usuario_red || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario_red: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Corp.</label>
-                    <input type="email" value={editingItem.correo_corp || ''} onChange={(e) => setEditingItem({ ...editingItem, correo_corp: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Gmail</label>
-                    <input type="email" value={editingItem.gmail || ''} onChange={(e) => setEditingItem({ ...editingItem, gmail: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña Gmail</label>
-                      <input type="text" value={editingItem.password_gmail || ''} onChange={(e) => setEditingItem({ ...editingItem, password_gmail: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña Simi</label>
-                      <input type="text" value={editingItem.password_simi || ''} onChange={(e) => setEditingItem({ ...editingItem, password_simi: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Celular</label>
-                    <input type="text" value={editingItem.celular || ''} onChange={(e) => setEditingItem({ ...editingItem, celular: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Teléfono Fijo</label>
-                      <input type="text" value={editingItem.telefono || ''} onChange={(e) => setEditingItem({ ...editingItem, telefono: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Anexo</label>
-                      <input type="text" value={editingItem.anexo || ''} onChange={(e) => setEditingItem({ ...editingItem, anexo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                  </div>
-
-                  <div>
-  <label
-    style={{
-      fontSize: '0.8rem',
-      color: '#16a34a',
-      fontWeight: 'bold'
-    }}
-  >
-    Seleccionar IP Asignada
-  </label>
-
-  <select
-    value={
-      editingItem.ip_seleccionada !== undefined
-        ? (editingItem.ip_seleccionada ?? '')
-        : (editingItem.ip_actual ?? '')
+{/* Modal de Edición */}
+{editingItem && (
+  <EditModal
+    title={
+      tab === 'usuarios'
+        ? 'Editar Usuario'
+        : tab === 'equipos'
+        ? 'Editar Equipo'
+        : tab === 'perfiles'
+        ? 'Editar Perfil Genérico'
+        : 'Editar Dirección IP'
     }
-    onChange={(e) =>
-      setEditingItem({
-        ...editingItem,
-        ip_seleccionada: e.target.value || null
-      })
-    }
-    style={{
-      width: '100%',
-      padding: '0.6rem',
-      borderRadius: '6px',
-      border: '1px solid #cbd5e1',
-      marginTop: '4px',
-      boxSizing: 'border-box',
-      fontWeight: 'bold',
-      color: '#15803d'
-    }}
+    onClose={() => setEditingItem(null)}
+    onSubmit={handleSave}
   >
-    <option value="">
-      Sin IP Asignada
-    </option>
+    {tab === 'usuarios' && (
+      <UsuarioEditForm
+        usuario={editingItem}
+        onChange={setEditingItem}
+        departments={dptosList}
+        availableIps={availableIpsForUser(
+          editingItem.ip_actual
+        )}
+      />
+    )}
 
-    {availableIpsForUser(editingItem.ip_actual).map((ip) => (
-      <option
-        key={ip.id}
-        value={ip.direccion_ip}
-      >
-        {ip.direccion_ip} ({ip.observacion || 'Libre'})
-      </option>
-    ))}
-  </select>
-</div>
-                </>
-              )}
+    {tab === 'equipos' && (
+      <EquipoEditForm
+        equipo={editingItem}
+        onChange={setEditingItem}
+        usuarios={usuariosList}
+        formatEquipmentType={formatTipoEquipo}
+        onHostnameChange={(value) =>
+          handleHostnameEquipoChange(
+            value,
+            editingItem,
+            setEditingItem
+          )
+        }
+      />
+    )}
 
-              {tab === 'equipos' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo de Equipo</label>
-                    <select value={formatTipoEquipo(editingItem.tipo)} onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="Notebook">Notebook</option>
-                      <option value="Celular">Celular</option>
-                      <option value="Tablet">Tablet</option>
-                      <option value="Mac">Mac</option>
-                      <option value="BAM / Router">BAM / Router</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Marca</label>
-                    <input type="text" value={editingItem.marca || ''} onChange={(e) => setEditingItem({ ...editingItem, marca: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Modelo</label>
-                    <input type="text" value={editingItem.modelo || ''} onChange={(e) => setEditingItem({ ...editingItem, modelo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>N° de Serie</label>
-                    <input type="text" value={editingItem.numero_serie || ''} onChange={(e) => setEditingItem({ ...editingItem, numero_serie: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
+    {tab === 'perfiles' && (
+      <PerfilEditForm
+        perfil={editingItem}
+        onChange={setEditingItem}
+        departments={dptosList}
+      />
+    )}
 
-                  {formatTipoEquipo(editingItem.tipo) === 'Celular' && (
-                    <div style={{ backgroundColor: '#f0fdf4', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#166534', textTransform: 'uppercase' }}>Detalles de Celular</span>
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>Número de Teléfono</label>
-                        <input type="text" value={editingItem.numero_telefono || ''} onChange={(e) => setEditingItem({ ...editingItem, numero_telefono: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>IMEI</label>
-                          <input type="text" value={editingItem.imei || ''} onChange={(e) => setEditingItem({ ...editingItem, imei: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 'bold' }}>PIN</label>
-                          <input type="text" value={editingItem.pin || ''} onChange={(e) => setEditingItem({ ...editingItem, pin: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {formatTipoEquipo(editingItem.tipo) === 'Mac' && (
-                    <div style={{ backgroundColor: '#eff6ff', padding: '0.8rem', borderRadius: '8px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1e40af', textTransform: 'uppercase' }}>Detalles de iCloud (Mac)</span>
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Cuenta iCloud</label>
-                        <input type="email" value={editingItem.icloud_cuenta || ''} onChange={(e) => setEditingItem({ ...editingItem, icloud_cuenta: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 'bold' }}>Contraseña iCloud</label>
-                        <input type="text" value={editingItem.icloud_password || ''} onChange={(e) => setEditingItem({ ...editingItem, icloud_password: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '2px', boxSizing: 'border-box' }} />
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Hostname</label>
-                    <input type="text" value={editingItem.hostname || ''} onChange={(e) => handleHostnameEquipoChange(e.target.value, editingItem, setEditingItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Activo Fijo (AF)</label>
-                    <input type="text" maxLength={12} value={editingItem.af || ''} onChange={(e) => setEditingItem({ ...editingItem, af: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Asignar a Usuario</label>
-                    <select value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value || null })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Sin Asignar (Stock)</option>
-                      {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Fecha de Asignación</label>
-                    <input type="date" value={editingItem.fecha_asignacion || ''} onChange={(e) => setEditingItem({ ...editingItem, fecha_asignacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado</label>
-                    <select value={editingItem.estado || 'ASIGNADO'} onChange={(e) => setEditingItem({ ...editingItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="ASIGNADO">Asignado</option>
-                      <option value="STOCK">Stock / Disponible</option>
-                      <option value="MANTENCION">En Mantención</option>
-                      <option value="BAJA">Dado de Baja</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {tab === 'perfiles' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Nombre / Perfil *</label>
-                    <input type="text" required value={editingItem.nombre || ''} onChange={(e) => setEditingItem({ ...editingItem, nombre: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Usuario *</label>
-                    <input type="text" required value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Contraseña</label>
-                    <input type="text" value={editingItem.password || ''} onChange={(e) => setEditingItem({ ...editingItem, password: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Tipo Cuenta</label>
-                    <select value={editingItem.tipo || 'On Premise'} onChange={(e) => setEditingItem({ ...editingItem, tipo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box', backgroundColor: editingItem.tipo === 'O365' ? '#eff6ff' : '#f8fafc', fontWeight: 'bold', color: editingItem.tipo === 'O365' ? '#1d4ed8' : '#334155' }}>
-                      <option value="On Premise">On Premise</option>
-                      <option value="O365">O365</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Correo Asignado</label>
-                    <input type="email" value={editingItem.correo || ''} onChange={(e) => setEditingItem({ ...editingItem, correo: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Departamento / Área</label>
-                    <select value={editingItem.dpto_area || ''} onChange={(e) => setEditingItem({ ...editingItem, dpto_area: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Selecciona un área...</option>
-                      {dptosList.map((dpto, idx) => (<option key={idx} value={dpto}>{dpto}</option>))}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {/* CAMBIO 2: Opciones en el Modal de Edición de IPs */}
-              {tab === 'ips' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Dirección IP * (Solo números y puntos, máx. 15 caracteres)</label>
-                    <input type="text" required value={editingItem.direccion_ip || ''} maxLength={15} onChange={(e) => handleIPInputChange(e.target.value, editingItem, setEditingItem)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Estado de la IP *</label>
-                    <select value={editingItem.estado || 'LIBRE'} onChange={(e) => setEditingItem({ ...editingItem, estado: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="LIBRE">🟢 Libre</option>
-                      <option value="RESERVADA">🔴 Reservada</option>
-                      <option value="DUPLICADA">🔵 Duplicada</option>
-                      <option value="DESCONOCIDA">🟡 Desconocida</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 'bold' }}>Asignado a (Usuario)</label>
-                    <select value={editingItem.usuario || ''} onChange={(e) => setEditingItem({ ...editingItem, usuario: e.target.value || null, asignado_otro: '' })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }}>
-                      <option value="">Sin Asignar (Ninguno)</option>
-                      {usuariosList.map((usr) => (<option key={usr.id} value={usr.id}>{usr.nombre_completo} ({usr.usuario_red})</option>))}
-                    </select>
-                  </div>
-                  {!editingItem.usuario && (
-                    <div>
-                      <label style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 'bold' }}>Otros (Servidor, CCTV, Impresora, etc.)</label>
-                      <input type="text" placeholder="Ej: Servidor DB / CCTV Piso 1" value={editingItem.asignado_otro || ''} onChange={(e) => setEditingItem({ ...editingItem, asignado_otro: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                    </div>
-                  )}
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Observaciones</label>
-                    <input type="text" value={editingItem.observacion || ''} onChange={(e) => setEditingItem({ ...editingItem, observacion: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-                  </div>
-                </>
-              )}
-
-              <button type="submit" style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>
-                <Save size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Guardar Cambios
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+    {tab === 'ips' && (
+      <IpEditForm
+        ip={editingItem}
+        onChange={setEditingItem}
+        usuarios={usuariosList}
+        onIpChange={(value) =>
+          handleIPInputChange(
+            value,
+            editingItem,
+            setEditingItem
+          )
+        }
+      />
+    )}
+  </EditModal>
+)}
     </div>
   );
 }

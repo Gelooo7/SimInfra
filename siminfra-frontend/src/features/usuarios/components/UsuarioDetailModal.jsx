@@ -24,6 +24,26 @@ export default function UsuarioDetailModal({
     return null;
   }
 
+  /*
+    El teléfono corporativo NO se toma desde Usuario.celular.
+
+    Se obtiene automáticamente desde los equipos
+    de tipo Celular asignados al usuario.
+  */
+  const celularesAsignados = (usuario.equipos || []).filter(
+    (equipo) =>
+      formatEquipmentType(equipo.tipo) === 'Celular'
+  );
+
+  const numerosCelular = celularesAsignados
+    .map((equipo) => equipo.numero_telefono)
+    .filter(Boolean);
+
+  const celularCorporativo =
+    numerosCelular.length > 0
+      ? numerosCelular.join(' / ')
+      : null;
+
   const copyToClipboard = async (text, type) => {
     if (!text) return;
 
@@ -45,13 +65,21 @@ export default function UsuarioDetailModal({
           setCopiedSimi(false);
         }, 2000);
       }
-
     } catch (error) {
       console.error(
-        'Error copiando contraseña:',
+        'Error copiando al portapapeles:',
         error
       );
     }
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '0.7rem',
+    fontWeight: 'bold',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    marginBottom: '3px'
   };
 
   return (
@@ -72,20 +100,21 @@ export default function UsuarioDetailModal({
       <div
         style={{
           backgroundColor: '#fff',
-          borderRadius: '12px',
-          width: '650px',
+          width: '760px',
           maxWidth: '95%',
+          maxHeight: '90vh',
+          borderRadius: '12px',
           overflow: 'hidden',
           boxShadow:
-            '0 20px 25px -5px rgba(0, 0, 0, 0.2)'
+            '0 20px 25px -5px rgba(0,0,0,0.25)'
         }}
       >
-        {/* Encabezado */}
+        {/* ENCABEZADO */}
         <div
           style={{
-            padding: '1.5rem',
             backgroundColor: '#0f172a',
             color: '#fff',
+            padding: '1.25rem',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start'
@@ -94,33 +123,23 @@ export default function UsuarioDetailModal({
           <div>
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
+                marginBottom: '0.5rem'
               }}
             >
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: '1.3rem'
-                }}
-              >
-                {usuario.nombre_completo}
-              </h2>
-
               {renderStatusBadge(usuario.estado)}
             </div>
 
             <p
               style={{
-                margin: '0.25rem 0 0 0',
+                margin: 0,
                 color: '#94a3b8',
-                fontSize: '0.85rem'
+                fontSize: '0.8rem',
+                textTransform: 'uppercase'
               }}
             >
               {usuario.cargo || 'Sin cargo'}
               {' — '}
-              {usuario.dpto_area}
+              {usuario.dpto_area || 'Sin área'}
             </p>
           </div>
 
@@ -128,204 +147,148 @@ export default function UsuarioDetailModal({
             type="button"
             onClick={onClose}
             style={{
-              border: 'none',
               background: 'none',
+              border: 'none',
               color: '#fff',
               cursor: 'pointer'
             }}
           >
-            <X size={22} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Contenido */}
+        {/* CONTENIDO */}
         <div
           style={{
             padding: '1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.25rem',
-            maxHeight: '75vh',
+            maxHeight: '72vh',
             overflowY: 'auto'
           }}
         >
+          {/* DATOS GENERALES */}
           <div
             style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '1rem',
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '1rem',
-              backgroundColor: '#f8fafc',
-              padding: '1rem',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0'
+              gap: '1rem'
             }}
           >
-            {/* Usuario Red */}
             <div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold'
-                }}
-              >
+              <span style={labelStyle}>
                 Usuario de Red
               </span>
 
-              <p
+              <strong
                 style={{
-                  margin: '2px 0 0 0',
-                  fontWeight: '600'
+                  color: '#475569'
                 }}
               >
                 {usuario.usuario_red || 'N/I'}
-              </p>
+              </strong>
             </div>
 
-            {/* Hostname */}
             <div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold'
-                }}
-              >
+              <span style={labelStyle}>
                 Hostname
               </span>
 
-              <p
+              <strong
                 style={{
-                  margin: '2px 0 0 0',
-                  fontWeight: 'bold',
                   color: '#0284c7'
                 }}
               >
-                {usuario.hostname || 'N/I'}
-              </p>
+                {usuario.hostname || 'Sin hostname'}
+              </strong>
             </div>
 
-            {/* IP */}
             <div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold'
-                }}
-              >
+              <span style={labelStyle}>
                 IP Asignada
               </span>
 
-              <p
+              <strong
                 style={{
-                  margin: '2px 0 0 0',
-                  fontWeight: 'bold',
                   color: usuario.ip_actual
                     ? '#16a34a'
                     : '#94a3b8'
                 }}
               >
                 {usuario.ip_actual || 'Sin IP'}
-              </p>
+              </strong>
             </div>
 
-            {/* Correo */}
             <div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold'
-                }}
-              >
+              <span style={labelStyle}>
                 Correo Corp.
               </span>
 
-              <p
-                style={{
-                  margin: '2px 0 0 0',
-                  fontSize: '0.85rem'
-                }}
-              >
-                {usuario.correo_corp || 'N/I'}
-              </p>
-            </div>
-
-            {/* Celular */}
-            <div>
               <span
                 style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold'
+                  color: '#475569',
+                  fontSize: '0.85rem',
+                  wordBreak: 'break-word'
                 }}
               >
-                Celular
+                {usuario.correo_corp || 'Sin correo'}
+              </span>
+            </div>
+
+            {/* CELULAR AUTOMÁTICO DESDE EQUIPOS */}
+            <div>
+              <span style={labelStyle}>
+                Celular Corporativo
               </span>
 
-              <p
+              <strong
                 style={{
-                  margin: '2px 0 0 0',
-                  fontSize: '0.85rem',
-                  fontWeight: '500'
+                  color: celularCorporativo
+                    ? '#2563eb'
+                    : '#94a3b8'
                 }}
               >
-                {usuario.celular || 'N/I'}
-              </p>
+                {celularCorporativo ||
+                  'Sin celular asignado'}
+              </strong>
             </div>
 
-            {/* Teléfono */}
             <div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold'
-                }}
-              >
+              <span style={labelStyle}>
                 Teléfono Fijo / Anexo
               </span>
 
-              <p
+              <span
                 style={{
-                  margin: '2px 0 0 0',
+                  color: '#475569',
                   fontSize: '0.85rem'
                 }}
               >
-                {usuario.telefono || 'Sin teléfono'}
-
-                {usuario.anexo
-                  ? ` (Anx: ${usuario.anexo})`
-                  : ''}
-              </p>
+                {usuario.telefono
+                  ? `${usuario.telefono}${
+                      usuario.anexo
+                        ? ` (Anx: ${usuario.anexo})`
+                        : ''
+                    }`
+                  : usuario.anexo
+                  ? `Anexo ${usuario.anexo}`
+                  : 'Sin teléfono'}
+              </span>
             </div>
 
-            {/* Gmail */}
+            {/* GMAIL */}
             <div
               style={{
-                gridColumn: 'span 2',
+                gridColumn: '1 / -1',
+                border: '1px solid #cbd5e1',
                 backgroundColor: '#fff',
-                padding: '0.75rem',
                 borderRadius: '6px',
-                border: '1px solid #cbd5e1'
+                padding: '0.75rem'
               }}
             >
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold',
-                  display: 'block'
-                }}
-              >
+              <span style={labelStyle}>
                 Gmail & Contraseña
               </span>
 
@@ -334,13 +297,13 @@ export default function UsuarioDetailModal({
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginTop: '4px'
+                  gap: '1rem'
                 }}
               >
                 <span
                   style={{
                     fontSize: '0.85rem',
-                    fontWeight: '500'
+                    color: '#475569'
                   }}
                 >
                   {usuario.gmail || 'Sin Gmail'}
@@ -357,22 +320,17 @@ export default function UsuarioDetailModal({
                     style={{
                       fontFamily: 'monospace',
                       fontWeight: 'bold',
-                      fontSize: '0.9rem',
                       backgroundColor: '#f1f5f9',
                       padding: '0.2rem 0.5rem',
                       borderRadius: '4px'
                     }}
                   >
                     {showPassGmail
-                      ? (
-                        usuario.password_gmail ||
+                      ? usuario.password_gmail ||
                         'Sin Contraseña'
-                      )
-                      : (
-                        usuario.password_gmail
-                          ? '••••••••'
-                          : 'Sin Contraseña'
-                      )}
+                      : usuario.password_gmail
+                      ? '••••••••'
+                      : 'Sin Contraseña'}
                   </span>
 
                   {usuario.password_gmail && (
@@ -392,9 +350,11 @@ export default function UsuarioDetailModal({
                         }}
                         title="Mostrar / Ocultar"
                       >
-                        {showPassGmail
-                          ? <EyeOff size={16} />
-                          : <Eye size={16} />}
+                        {showPassGmail ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
                       </button>
 
                       <button
@@ -415,9 +375,11 @@ export default function UsuarioDetailModal({
                         }}
                         title="Copiar Contraseña"
                       >
-                        {copiedGmail
-                          ? <Check size={16} />
-                          : <Copy size={16} />}
+                        {copiedGmail ? (
+                          <Check size={16} />
+                        ) : (
+                          <Copy size={16} />
+                        )}
                       </button>
                     </>
                   )}
@@ -428,69 +390,47 @@ export default function UsuarioDetailModal({
             {/* SIMI */}
             <div
               style={{
-                gridColumn: 'span 2',
+                gridColumn: '1 / -1',
+                border: '1px solid #cbd5e1',
                 backgroundColor: '#fff',
-                padding: '0.75rem',
                 borderRadius: '6px',
-                border: '1px solid #cbd5e1'
+                padding: '0.75rem'
               }}
             >
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold',
-                  display: 'block'
-                }}
-              >
-                Contraseña SIMI
+              <span style={labelStyle}>
+                Contraseña Simi
               </span>
 
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginTop: '4px'
+                  gap: '0.5rem'
                 }}
               >
                 <span
                   style={{
                     fontFamily: 'monospace',
                     fontWeight: 'bold',
-                    fontSize: '0.9rem',
                     backgroundColor: '#f1f5f9',
                     padding: '0.2rem 0.5rem',
                     borderRadius: '4px'
                   }}
                 >
                   {showPassSimi
-                    ? (
-                      usuario.password_simi ||
+                    ? usuario.password_simi ||
                       'Sin Contraseña'
-                    )
-                    : (
-                      usuario.password_simi
-                        ? '••••••••'
-                        : 'Sin Contraseña'
-                    )}
+                    : usuario.password_simi
+                    ? '••••••••'
+                    : 'Sin Contraseña'}
                 </span>
 
                 {usuario.password_simi && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
+                  <>
                     <button
                       type="button"
                       onClick={() =>
-                        setShowPassSimi(
-                          !showPassSimi
-                        )
+                        setShowPassSimi(!showPassSimi)
                       }
                       style={{
                         border: 'none',
@@ -500,9 +440,11 @@ export default function UsuarioDetailModal({
                       }}
                       title="Mostrar / Ocultar"
                     >
-                      {showPassSimi
-                        ? <EyeOff size={16} />
-                        : <Eye size={16} />}
+                      {showPassSimi ? (
+                        <EyeOff size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
                     </button>
 
                     <button
@@ -523,18 +465,24 @@ export default function UsuarioDetailModal({
                       }}
                       title="Copiar Contraseña"
                     >
-                      {copiedSimi
-                        ? <Check size={16} />
-                        : <Copy size={16} />}
+                      {copiedSimi ? (
+                        <Check size={16} />
+                      ) : (
+                        <Copy size={16} />
+                      )}
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Equipos asignados */}
-          <div>
+          {/* EQUIPOS */}
+          <div
+            style={{
+              marginTop: '1.25rem'
+            }}
+          >
             <h4
               style={{
                 margin: '0 0 0.5rem 0',
@@ -555,53 +503,130 @@ export default function UsuarioDetailModal({
                   gap: '0.5rem'
                 }}
               >
-                {usuario.equipos.map((equipo) => (
-                  <div
-                    key={equipo.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      alignItems: 'center',
-                      backgroundColor: '#f1f5f9',
-                      padding: '0.6rem 0.8rem',
-                      borderRadius: '6px',
-                      fontSize: '0.85rem'
-                    }}
-                  >
-                    <div>
-                      <strong>
-                        [
-                        {formatEquipmentType(
-                          equipo.tipo
-                        )}
-                        ]{' '}
-                        {equipo.marca}{' '}
-                        {equipo.modelo}
-                      </strong>
+                {usuario.equipos.map((equipo) => {
+                  const tipoEquipo =
+                    formatEquipmentType(
+                      equipo.tipo
+                    );
 
-                      <span
-                        style={{
-                          color: '#64748b',
-                          marginLeft: '8px',
-                          fontFamily: 'monospace'
-                        }}
-                      >
-                        S/N: {equipo.numero_serie}
-                      </span>
-                    </div>
-
-                    <span
+                  return (
+                    <div
+                      key={equipo.id}
                       style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        color: '#0284c7'
+                        backgroundColor: '#f1f5f9',
+                        padding: '0.75rem 0.8rem',
+                        borderRadius: '6px',
+                        fontSize: '0.85rem'
                       }}
                     >
-                      AF: {equipo.af || 'N/I'}
-                    </span>
-                  </div>
-                ))}
+                      {/* CABECERA EQUIPO */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent:
+                            'space-between',
+                          alignItems: 'center',
+                          gap: '1rem'
+                        }}
+                      >
+                        <div>
+                          <strong>
+                            [{tipoEquipo}]{' '}
+                            {equipo.marca}{' '}
+                            {equipo.modelo}
+                          </strong>
+
+                          <span
+                            style={{
+                              color: '#64748b',
+                              marginLeft: '8px',
+                              fontFamily:
+                                'monospace'
+                            }}
+                          >
+                            S/N:{' '}
+                            {equipo.numero_serie}
+                          </span>
+                        </div>
+
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            color: '#0284c7'
+                          }}
+                        >
+                          AF: {equipo.af || 'N/I'}
+                        </span>
+                      </div>
+
+                      {/* CELULAR
+                          El número NO se repite aquí.
+                          Ya aparece arriba como
+                          Celular Corporativo.
+                      */}
+                      {tipoEquipo === 'Celular' && (
+                        <div
+                          style={{
+                            marginTop: '0.6rem',
+                            paddingTop: '0.6rem',
+                            borderTop:
+                              '1px solid #cbd5e1',
+                            display: 'grid',
+                            gridTemplateColumns:
+                              '1fr 1fr',
+                            gap: '1rem'
+                          }}
+                        >
+                          <div>
+                            <span
+                              style={labelStyle}
+                            >
+                              IMEI
+                            </span>
+
+                            <span>
+                              {equipo.imei || 'N/I'}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span
+                              style={labelStyle}
+                            >
+                              PIN
+                            </span>
+
+                            <span>
+                              {equipo.pin || 'N/I'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* MAC */}
+                      {tipoEquipo === 'Mac' && (
+                        <div
+                          style={{
+                            marginTop: '0.6rem',
+                            paddingTop: '0.6rem',
+                            borderTop:
+                              '1px solid #cbd5e1'
+                          }}
+                        >
+                          <span style={labelStyle}>
+                            Cuenta iCloud
+                          </span>
+
+                          <span>
+                            {equipo.icloud_cuenta ||
+                              'N/I'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p
