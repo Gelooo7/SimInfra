@@ -4,7 +4,10 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ModuleToolbar from './components/layout/ModuleToolbar';
 import UsuariosTable from './features/usuarios/components/UsuariosTable';
+import UsuarioDetailModal from './features/usuarios/components/UsuarioDetailModal';
+import UsuarioHistoryModal from './features/usuarios/components/UsuarioHistoryModal';
 import EquiposTable from './features/equipos/components/EquiposTable';
+import EquipoHistoryModal from './features/usuarios/components/EquipoHistoryModal';
 import PerfilesTable from './features/perfiles/components/PerfilesTable';
 import IpsTable from './features/ips/components/IpsTable';
 import {
@@ -31,10 +34,10 @@ import {
   updatePerfil,
   deletePerfil,
 } from './api/perfilesApi';
-import { 
-  Search, User, Monitor, Key, Edit, Save, X, LogOut, Lock, 
-  Eye, EyeOff, Trash2, Filter, Plus, History, ChevronDown, 
-  ChevronUp, Copy, Check, Network, Menu 
+import {
+  Save,
+  X,
+  Lock,
 } from 'lucide-react';
 
 
@@ -57,15 +60,10 @@ export default function App() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [historyEquipo, setHistoryEquipo] = useState(null);
   const [historyUsuario, setHistoryUsuario] = useState(null);
-  const [expandedHistory, setExpandedHistory] = useState({});
   const [usuariosList, setUsuariosList] = useState([]);
   const [ipsList, setIpsList] = useState([]);
 
-  const [showPassGmail, setShowPassGmail] = useState(false);
-  const [showPassSimi, setShowPassSimi] = useState(false);
   const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
-  const [copiedGmail, setCopiedGmail] = useState(false);
-  const [copiedSimi, setCopiedSimi] = useState(false);
 
 const handleLogin = async (e) => {
   e.preventDefault();
@@ -192,18 +190,6 @@ const fetchIpsList = async () => {
     console.error('Error cargando datos:', error);
   }
 };
-
-  const copyToClipboard = (text, type) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    if (type === 'gmail') {
-      setCopiedGmail(true);
-      setTimeout(() => setCopiedGmail(false), 2000);
-    } else if (type === 'simi') {
-      setCopiedSimi(true);
-      setTimeout(() => setCopiedSimi(false), 2000);
-    }
-  };
 
   const formatTipoEquipo = (tipo) => {
     if (!tipo) return 'N/I';
@@ -574,42 +560,6 @@ const handleDelete = async (id, nombre) => {
     }
   };
 
-  const renderHistorialDetalle = (obs) => {
-    if (!obs) return <p style={{ margin: 0, color: '#64748b' }}>Sin detalles adicionales.</p>;
-
-    if (obs.includes(':::')) {
-      const items = obs.split('||');
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
-          {items.map((it, idx) => {
-            const parts = it.split(':::');
-            const campo = parts[0] || 'Campo';
-            const anterior = parts[1] || 'N/I';
-            const actual = parts[2] || 'N/I';
-
-            return (
-              <div key={idx} style={{ backgroundColor: '#fff', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>{campo}</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.8rem' }}>
-                  <div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Anterior</span>
-                    <span style={{ color: '#b91c1c', fontWeight: '600', wordBreak: 'break-word' }}>{anterior}</span>
-                  </div>
-                  <div>
-                    <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Actual</span>
-                    <span style={{ color: '#15803d', fontWeight: '600', wordBreak: 'break-word' }}>{actual}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    return <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#334155' }}>{obs}</p>;
-  };
-
   const filteredData = data.filter(item => {
     if (tab === 'equipos' && selectedCategoriaEquipo) {
       const tipoFormatted = formatTipoEquipo(item.tipo).toLowerCase();
@@ -741,216 +691,22 @@ const handleDelete = async (id, nombre) => {
   )}
 </div>
 
-      {/* Modal Ficha Detallada de Usuario */}
-      {selectedUser && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
-            <div style={{ padding: '1.5rem', backgroundColor: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{selectedUser.nombre_completo}</h2>
-                  {getBadgeEstadoUsuario(selectedUser.estado)}
-                </div>
-                <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>{selectedUser.cargo || 'Sin cargo'} — {selectedUser.dpto_area}</p>
-              </div>
-              <button onClick={() => { setSelectedUser(null); setShowPassGmail(false); setShowPassSimi(false); }} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={22} /></button>
-            </div>
+<UsuarioDetailModal
+  usuario={selectedUser}
+  onClose={() => setSelectedUser(null)}
+  renderStatusBadge={getBadgeEstadoUsuario}
+  formatEquipmentType={formatTipoEquipo}
+/>
 
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '75vh', overflowY: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Usuario de Red</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: '600' }}>{selectedUser.usuario_red}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Hostname</span>
-                  <p style={{ margin: '2px 0 0 0', fontWeight: 'bold', color: '#0284c7' }}>{selectedUser.hostname || 'N/I'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>IP Asignada</span>
-                  <p
-                    style={{
-                      margin: '2px 0 0 0',
-                      fontWeight: 'bold',
-                      color: selectedUser.ip_actual ? '#16a34a' : '#94a3b8'
-                    }}
-                  >
-                    {selectedUser.ip_actual || 'Sin IP'}
-                  </p>                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Correo Corp.</span>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.correo_corp}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Celular</span>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem', fontWeight: '500' }}>{selectedUser.celular || 'N/I'}</p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Teléfono Fijo / Anexo</span>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>{selectedUser.telefono || 'Sin teléfono'} {selectedUser.anexo ? `(Anx: ${selectedUser.anexo})` : ''}</p>
-                </div>
-                
-                {/* Gmail */}
-                <div style={{ gridColumn: 'span 2', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Gmail & Contraseña</span>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{selectedUser.gmail || 'Sin Gmail'}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9rem', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                        {showPassGmail ? (selectedUser.password_gmail || 'Sin Contraseña') : (selectedUser.password_gmail ? '••••••••' : 'Sin Contraseña')}
-                      </span>
-                      {selectedUser.password_gmail && (
-                        <>
-                          <button onClick={() => setShowPassGmail(!showPassGmail)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }} title="Mostrar / Ocultar">
-                            {showPassGmail ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                          <button onClick={() => copyToClipboard(selectedUser.password_gmail, 'gmail')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: copiedGmail ? '#16a34a' : '#64748b' }} title="Copiar Contraseña">
-                            {copiedGmail ? <Check size={16} /> : <Copy size={16} />}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
+<UsuarioHistoryModal
+  usuario={historyUsuario}
+  onClose={() => setHistoryUsuario(null)}
+/>
 
-                {/* SIMI */}
-                <div style={{ gridColumn: 'span 2', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', display: 'block' }}>Contraseña SIMI</span>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9rem', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                      {showPassSimi ? (selectedUser.password_simi || 'Sin Contraseña') : (selectedUser.password_simi ? '••••••••' : 'Sin Contraseña')}
-                    </span>
-                    {selectedUser.password_simi && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <button onClick={() => setShowPassSimi(!showPassSimi)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }} title="Mostrar / Ocultar">
-                          {showPassSimi ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                        <button onClick={() => copyToClipboard(selectedUser.password_simi, 'simi')} style={{ border: 'none', background: 'none', cursor: 'pointer', color: copiedSimi ? '#16a34a' : '#64748b' }} title="Copiar Contraseña">
-                          {copiedSimi ? <Check size={16} /> : <Copy size={16} />}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-
-              <div>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e293b', fontSize: '0.9rem', fontWeight: 'bold' }}>Equipos Asignados</h4>
-                {selectedUser.equipos && selectedUser.equipos.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {selectedUser.equipos.map((eq) => (
-                      <div key={eq.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f1f5f9', padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-                        <div>
-                          <strong>[{formatTipoEquipo(eq.tipo)}] {eq.marca} {eq.modelo}</strong>
-                          <span style={{ color: '#64748b', marginLeft: '8px', fontFamily: 'monospace' }}>S/N: {eq.numero_serie}</span>
-                        </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#0284c7' }}>AF: {eq.af || 'N/I'}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>Sin equipos vinculados actualmente.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Historial Usuario */}
-      {historyUsuario && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
-            <div style={{ padding: '1.25rem', backgroundColor: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Historial de Modificaciones</h3>
-                <p style={{ margin: '2px 0 0 0', color: '#94a3b8', fontSize: '0.8rem' }}>{historyUsuario.nombre_completo} — Red: {historyUsuario.usuario_red}</p>
-              </div>
-              <button onClick={() => setHistoryUsuario(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-
-            <div style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
-              {historyUsuario.historial && historyUsuario.historial.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {historyUsuario.historial.map((h, i) => {
-                    const isExpanded = !!expandedHistory[i];
-                    return (
-                      <div key={i} style={{ borderLeft: '3px solid #2563eb', paddingLeft: '1rem', backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '0 8px 8px 0' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                          <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#1e40af', backgroundColor: '#dbeafe', padding: '0.1rem 0.5rem', borderRadius: '4px' }}>{h.accion}</span>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{new Date(h.fecha_movimiento).toLocaleString()}</span>
-                        </div>
-                        
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <button 
-                            onClick={() => setExpandedHistory(prev => ({ ...prev, [i]: !prev[i] }))} 
-                            style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
-                          >
-                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            {isExpanded ? 'Ocultar detalles' : 'Ver más detalle'}
-                          </button>
-                        </div>
-
-                        {isExpanded && renderHistorialDetalle(h.observacion)}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p style={{ textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', margin: '2rem 0' }}>No existen registros de modificaciones para este usuario.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Historial de Equipo */}
-      {historyEquipo && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', borderRadius: '12px', width: '650px', maxWidth: '95%', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' }}>
-            <div style={{ padding: '1.25rem', backgroundColor: '#0f172a', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Historial de Movimientos</h3>
-                <p style={{ margin: '2px 0 0 0', color: '#94a3b8', fontSize: '0.8rem' }}>{historyEquipo.marca} {historyEquipo.modelo} — Serie: {historyEquipo.numero_serie}</p>
-              </div>
-              <button onClick={() => setHistoryEquipo(null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-
-            <div style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
-              {historyEquipo.historial && historyEquipo.historial.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {historyEquipo.historial.map((h, i) => {
-                    const isExpanded = !!expandedHistory[`eq_${i}`];
-                    return (
-                      <div key={i} style={{ borderLeft: '3px solid #2563eb', paddingLeft: '1rem', backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '0 8px 8px 0' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                          <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#1e40af', backgroundColor: '#dbeafe', padding: '0.1rem 0.5rem', borderRadius: '4px' }}>{h.accion}</span>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{new Date(h.fecha_movimiento).toLocaleString()}</span>
-                        </div>
-
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <button 
-                            onClick={() => setExpandedHistory(prev => ({ ...prev, [`eq_${i}`]: !prev[`eq_${i}`] }))} 
-                            style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
-                          >
-                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            {isExpanded ? 'Ocultar detalles' : 'Ver más detalle'}
-                          </button>
-                        </div>
-
-                        {isExpanded && renderHistorialDetalle(h.observacion)}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p style={{ textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', margin: '2rem 0' }}>No existen registros de cambios para este equipo.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+<EquipoHistoryModal
+  equipo={historyEquipo}
+  onClose={() => setHistoryEquipo(null)}
+/>
 
       {/* Modal de Creación COMPLETO */}
       {newItem && (
