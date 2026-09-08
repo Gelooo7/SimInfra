@@ -17,6 +17,8 @@ import { useModuleModals } from './hooks/useModuleModals';
 import { useAuth } from './hooks/useAuth';
 import { useReferenceData } from './hooks/useReferenceData';
 import { useModuleData } from './hooks/useModuleData';
+import { useModuleFilters } from './hooks/useModuleFilters';
+import { useModuleNavigation } from './hooks/useModuleNavigation';
 
 import {
   buildEquipmentStateFromHostname,
@@ -51,14 +53,27 @@ const {
   logout,
 } = useAuth();
 
-const [tab, setTab] = useState('usuarios');
-const [sidebarOpen, setSidebarOpen] = useState(false);
-const [search, setSearch] = useState('');
-const [selectedDpto, setSelectedDpto] = useState('');
-const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
-const [selectedEstadoIP, setSelectedEstadoIP] = useState('');
-
 const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
+
+const {
+  search,
+  setSearch,
+  selectedDpto,
+  setSelectedDpto,
+  selectedCategoriaEquipo,
+  setSelectedCategoriaEquipo,
+  selectedEstadoIP,
+  setSelectedEstadoIP,
+  resetFilters,
+} = useModuleFilters();
+
+const {
+  tab,
+  sidebarOpen,
+  selectTab,
+  openSidebar,
+  closeSidebar,
+} = useModuleNavigation(resetFilters);
 
 const {
   editingItem,
@@ -91,6 +106,13 @@ const {
   selectedEstadoIP,
   onUnauthorized: logout,
 });
+
+const refreshAllData = async () => {
+  await Promise.all([
+    refreshData(),
+    refreshReferenceData(),
+  ]);
+};
 
 const handleLogin = async (e) => {
   e.preventDefault();
@@ -151,8 +173,7 @@ if (!validation.valid) {
 
     setNewItem(null);
 
-    await refreshData();
-    await refreshReferenceData();
+    await refreshAllData();
 
   } catch (error) {
     console.error(
@@ -199,8 +220,7 @@ const handleSave = async (e) => {
 
     setEditingItem(null);
 
-    await refreshData();
-    await refreshReferenceData();
+    await refreshAllData();
 
   } catch (error) {
     console.error(
@@ -220,15 +240,14 @@ const handleSave = async (e) => {
 const handleDelete = async (id, nombre) => {
   if (
     window.confirm(
-      `¿Estás seguro de que deseas eliminar permanentemente a "${nombre}"?`
+      `¿Estás seguro de que deseas eliminar permanentemente "${nombre}"?`
     )
   ) {
     try {
 
     await deleteItemByTab(tab, id);
 
-      await refreshData();
-      await refreshReferenceData();
+    await refreshAllData();
 
     } catch (error) {
       console.error(
@@ -263,14 +282,6 @@ const availableIpsForUser = (currentIp) => {
   );
 };
 
-  const handleSelectTab = (selectedTab) => {
-    setTab(selectedTab);
-    setSelectedDpto('');
-    setSelectedCategoriaEquipo('');
-    setSelectedEstadoIP('');
-    setSidebarOpen(false);
-  };
-
 if (!token) {
   return (
     <LoginPage
@@ -291,16 +302,16 @@ if (!token) {
         isOpen={sidebarOpen}
         activeTab={tab}
         activeCount={filteredData.length}
-        onClose={() => setSidebarOpen(false)}
-        onSelectTab={handleSelectTab}
+        onClose={closeSidebar}
+        onSelectTab={selectTab}
       />
       
       {/* ENCABEZADO */}
-        <Header
-          activeTab={tab}
-          onOpenSidebar={() => setSidebarOpen(true)}
-          onLogout={logout}
-        />
+      <Header
+        activeTab={tab}
+        onOpenSidebar={openSidebar}
+        onLogout={logout}
+      />
 
       {/* FILTROS Y ACCIONES SUPERIORES */}
       <ModuleToolbar
