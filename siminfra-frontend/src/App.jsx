@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAuth } from './hooks/useAuth';
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
 import { prepareCreatePayload } from './utils/prepareCreatePayload';
 import { prepareUpdatePayload } from './utils/prepareUpdatePayload';
@@ -12,6 +11,12 @@ import LoginPage from './features/auth/components/LoginPage';
 import ModuleCreateModal from './components/modules/ModuleCreateModal';
 import ModuleEditModal from './components/modules/ModuleEditModal';
 import ModuleTable from './components/modules/ModuleTable';
+import ModuleDetailModals from './components/modules/ModuleDetailModals';
+
+import { useModuleModals } from './hooks/useModuleModals';
+import { useAuth } from './hooks/useAuth';
+import { useReferenceData } from './hooks/useReferenceData';
+import { useModuleData } from './hooks/useModuleData';
 
 import {
   buildEquipmentStateFromHostname,
@@ -23,17 +28,10 @@ import {
   getAvailableIpsForUser,
 } from './utils/ipHelpers';
 
-import { useReferenceData } from './hooks/useReferenceData';
-import { useModuleData } from './hooks/useModuleData';
-
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ModuleToolbar from './components/layout/ModuleToolbar';
 
-import UsuarioDetailModal from './features/usuarios/components/UsuarioDetailModal';
-import UsuarioHistoryModal from './features/usuarios/components/UsuarioHistoryModal';
-
-import EquipoHistoryModal from './features/equipos/components/EquipoHistoryModal';
 import { formatEquipmentType } from './utils/formatEquipmentType';
 
 import {
@@ -60,13 +58,20 @@ const [selectedDpto, setSelectedDpto] = useState('');
 const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
 const [selectedEstadoIP, setSelectedEstadoIP] = useState('');
 
-const [editingItem, setEditingItem] = useState(null);
-const [newItem, setNewItem] = useState(null);
-const [selectedUser, setSelectedUser] = useState(null);
-const [historyEquipo, setHistoryEquipo] = useState(null);
-const [historyUsuario, setHistoryUsuario] = useState(null);
-
 const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
+
+const {
+  editingItem,
+  setEditingItem,
+  newItem,
+  setNewItem,
+  selectedUser,
+  setSelectedUser,
+  historyEquipo,
+  setHistoryEquipo,
+  historyUsuario,
+  setHistoryUsuario,
+} = useModuleModals();
 
   const {
   dptosList,
@@ -340,21 +345,15 @@ if (!token) {
 />
 </div>
 
-<UsuarioDetailModal
-  usuario={selectedUser}
-  onClose={() => setSelectedUser(null)}
-  renderStatusBadge={renderUsuarioStatusBadge}
+<ModuleDetailModals
+  selectedUser={selectedUser}
+  historyUsuario={historyUsuario}
+  historyEquipo={historyEquipo}
+  onCloseUser={() => setSelectedUser(null)}
+  onCloseUserHistory={() => setHistoryUsuario(null)}
+  onCloseEquipmentHistory={() => setHistoryEquipo(null)}
+  renderUsuarioStatusBadge={renderUsuarioStatusBadge}
   formatEquipmentType={formatEquipmentType}
-/>
-
-<UsuarioHistoryModal
-  usuario={historyUsuario}
-  onClose={() => setHistoryUsuario(null)}
-/>
-
-<EquipoHistoryModal
-  equipo={historyEquipo}
-  onClose={() => setHistoryEquipo(null)}
 />
 
 <ModuleCreateModal
