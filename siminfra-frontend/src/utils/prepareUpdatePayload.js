@@ -39,21 +39,24 @@ export const prepareUpdatePayload = (tab, item, formatTipoEquipo) => {
   }
 
   // IPS
-  if (tab === 'ips') {
-    if (
-      payload.usuario ||
-      (payload.asignado_otro && payload.asignado_otro.trim())
-    ) {
-      payload.estado = 'RESERVADA';
+// IPS
+if (tab === 'ips') {
+  const tieneAsignacion = Boolean(
+    payload.usuario ||
+    (payload.asignado_otro && payload.asignado_otro.trim())
+  );
 
-    } else if (
-      !payload.usuario &&
-      !payload.asignado_otro &&
-      payload.estado === 'RESERVADA'
-    ) {
-      payload.estado = 'LIBRE';
-    }
+  // Solo automatizamos LIBRE y RESERVADA.
+  // DUPLICADA y DESCONOCIDA se respetan tal como las selecciona el usuario.
+
+  if (payload.estado === 'LIBRE' && tieneAsignacion) {
+    payload.estado = 'RESERVADA';
   }
+
+  if (payload.estado === 'RESERVADA' && !tieneAsignacion) {
+    payload.estado = 'LIBRE';
+  }
+}
 
   return payload;
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import apiClient from './api/client';
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
 import { prepareCreatePayload } from './utils/prepareCreatePayload';
@@ -7,8 +7,8 @@ import { validateItem } from './utils/validateItem';
 import { createItemByTab } from './services/createItemService';
 import { updateItemByTab } from './services/updateItemService';
 import { deleteItemByTab } from './services/deleteItemService';
-import { getItemsByTab } from './services/getItemService';
 import EditModal from './components/common/EditModal';
+
 
 import {
   buildEquipmentStateFromHostname,
@@ -21,6 +21,7 @@ import {
 } from './utils/ipHelpers';
 
 import { useReferenceData } from './hooks/useReferenceData';
+import { useModuleData } from './hooks/useModuleData';
 
 import UsuarioEditForm from './features/usuarios/components/UsuarioEditForm';
 import EquipoEditForm from './features/equipos/components/EquipoEditForm';
@@ -68,7 +69,6 @@ const [loginError, setLoginError] = useState('');
 
 const [tab, setTab] = useState('usuarios');
 const [sidebarOpen, setSidebarOpen] = useState(false);
-const [data, setData] = useState([]);
 const [search, setSearch] = useState('');
 const [selectedDpto, setSelectedDpto] = useState('');
 const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
@@ -82,12 +82,29 @@ const [historyUsuario, setHistoryUsuario] = useState(null);
 
 const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
 
+const handleLogout = useCallback(() => {
+  localStorage.removeItem('access_token');
+  setToken(null);
+}, []);
+
   const {
   dptosList,
   usuariosList,
   ipsList,
   refreshReferenceData,
 } = useReferenceData(token);
+
+const {
+  data,
+  refreshData,
+} = useModuleData({
+  token,
+  tab,
+  search,
+  selectedDpto,
+  selectedEstadoIP,
+  onUnauthorized: handleLogout,
+});
 
 const handleLogin = async (e) => {
   e.preventDefault();
@@ -107,46 +124,6 @@ const handleLogin = async (e) => {
     setLoginError(
       'Credenciales inválidas. Verifica tu usuario y contraseña.'
     );
-  }
-};
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    setToken(null);
-  };
-
-  useEffect(() => {
-    if (token) {
-      fetchData();
-    }
-  }, [tab, search, selectedDpto, selectedEstadoIP, token]);
-
-  const fetchData = async () => {
-  try {
-    const params = {};
-
-    if (search) {
-      params.search = search;
-    }
-
-    if (selectedDpto && (tab === 'usuarios' || tab === 'perfiles')) {
-      params.dpto_area = selectedDpto;
-    }
-
-    if (selectedEstadoIP && tab === 'ips') {
-      params.estado = selectedEstadoIP;
-    }
-
-const result = await getItemsByTab(tab, params);
-
-setData(result);
-
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      handleLogout();
-      return;
-    }
-
-    console.error('Error cargando datos:', error);
   }
 };
 
@@ -196,7 +173,7 @@ if (!validation.valid) {
 
     setNewItem(null);
 
-    await fetchData();
+    await refreshData();
     await refreshReferenceData();
 
   } catch (error) {
@@ -217,31 +194,34 @@ if (!validation.valid) {
 const handleSave = async (e) => {
   e.preventDefault();
 
-const validation = validateItem(
-  tab,
-  editingItem,
-  data
-);
+  const validation = validateItem(
+    tab,
+    editingItem,
+    data
+  );
 
-if (!validation.valid) {
-  alert(validation.message);
-  return;
-}
+  if (!validation.valid) {
+    alert(validation.message);
+    return;
+  }
 
   try {
+    const payload = prepareUpdatePayload(
+      tab,
+      editingItem,
+      formatEquipmentType
+    );
 
-const payload = prepareUpdatePayload(
-  tab,
-  editingItem,
-  formatEquipmentType
-);
 
-    // Actualizar según módulo
-  await updateItemByTab(tab, editingItem.id, payload);
+    await updateItemByTab(
+      tab,
+      editingItem.id,
+      payload
+    );
 
     setEditingItem(null);
 
-    await fetchData();
+    await refreshData();
     await refreshReferenceData();
 
   } catch (error) {
@@ -269,7 +249,7 @@ const handleDelete = async (id, nombre) => {
 
     await deleteItemByTab(tab, id);
 
-      await fetchData();
+      await refreshData();
       await refreshReferenceData();
 
     } catch (error) {
