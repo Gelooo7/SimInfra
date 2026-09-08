@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import apiClient from './api/client';
+import React, { useState } from 'react';
+import { useAuth } from './hooks/useAuth';
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
 import { prepareCreatePayload } from './utils/prepareCreatePayload';
 import { prepareUpdatePayload } from './utils/prepareUpdatePayload';
@@ -7,8 +7,11 @@ import { validateItem } from './utils/validateItem';
 import { createItemByTab } from './services/createItemService';
 import { updateItemByTab } from './services/updateItemService';
 import { deleteItemByTab } from './services/deleteItemService';
-import EditModal from './components/common/EditModal';
 
+import LoginPage from './features/auth/components/LoginPage';
+import ModuleCreateModal from './components/modules/ModuleCreateModal';
+import ModuleEditModal from './components/modules/ModuleEditModal';
+import ModuleTable from './components/modules/ModuleTable';
 
 import {
   buildEquipmentStateFromHostname,
@@ -23,31 +26,15 @@ import {
 import { useReferenceData } from './hooks/useReferenceData';
 import { useModuleData } from './hooks/useModuleData';
 
-import UsuarioEditForm from './features/usuarios/components/UsuarioEditForm';
-import EquipoEditForm from './features/equipos/components/EquipoEditForm';
-import PerfilEditForm from './features/perfiles/components/PerfilEditForm';
-import IpEditForm from './features/ips/components/IpEditForm';
-
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ModuleToolbar from './components/layout/ModuleToolbar';
-import CreateModal from './components/common/CreateModal';
 
-import UsuarioCreateForm from './features/usuarios/components/UsuarioCreateForm';
-import UsuariosTable from './features/usuarios/components/UsuariosTable';
 import UsuarioDetailModal from './features/usuarios/components/UsuarioDetailModal';
 import UsuarioHistoryModal from './features/usuarios/components/UsuarioHistoryModal';
 
-import EquipoCreateForm from './features/equipos/components/EquipoCreateForm';
-import EquiposTable from './features/equipos/components/EquiposTable';
 import EquipoHistoryModal from './features/equipos/components/EquipoHistoryModal';
 import { formatEquipmentType } from './utils/formatEquipmentType';
-
-import PerfilCreateForm from './features/perfiles/components/PerfilCreateForm';
-import PerfilesTable from './features/perfiles/components/PerfilesTable';
-
-import IpsTable from './features/ips/components/IpsTable';
-import IpCreateForm from './features/ips/components/IpCreateForm';
 
 import {
   renderUsuarioStatusBadge,
@@ -55,17 +42,16 @@ import {
   renderIpStatusBadge,
 } from './components/common/badgeRenderers';
 
-import {Lock} from 'lucide-react';
-
-
 export default function App() {
-const [token, setToken] = useState(
-  localStorage.getItem('access_token') || null
-);
 
 const [username, setUsername] = useState('');
 const [password, setPassword] = useState('');
-const [loginError, setLoginError] = useState('');
+const {
+  token,
+  loginError,
+  login,
+  logout,
+} = useAuth();
 
 const [tab, setTab] = useState('usuarios');
 const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -81,11 +67,6 @@ const [historyEquipo, setHistoryEquipo] = useState(null);
 const [historyUsuario, setHistoryUsuario] = useState(null);
 
 const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
-
-const handleLogout = useCallback(() => {
-  localStorage.removeItem('access_token');
-  setToken(null);
-}, []);
 
   const {
   dptosList,
@@ -103,27 +84,19 @@ const {
   search,
   selectedDpto,
   selectedEstadoIP,
-  onUnauthorized: handleLogout,
+  onUnauthorized: logout,
 });
 
 const handleLogin = async (e) => {
   e.preventDefault();
-  setLoginError('');
 
-  try {
-    const response = await apiClient.post('/token/', {
-      username,
-      password
-    });
+  const success = await login(
+    username,
+    password
+  );
 
-    const accessToken = response.data.access;
-
-    localStorage.setItem('access_token', accessToken);
-    setToken(accessToken);
-  } catch (error) {
-    setLoginError(
-      'Credenciales inválidas. Verifica tu usuario y contraseña.'
-    );
+  if (success) {
+    setPassword('');
   }
 };
 
@@ -293,29 +266,18 @@ const availableIpsForUser = (currentIp) => {
     setSidebarOpen(false);
   };
 
-  if (!token) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0f172a', fontFamily: 'system-ui, sans-serif' }}>
-        <form onSubmit={handleLogin} style={{ backgroundColor: '#fff', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', width: '360px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <Lock size={36} color="#2563eb" />
-            <h2 style={{ margin: '0.5rem 0 0 0', color: '#1e293b' }}>SimInfra Admin</h2>
-            <p style={{ color: '#64748b', fontSize: '0.85rem' }}>Inicia sesión para gestionar el sistema</p>
-          </div>
-          {loginError && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{loginError}</p>}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>Usuario</label>
-            <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-          </div>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>Contraseña</label>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1', marginTop: '4px', boxSizing: 'border-box' }} />
-          </div>
-          <button type="submit" style={{ width: '100%', backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Ingresar</button>
-        </form>
-      </div>
-    );
-  }
+if (!token) {
+  return (
+    <LoginPage
+      username={username}
+      password={password}
+      loginError={loginError}
+      onUsernameChange={setUsername}
+      onPasswordChange={setPassword}
+      onSubmit={handleLogin}
+    />
+  );
+}
 
   return (
     <div style={{ padding: '1.5rem 3rem', fontFamily: 'system-ui, sans-serif', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box' }}>
@@ -332,7 +294,7 @@ const availableIpsForUser = (currentIp) => {
         <Header
           activeTab={tab}
           onOpenSidebar={() => setSidebarOpen(true)}
-          onLogout={handleLogout}
+          onLogout={logout}
         />
 
       {/* FILTROS Y ACCIONES SUPERIORES */}
@@ -361,45 +323,21 @@ const availableIpsForUser = (currentIp) => {
     width: '100%'
   }}
 >
-  {tab === 'usuarios' && (
-    <UsuariosTable
-      usuarios={filteredData}
-      onSelectUser={setSelectedUser}
-      onShowHistory={setHistoryUsuario}
-      onEdit={setEditingItem}
-      onDelete={handleDelete}
-renderStatusBadge={renderUsuarioStatusBadge}    />
-  )}
-
-  {tab === 'equipos' && (
-    <EquiposTable
-      equipos={filteredData}
-      formatEquipmentType={formatEquipmentType}
-      onShowHistory={setHistoryEquipo}
-      onEdit={setEditingItem}
-      onDelete={handleDelete}
-    />
-  )}
-
-  {tab === 'perfiles' && (
-    <PerfilesTable
-      perfiles={filteredData}
-      visiblePasswords={visibleProfilePasswords}
-      setVisiblePasswords={setVisibleProfilePasswords}
-      renderAccountTypeBadge={renderAccountTypeBadge}
-      onEdit={setEditingItem}
-      onDelete={handleDelete}
-    />
-  )}
-
-  {tab === 'ips' && (
-    <IpsTable
-      ips={filteredData}
-      renderIpStatusBadge={renderIpStatusBadge}
-      onEdit={setEditingItem}
-      onDelete={handleDelete}
-    />
-  )}
+<ModuleTable
+  tab={tab}
+  data={filteredData}
+  formatEquipmentType={formatEquipmentType}
+  visibleProfilePasswords={visibleProfilePasswords}
+  setVisibleProfilePasswords={setVisibleProfilePasswords}
+  renderUsuarioStatusBadge={renderUsuarioStatusBadge}
+  renderAccountTypeBadge={renderAccountTypeBadge}
+  renderIpStatusBadge={renderIpStatusBadge}
+  onSelectUser={setSelectedUser}
+  onShowUserHistory={setHistoryUsuario}
+  onShowEquipmentHistory={setHistoryEquipo}
+  onEdit={setEditingItem}
+  onDelete={handleDelete}
+/>
 </div>
 
 <UsuarioDetailModal
@@ -419,139 +357,61 @@ renderStatusBadge={renderUsuarioStatusBadge}    />
   onClose={() => setHistoryEquipo(null)}
 />
 
-{/* Modal de Creación */}
-{newItem && (
-  <CreateModal
-    title={
-      tab === 'usuarios'
-        ? 'Nuevo Usuario'
-        : tab === 'equipos'
-        ? 'Nuevo Equipo'
-        : tab === 'perfiles'
-        ? 'Nuevo Perfil Genérico'
-        : 'Nueva Dirección IP'
-    }
-    onClose={() => setNewItem(null)}
-    onSubmit={handleCreateSave}
-  >
-    {tab === 'usuarios' && (
-      <UsuarioCreateForm
-        usuario={newItem}
-        onChange={setNewItem}
-        departments={dptosList}
-        availableIps={availableIpsForUser(
-          newItem.ip_seleccionada
-        )}
-      />
-    )}
+<ModuleCreateModal
+  tab={tab}
+  newItem={newItem}
+  setNewItem={setNewItem}
+  onSubmit={handleCreateSave}
+  onClose={() => setNewItem(null)}
+  departments={dptosList}
+  usuarios={usuariosList}
+  availableIps={availableIpsForUser(
+    newItem?.ip_seleccionada
+  )}
+  formatEquipmentType={formatEquipmentType}
+  onHostnameChange={(value) =>
+    handleHostnameEquipoChange(
+      value,
+      newItem,
+      setNewItem
+    )
+  }
+  onIpChange={(value) =>
+    handleIPInputChange(
+      value,
+      newItem,
+      setNewItem
+    )
+  }
+/>
 
-    {tab === 'equipos' && (
-      <EquipoCreateForm
-        equipo={newItem}
-        onChange={setNewItem}
-        usuarios={usuariosList}
-        formatEquipmentType={formatEquipmentType}
-        onHostnameChange={(value) =>
-          handleHostnameEquipoChange(
-            value,
-            newItem,
-            setNewItem
-          )
-        }
-      />
-    )}
-
-    {tab === 'perfiles' && (
-      <PerfilCreateForm
-        perfil={newItem}
-        onChange={setNewItem}
-        departments={dptosList}
-      />
-    )}
-
-    {tab === 'ips' && (
-      <IpCreateForm
-        ip={newItem}
-        onChange={setNewItem}
-        usuarios={usuariosList}
-        onIpChange={(value) =>
-          handleIPInputChange(
-            value,
-            newItem,
-            setNewItem
-          )
-        }
-      />
-    )}
-  </CreateModal>
-)}
-
-{/* Modal de Edición */}
-{editingItem && (
-  <EditModal
-    title={
-      tab === 'usuarios'
-        ? 'Editar Usuario'
-        : tab === 'equipos'
-        ? 'Editar Equipo'
-        : tab === 'perfiles'
-        ? 'Editar Perfil Genérico'
-        : 'Editar Dirección IP'
-    }
-    onClose={() => setEditingItem(null)}
-    onSubmit={handleSave}
-  >
-    {tab === 'usuarios' && (
-      <UsuarioEditForm
-        usuario={editingItem}
-        onChange={setEditingItem}
-        departments={dptosList}
-        availableIps={availableIpsForUser(
-          editingItem.ip_actual
-        )}
-      />
-    )}
-
-    {tab === 'equipos' && (
-      <EquipoEditForm
-        equipo={editingItem}
-        onChange={setEditingItem}
-        usuarios={usuariosList}
-        formatEquipmentType={formatEquipmentType}
-        onHostnameChange={(value) =>
-          handleHostnameEquipoChange(
-            value,
-            editingItem,
-            setEditingItem
-          )
-        }
-      />
-    )}
-
-    {tab === 'perfiles' && (
-      <PerfilEditForm
-        perfil={editingItem}
-        onChange={setEditingItem}
-        departments={dptosList}
-      />
-    )}
-
-    {tab === 'ips' && (
-      <IpEditForm
-        ip={editingItem}
-        onChange={setEditingItem}
-        usuarios={usuariosList}
-        onIpChange={(value) =>
-          handleIPInputChange(
-            value,
-            editingItem,
-            setEditingItem
-          )
-        }
-      />
-    )}
-  </EditModal>
-)}
+<ModuleEditModal
+  tab={tab}
+  editingItem={editingItem}
+  setEditingItem={setEditingItem}
+  onSubmit={handleSave}
+  onClose={() => setEditingItem(null)}
+  departments={dptosList}
+  usuarios={usuariosList}
+  availableIps={availableIpsForUser(
+    editingItem?.ip_actual
+  )}
+  formatEquipmentType={formatEquipmentType}
+  onHostnameChange={(value) =>
+    handleHostnameEquipoChange(
+      value,
+      editingItem,
+      setEditingItem
+    )
+  }
+  onIpChange={(value) =>
+    handleIPInputChange(
+      value,
+      editingItem,
+      setEditingItem
+    )
+  }
+/>
     </div>
   );
 }
