@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from './api/client';
+import { getInitialCreateItem } from './utils/getInitialCreateItem';
+import { prepareCreatePayload } from './utils/prepareCreatePayload';
+import { prepareUpdatePayload } from './utils/prepareUpdatePayload';
+import { validateItem } from './utils/validateItem';
+import { createItemByTab } from './services/createItemService';
+import { updateItemByTab } from './services/updateItemService';
+import { deleteItemByTab } from './services/deleteItemService';
+import { getItemsByTab } from './services/getItemService';
 import EditModal from './components/common/EditModal';
+
+import {
+  buildEquipmentStateFromHostname,
+  filterEquiposByCategory,
+} from './utils/equipmentHelpers';
+
+import {
+  sanitizeIpInput,
+  getAvailableIpsForUser,
+} from './utils/ipHelpers';
+
+import { useReferenceData } from './hooks/useReferenceData';
 
 import UsuarioEditForm from './features/usuarios/components/UsuarioEditForm';
 import EquipoEditForm from './features/equipos/components/EquipoEditForm';
@@ -20,66 +40,54 @@ import UsuarioHistoryModal from './features/usuarios/components/UsuarioHistoryMo
 import EquipoCreateForm from './features/equipos/components/EquipoCreateForm';
 import EquiposTable from './features/equipos/components/EquiposTable';
 import EquipoHistoryModal from './features/equipos/components/EquipoHistoryModal';
+import { formatEquipmentType } from './utils/formatEquipmentType';
 
 import PerfilCreateForm from './features/perfiles/components/PerfilCreateForm';
 import PerfilesTable from './features/perfiles/components/PerfilesTable';
 
 import IpsTable from './features/ips/components/IpsTable';
 import IpCreateForm from './features/ips/components/IpCreateForm';
+
 import {
-  getUsuarios,
-  createUsuario,
-  updateUsuario,
-  deleteUsuario,
-} from './api/usuariosApi';
-import {
-  getIps,
-  createIp,
-  updateIp,
-  deleteIp,
-} from './api/ipsApi';
-import {
-  getEquipos,
-  createEquipo,
-  updateEquipo,
-  deleteEquipo,
-} from './api/equiposApi';
-import {
-  getPerfiles,
-  createPerfil,
-  updatePerfil,
-  deletePerfil,
-} from './api/perfilesApi';
-import {
-  Save,
-  X,
-  Lock,
-} from 'lucide-react';
+  renderUsuarioStatusBadge,
+  renderAccountTypeBadge,
+  renderIpStatusBadge,
+} from './components/common/badgeRenderers';
+
+import {Lock} from 'lucide-react';
 
 
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem('access_token') || null);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
+const [token, setToken] = useState(
+  localStorage.getItem('access_token') || null
+);
 
-  const [tab, setTab] = useState('usuarios');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [data, setData] = useState([]);
-  const [search, setSearch] = useState('');
-  const [selectedDpto, setSelectedDpto] = useState('');
-  const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
-  const [selectedEstadoIP, setSelectedEstadoIP] = useState('');
-  const [dptosList, setDptosList] = useState([]);
-  const [editingItem, setEditingItem] = useState(null);
-  const [newItem, setNewItem] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [historyEquipo, setHistoryEquipo] = useState(null);
-  const [historyUsuario, setHistoryUsuario] = useState(null);
-  const [usuariosList, setUsuariosList] = useState([]);
-  const [ipsList, setIpsList] = useState([]);
+const [username, setUsername] = useState('');
+const [password, setPassword] = useState('');
+const [loginError, setLoginError] = useState('');
 
-  const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
+const [tab, setTab] = useState('usuarios');
+const [sidebarOpen, setSidebarOpen] = useState(false);
+const [data, setData] = useState([]);
+const [search, setSearch] = useState('');
+const [selectedDpto, setSelectedDpto] = useState('');
+const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState('');
+const [selectedEstadoIP, setSelectedEstadoIP] = useState('');
+
+const [editingItem, setEditingItem] = useState(null);
+const [newItem, setNewItem] = useState(null);
+const [selectedUser, setSelectedUser] = useState(null);
+const [historyEquipo, setHistoryEquipo] = useState(null);
+const [historyUsuario, setHistoryUsuario] = useState(null);
+
+const [visibleProfilePasswords, setVisibleProfilePasswords] = useState({});
+
+  const {
+  dptosList,
+  usuariosList,
+  ipsList,
+  refreshReferenceData,
+} = useReferenceData(token);
 
 const handleLogin = async (e) => {
   e.preventDefault();
@@ -108,50 +116,6 @@ const handleLogin = async (e) => {
 
   useEffect(() => {
     if (token) {
-      fetchDptos();
-      fetchUsuariosList();
-      fetchIpsList();
-    }
-  }, [token]);
-
-const fetchDptos = async () => {
-  try {
-    const usuarios = await getUsuarios();
-
-    const unique = Array.from(
-      new Set(
-        usuarios
-          .map((usuario) => usuario.dpto_area)
-          .filter(Boolean)
-      )
-    );
-
-    setDptosList(unique.sort());
-  } catch (error) {
-    console.error('Error cargando departamentos:', error);
-  }
-};
-
-const fetchUsuariosList = async () => {
-  try {
-    const usuarios = await getUsuarios();
-    setUsuariosList(usuarios);
-  } catch (error) {
-    console.error('Error cargando usuarios:', error);
-  }
-};
-
-const fetchIpsList = async () => {
-  try {
-    const ips = await getIps();
-    setIpsList(ips);
-  } catch (error) {
-    console.error('Error cargando IPs:', error);
-  }
-};
-
-  useEffect(() => {
-    if (token) {
       fetchData();
     }
   }, [tab, search, selectedDpto, selectedEstadoIP, token]);
@@ -172,30 +136,9 @@ const fetchIpsList = async () => {
       params.estado = selectedEstadoIP;
     }
 
-    let result = [];
+const result = await getItemsByTab(tab, params);
 
-    switch (tab) {
-      case 'usuarios':
-        result = await getUsuarios(params);
-        break;
-
-      case 'equipos':
-        result = await getEquipos(params);
-        break;
-
-      case 'perfiles':
-        result = await getPerfiles(params);
-        break;
-
-      case 'ips':
-        result = await getIps(params);
-        break;
-
-      default:
-        result = [];
-    }
-
-    setData(result);
+setData(result);
 
   } catch (error) {
     if (error.response && error.response.status === 401) {
@@ -207,173 +150,54 @@ const fetchIpsList = async () => {
   }
 };
 
-  const formatTipoEquipo = (tipo) => {
-    if (!tipo) return 'N/I';
-    const t = tipo.toUpperCase();
-    if (t === 'NTBK' || t === 'NOTEBOOK') return 'Notebook';
-    if (t === 'CEL' || t === 'CELULAR') return 'Celular';
-    if (t === 'TBIT' || t === 'TABLET') return 'Tablet';
-    if (t === 'MAC') return 'Mac';
-    if (t === 'BAM' || t === 'BAM / ROUTER') return 'BAM / Router';
-    return tipo;
-  };
+const handleHostnameEquipoChange = (
+  hostnameValue,
+  targetState,
+  setTargetState
+) => {
+  const nextState = buildEquipmentStateFromHostname(
+    hostnameValue,
+    targetState,
+    usuariosList
+  );
 
-  const handleHostnameEquipoChange = (hostnameVal, targetState, setTargetState) => {
-    const matchUser = usuariosList.find(u => u.hostname && u.hostname.trim().toLowerCase() === hostnameVal.trim().toLowerCase());
-    
-    if (matchUser) {
-      setTargetState({
-        ...targetState,
-        hostname: hostnameVal,
-        usuario: matchUser.id,
-        estado: 'ASIGNADO'
-      });
-    } else {
-      setTargetState({ ...targetState, hostname: hostnameVal });
-    }
-  };
+  setTargetState(nextState);
+};
 
-  const handleIPInputChange = (val, targetState, setTargetState) => {
-    const cleaned = val.replace(/[^0-9.]/g, '');
-    setTargetState({ ...targetState, direccion_ip: cleaned });
-  };
-
-  const validateFieldsAndDuplicates = (item) => {
-    if (tab === 'ips') {
-      if (!item.direccion_ip || !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(item.direccion_ip.trim())) {
-        alert('Por favor ingrese una dirección IP válida (ejemplo: 192.168.1.50).');
-        return false;
-      }
-      const dupIP = data.find(i => i.id !== item.id && i.direccion_ip.trim() === item.direccion_ip.trim());
-      if (dupIP) { alert(`Error: La dirección IP "${item.direccion_ip}" ya existe en el sistema.`); return false; }
-    }
-
-    if (item.af) {
-      if (item.af.length > 12 || !/^\d+$/.test(item.af)) {
-        alert('El Activo Fijo (AF) debe ser numérico y tener máximo 12 dígitos.');
-        return false;
-      }
-    }
-
-    if (tab === 'usuarios') {
-      const dupNombre = data.find(u => u.id !== item.id && u.nombre_completo.trim().toLowerCase() === (item.nombre_completo || '').trim().toLowerCase());
-      if (dupNombre) { alert(`Error: Ya existe un usuario llamado "${item.nombre_completo}".`); return false; }
-
-      const dupRed = data.find(u => u.id !== item.id && u.usuario_red.trim().toLowerCase() === (item.usuario_red || '').trim().toLowerCase());
-      if (dupRed) { alert(`Error: El usuario de red "${item.usuario_red}" ya existe.`); return false; }
-    }
-
-    if (tab === 'equipos') {
-      const dupSerie = data.find(e => e.id !== item.id && e.numero_serie.trim().toLowerCase() === (item.numero_serie || '').trim().toLowerCase());
-      if (dupSerie) { alert(`Error: El número de serie "${item.numero_serie}" ya está registrado.`); return false; }
-
-      if (item.af) {
-        const dupAF = data.find(e => e.id !== item.id && e.af === item.af);
-        if (dupAF) { alert(`Error: El Activo Fijo (AF) "${item.af}" ya pertenece a otro equipo.`); return false; }
-      }
-    }
-
-    return true;
-  };
+const handleIPInputChange = (
+  value,
+  targetState,
+  setTargetState
+) => {
+  setTargetState({
+    ...targetState,
+    direccion_ip: sanitizeIpInput(value),
+  });
+};
 
   const handleOpenCreateModal = () => {
-    if (tab === 'usuarios') {
-  setNewItem({
-    estado: 'ACTIVO',
-    nombre_completo: '',
-    hostname: '',
-    cargo: '',
-    dpto_area: dptosList[0] || '',
-    usuario_red: '',
-    correo_corp: '',
-    gmail: '',
-    password_gmail: '',
-    password_simi: '',
-    celular: '',
-    telefono: '',
-    anexo: '',
-    ip_seleccionada: null
-  });
-    } else if (tab === 'equipos') {
-      setNewItem({
-        tipo: 'Notebook',
-        marca: '',
-        modelo: '',
-        numero_serie: '',
-        hostname: '',
-        af: '',
-        usuario: '',
-        fecha_asignacion: '',
-        numero_telefono: '',
-        imei: '',
-        pin: '',
-        icloud_cuenta: '',
-        icloud_password: '',
-        estado: 'ASIGNADO'
-      });
-    } else if (tab === 'perfiles') {
-      setNewItem({
-        nombre: '',
-        usuario: '',
-        password: '',
-        correo: '',
-        dpto_area: dptosList[0] || '',
-        tipo: 'On Premise',
-        estado: 'ACTIVO'
-      });
-    } else {
-      setNewItem({
-        direccion_ip: '',
-        estado: 'LIBRE',
-        observacion: '',
-        usuario: '',
-        asignado_otro: ''
-      });
-    }
-  };
+  setNewItem(getInitialCreateItem(tab, dptosList));
+};
 
 const handleCreateSave = async (e) => {
   e.preventDefault();
 
-  if (!validateFieldsAndDuplicates(newItem)) return;
+const validation = validateItem(tab, newItem, data);
+
+if (!validation.valid) {
+  alert(validation.message);
+  return;
+}
 
   try {
-    const payload = { ...newItem };
+    const payload = prepareCreatePayload(tab, newItem);
 
-    // Convertir strings vacíos en null
-    Object.keys(payload).forEach((key) => {
-      if (payload[key] === '') {
-        payload[key] = null;
-      }
-    });
-
-    // IP asignada o reservada
-    if (tab === 'ips') {
-      if (payload.usuario || payload.asignado_otro) {
-        payload.estado = 'RESERVADA';
-      }
-    }
-
-    // Crear según módulo
-    if (tab === 'usuarios') {
-      await createUsuario(payload);
-
-    } else if (tab === 'equipos') {
-      await createEquipo(payload);
-
-    } else if (tab === 'ips') {
-      await createIp(payload);
-
-    } else if (tab === 'perfiles') {
-      await createPerfil(payload);
-    }
+    await createItemByTab(tab, payload);
 
     setNewItem(null);
 
     await fetchData();
-    fetchDptos();
-    fetchUsuariosList();
-    fetchIpsList();
+    await refreshReferenceData();
 
   } catch (error) {
     console.error(
@@ -393,97 +217,32 @@ const handleCreateSave = async (e) => {
 const handleSave = async (e) => {
   e.preventDefault();
 
-  if (!validateFieldsAndDuplicates(editingItem)) return;
+const validation = validateItem(
+  tab,
+  editingItem,
+  data
+);
+
+if (!validation.valid) {
+  alert(validation.message);
+  return;
+}
 
   try {
-    const payload = { ...editingItem };
 
-    // Campos que no deben enviarse al backend
-    delete payload.equipos;
-    delete payload.historial;
-    delete payload.id;
-    delete payload.usuario_nombre;
-    delete payload.ip_actual;
-
-    // USUARIOS
-    if (tab === 'usuarios') {
-      delete payload.ip_asignada;
-
-      if (payload.ip_seleccionada === '') {
-        payload.ip_seleccionada = null;
-      }
-    }
-
-    // EQUIPOS - Normalizar tipos antiguos
-    if (tab === 'equipos' && payload.tipo) {
-      payload.tipo = formatTipoEquipo(payload.tipo);
-    }
-
-    // EQUIPOS - Coherencia entre usuario y estado
-    if (tab === 'equipos') {
-      if (!payload.usuario) {
-        payload.estado = 'STOCK';
-        payload.fecha_asignacion = null;
-
-      } else if (payload.estado === 'STOCK') {
-        payload.estado = 'ASIGNADO';
-      }
-    }
-
-    // Normalizar estados
-    if (payload.estado && tab !== 'ips') {
-      payload.estado = payload.estado.toUpperCase();
-    }
-
-    // IPS
-    if (tab === 'ips') {
-      if (
-        payload.usuario ||
-        (payload.asignado_otro && payload.asignado_otro.trim())
-      ) {
-        payload.estado = 'RESERVADA';
-
-      } else if (
-        !payload.usuario &&
-        !payload.asignado_otro &&
-        payload.estado === 'RESERVADA'
-      ) {
-        payload.estado = 'LIBRE';
-      }
-    }
+const payload = prepareUpdatePayload(
+  tab,
+  editingItem,
+  formatEquipmentType
+);
 
     // Actualizar según módulo
-    if (tab === 'usuarios') {
-      await updateUsuario(
-        editingItem.id,
-        payload
-      );
-
-    } else if (tab === 'equipos') {
-      await updateEquipo(
-        editingItem.id,
-        payload
-      );
-
-    } else if (tab === 'ips') {
-      await updateIp(
-        editingItem.id,
-        payload
-      );
-
-    } else if (tab === 'perfiles') {
-      await updatePerfil(
-        editingItem.id,
-        payload
-      );
-    }
+  await updateItemByTab(tab, editingItem.id, payload);
 
     setEditingItem(null);
 
     await fetchData();
-    fetchDptos();
-    fetchUsuariosList();
-    fetchIpsList();
+    await refreshReferenceData();
 
   } catch (error) {
     console.error(
@@ -508,22 +267,10 @@ const handleDelete = async (id, nombre) => {
   ) {
     try {
 
-      if (tab === 'usuarios') {
-        await deleteUsuario(id);
-
-      } else if (tab === 'equipos') {
-        await deleteEquipo(id);
-
-      } else if (tab === 'ips') {
-        await deleteIp(id);
-
-      } else if (tab === 'perfiles') {
-        await deletePerfil(id);
-      }
+    await deleteItemByTab(tab, id);
 
       await fetchData();
-      fetchUsuariosList();
-      fetchIpsList();
+      await refreshReferenceData();
 
     } catch (error) {
       console.error(
@@ -542,52 +289,21 @@ const handleDelete = async (id, nombre) => {
   }
 };
 
-  const getBadgeEstadoUsuario = (estado) => {
-    switch(estado) {
-      case 'LICENCIA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309', whiteSpace: 'nowrap', display: 'inline-block' }}>Licencia Médica</span>;
-      case 'BAJA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c', whiteSpace: 'nowrap', display: 'inline-block' }}>Dar de Baja</span>;
-      default:
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d', whiteSpace: 'nowrap', display: 'inline-block' }}>Activo</span>;
-    }
-  };
+const filteredData =
+  tab === 'equipos'
+    ? filterEquiposByCategory(
+        data,
+        selectedCategoriaEquipo,
+        formatEquipmentType
+      )
+    : data;
 
-  const getBadgeTipoCuenta = (tipo) => {
-    if (tipo === 'O365') {
-      return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', display: 'inline-block' }}>O365</span>;
-    }
-    return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', whiteSpace: 'nowrap', display: 'inline-block' }}>On Premise</span>;
-  };
-
-  // CAMBIO 2: INTERCAMBIO DE COLORES (RESERVADA -> ROJO, DESCONOCIDA -> AMARILLO)
-  const getBadgeEstadoIP = (estado) => {
-    switch(estado) {
-      case 'LIBRE':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#15803d', whiteSpace: 'nowrap', display: 'inline-block' }}>🟢 Libre</span>;
-      case 'RESERVADA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fee2e2', color: '#b91c1c', whiteSpace: 'nowrap', display: 'inline-block' }}>🔴 Reservada</span>;
-      case 'DUPLICADA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', display: 'inline-block' }}>🔵 Duplicada</span>;
-      case 'DESCONOCIDA':
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#fef3c7', color: '#b45309', whiteSpace: 'nowrap', display: 'inline-block' }}>🟡 Desconocida</span>;
-      default:
-        return <span style={{ padding: '0.3rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: '#f1f5f9', color: '#475569', whiteSpace: 'nowrap', display: 'inline-block' }}>⚪ Asignada</span>;
-    }
-  };
-
-  const filteredData = data.filter(item => {
-    if (tab === 'equipos' && selectedCategoriaEquipo) {
-      const tipoFormatted = formatTipoEquipo(item.tipo).toLowerCase();
-      const selFormatted = formatTipoEquipo(selectedCategoriaEquipo).toLowerCase();
-      return tipoFormatted === selFormatted;
-    }
-    return true;
-  });
-
-  const availableIpsForUser = (currentIp) => {
-    return ipsList.filter(ip => ip.estado === 'LIBRE' || ip.direccion_ip === currentIp);
-  };
+const availableIpsForUser = (currentIp) => {
+  return getAvailableIpsForUser(
+    ipsList,
+    currentIp
+  );
+};
 
   const handleSelectTab = (selectedTab) => {
     setTab(selectedTab);
@@ -672,14 +388,13 @@ const handleDelete = async (id, nombre) => {
       onShowHistory={setHistoryUsuario}
       onEdit={setEditingItem}
       onDelete={handleDelete}
-      renderStatusBadge={getBadgeEstadoUsuario}
-    />
+renderStatusBadge={renderUsuarioStatusBadge}    />
   )}
 
   {tab === 'equipos' && (
     <EquiposTable
       equipos={filteredData}
-      formatEquipmentType={formatTipoEquipo}
+      formatEquipmentType={formatEquipmentType}
       onShowHistory={setHistoryEquipo}
       onEdit={setEditingItem}
       onDelete={handleDelete}
@@ -691,7 +406,7 @@ const handleDelete = async (id, nombre) => {
       perfiles={filteredData}
       visiblePasswords={visibleProfilePasswords}
       setVisiblePasswords={setVisibleProfilePasswords}
-      renderAccountTypeBadge={getBadgeTipoCuenta}
+      renderAccountTypeBadge={renderAccountTypeBadge}
       onEdit={setEditingItem}
       onDelete={handleDelete}
     />
@@ -700,7 +415,7 @@ const handleDelete = async (id, nombre) => {
   {tab === 'ips' && (
     <IpsTable
       ips={filteredData}
-      renderIpStatusBadge={getBadgeEstadoIP}
+      renderIpStatusBadge={renderIpStatusBadge}
       onEdit={setEditingItem}
       onDelete={handleDelete}
     />
@@ -710,8 +425,8 @@ const handleDelete = async (id, nombre) => {
 <UsuarioDetailModal
   usuario={selectedUser}
   onClose={() => setSelectedUser(null)}
-  renderStatusBadge={getBadgeEstadoUsuario}
-  formatEquipmentType={formatTipoEquipo}
+  renderStatusBadge={renderUsuarioStatusBadge}
+  formatEquipmentType={formatEquipmentType}
 />
 
 <UsuarioHistoryModal
@@ -755,7 +470,7 @@ const handleDelete = async (id, nombre) => {
         equipo={newItem}
         onChange={setNewItem}
         usuarios={usuariosList}
-        formatEquipmentType={formatTipoEquipo}
+        formatEquipmentType={formatEquipmentType}
         onHostnameChange={(value) =>
           handleHostnameEquipoChange(
             value,
@@ -822,7 +537,7 @@ const handleDelete = async (id, nombre) => {
         equipo={editingItem}
         onChange={setEditingItem}
         usuarios={usuariosList}
-        formatEquipmentType={formatTipoEquipo}
+        formatEquipmentType={formatEquipmentType}
         onHostnameChange={(value) =>
           handleHostnameEquipoChange(
             value,
