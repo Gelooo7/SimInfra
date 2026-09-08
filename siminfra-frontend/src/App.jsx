@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
-import { prepareCreatePayload } from './utils/prepareCreatePayload';
-import { prepareUpdatePayload } from './utils/prepareUpdatePayload';
-import { validateItem } from './utils/validateItem';
-import { createItemByTab } from './services/createItemService';
-import { updateItemByTab } from './services/updateItemService';
-import { deleteItemByTab } from './services/deleteItemService';
+import { useModuleCrud } from './hooks/useModuleCrud';
 
 import LoginPage from './features/auth/components/LoginPage';
 import ModuleCreateModal from './components/modules/ModuleCreateModal';
@@ -114,6 +109,20 @@ const refreshAllData = async () => {
   ]);
 };
 
+const {
+  handleCreateSave,
+  handleSave,
+  handleDelete,
+} = useModuleCrud({
+  tab,
+  data,
+  newItem,
+  editingItem,
+  setNewItem,
+  setEditingItem,
+  refreshAllData,
+});
+
 const handleLogin = async (e) => {
   e.preventDefault();
 
@@ -154,116 +163,6 @@ const handleIPInputChange = (
 
   const handleOpenCreateModal = () => {
   setNewItem(getInitialCreateItem(tab, dptosList));
-};
-
-const handleCreateSave = async (e) => {
-  e.preventDefault();
-
-const validation = validateItem(tab, newItem, data);
-
-if (!validation.valid) {
-  alert(validation.message);
-  return;
-}
-
-  try {
-    const payload = prepareCreatePayload(tab, newItem);
-
-    await createItemByTab(tab, payload);
-
-    setNewItem(null);
-
-    await refreshAllData();
-
-  } catch (error) {
-    console.error(
-      'Error al guardar:',
-      error.response?.data || error
-    );
-
-    alert(
-      'Error al guardar: ' +
-      JSON.stringify(
-        error.response?.data || 'Verifique los datos'
-      )
-    );
-  }
-};
-
-const handleSave = async (e) => {
-  e.preventDefault();
-
-  const validation = validateItem(
-    tab,
-    editingItem,
-    data
-  );
-
-  if (!validation.valid) {
-    alert(validation.message);
-    return;
-  }
-
-  try {
-    const payload = prepareUpdatePayload(
-      tab,
-      editingItem,
-      formatEquipmentType
-    );
-
-
-    await updateItemByTab(
-      tab,
-      editingItem.id,
-      payload
-    );
-
-    setEditingItem(null);
-
-    await refreshAllData();
-
-  } catch (error) {
-    console.error(
-      'Error guardando cambios:',
-      error.response?.data || error
-    );
-
-    alert(
-      'Error al guardar: ' +
-      JSON.stringify(
-        error.response?.data || 'Verifique los datos'
-      )
-    );
-  }
-};
-
-const handleDelete = async (id, nombre) => {
-  if (
-    window.confirm(
-      `¿Estás seguro de que deseas eliminar permanentemente "${nombre}"?`
-    )
-  ) {
-    try {
-
-    await deleteItemByTab(tab, id);
-
-    await refreshAllData();
-
-    } catch (error) {
-      console.error(
-        'Error al eliminar registro:',
-        error.response?.data || error
-      );
-
-      alert(
-        'Error al eliminar: ' +
-        JSON.stringify(
-          error.response?.data ||
-          'No se pudo eliminar el registro'
-        )
-      );
-    }
-  }
 };
 
 const filteredData =
