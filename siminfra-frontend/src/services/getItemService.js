@@ -2,6 +2,8 @@ import { getUsuarios } from '../api/usuariosApi';
 import { getEquipos } from '../api/equiposApi';
 import { getPerfiles } from '../api/perfilesApi';
 import { getIps } from '../api/ipsApi';
+import { getAnexos } from '../api/anexosApi';
+
 
 export const getItemsByTab = async (tab, params = {}) => {
   switch (tab) {
@@ -16,6 +18,9 @@ export const getItemsByTab = async (tab, params = {}) => {
 
     case 'ips':
       return await getIps(params);
+
+    case 'anexos':
+      return await getAnexos(params);
 
     default:
       return [];

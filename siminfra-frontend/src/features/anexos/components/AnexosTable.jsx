@@ -4,13 +4,12 @@ import {
   History
 } from 'lucide-react';
 
-export default function UsuariosTable({
-  usuarios,
-  onSelectUser,
+export default function AnexosTable({
+  anexos,
+  renderAnexoStatusBadge,
   onShowHistory,
   onEdit,
   onDelete,
-  renderStatusBadge,
 }) {
   return (
     <table
@@ -42,26 +41,6 @@ export default function UsuariosTable({
           </th>
 
           <th style={{ padding: '1rem 1.2rem' }}>
-            Estado
-          </th>
-
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Usuario Red
-          </th>
-
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Hostname
-          </th>
-
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Correo Corp.
-          </th>
-
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Celular
-          </th>
-
-          <th style={{ padding: '1rem 1.2rem' }}>
             Anexo
           </th>
 
@@ -70,7 +49,15 @@ export default function UsuariosTable({
           </th>
 
           <th style={{ padding: '1rem 1.2rem' }}>
-            IP Asignada
+            Correo
+          </th>
+
+          <th style={{ padding: '1rem 1.2rem' }}>
+            Estado
+          </th>
+
+          <th style={{ padding: '1rem 1.2rem' }}>
+            Observaciones
           </th>
 
           <th
@@ -85,150 +72,112 @@ export default function UsuariosTable({
       </thead>
 
       <tbody>
-        {usuarios.map((usuario) => (
+        {anexos.map((anexo) => (
           <tr
-            key={usuario.id}
-            onClick={() => onSelectUser(usuario)}
+            key={anexo.id}
             style={{
               borderBottom: '1px solid #f1f5f9',
-              color: '#334155',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f1f5f9';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              color: '#334155'
             }}
           >
+            {/* Nombre */}
             <td
               style={{
                 padding: '1rem 1.2rem',
-                fontWeight: '600',
-                color: '#2563eb'
+                fontWeight: 'bold'
               }}
             >
-              {usuario.nombre_completo || 'N/I'}
+              {anexo.usuario_nombre || 'Sin asignar'}
             </td>
 
+            {/* Departamento */}
             <td style={{ padding: '1rem 1.2rem' }}>
-              {usuario.dpto_area || 'N/I'}
+              {anexo.departamento || '—'}
             </td>
 
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontSize: '0.85rem',
-                color: '#64748b'
-              }}
-            >
-              {usuario.cargo || 'N/I'}
-            </td>
-
+            {/* Cargo */}
             <td style={{ padding: '1rem 1.2rem' }}>
-              {renderStatusBadge(usuario.estado)}
+              {anexo.cargo || '—'}
             </td>
 
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {usuario.usuario_red || 'N/I'}
-            </td>
-
+            {/* Anexo */}
             <td
               style={{
                 padding: '1rem 1.2rem',
                 fontFamily: 'monospace',
-                fontWeight: 'bold'
-              }}
-            >
-              {usuario.hostname || 'N/I'}
-            </td>
-
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {usuario.correo_corp || 'N/I'}
-            </td>
-
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontSize: '0.85rem',
-                fontWeight: '500'
-              }}
-            >
-              {usuario.celular || 'N/I'}
-            </td>
-
-            {/* ANEXO - DESDE MÓDULO ANEXOS */}
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontSize: '0.85rem',
                 fontWeight: 'bold',
-                color: usuario.anexo_actual
-                  ? '#2563eb'
-                  : '#94a3b8'
+                color: '#0284c7'
               }}
             >
-              {usuario.anexo_actual?.numero_anexo ||
-                'Sin asignar'}
+              {anexo.numero_anexo}
             </td>
 
-            {/* EXTERIOR - DESDE MÓDULO ANEXOS */}
+            {/* Exterior */}
             <td
               style={{
                 padding: '1rem 1.2rem',
-                fontSize: '0.85rem',
-                fontWeight: '500',
-                color: usuario.anexo_actual?.exterior
-                  ? '#475569'
-                  : '#94a3b8'
+                fontFamily: 'monospace'
               }}
             >
-              {usuario.anexo_actual?.exterior || 'N/I'}
+              {anexo.exterior || '—'}
             </td>
 
+            {/* Correo */}
+            <td style={{ padding: '1rem 1.2rem' }}>
+              {anexo.correo || '—'}
+            </td>
+
+            {/* Estado */}
+            <td style={{ padding: '1rem 1.2rem' }}>
+              {renderAnexoStatusBadge(
+                anexo.estado
+              )}
+            </td>
+
+            {/* Observaciones */}
             <td
               style={{
                 padding: '1rem 1.2rem',
-                color: usuario.ip_actual
-                  ? '#16a34a'
-                  : '#94a3b8',
-                fontWeight: 'bold'
+                fontSize: '0.85rem'
               }}
             >
-              {usuario.ip_actual || 'Sin asignar'}
+              {anexo.observaciones ||
+                'Sin observaciones'}
             </td>
 
+            {/* Acciones */}
             <td
               style={{
                 padding: '1rem 1.2rem',
                 textAlign: 'center'
               }}
-              onClick={(e) => e.stopPropagation()}
             >
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'center',
-                  gap: '0.6rem'
+                  gap: '0.75rem'
                 }}
               >
                 <button
                   type="button"
-                  onClick={() => onShowHistory(usuario)}
+                  onClick={() =>
+                    onShowHistory(anexo)
+                  }
                   style={{
                     border: 'none',
                     background: 'none',
                     cursor: 'pointer',
-                    color: '#d97706'
+                    color: '#64748b'
                   }}
-                  title="Ver Historial de Modificaciones"
+                  title="Ver historial"
                 >
                   <History size={18} />
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => onEdit(usuario)}
+                  onClick={() => onEdit(anexo)}
                   style={{
                     border: 'none',
                     background: 'none',
@@ -244,8 +193,8 @@ export default function UsuariosTable({
                   type="button"
                   onClick={() =>
                     onDelete(
-                      usuario.id,
-                      usuario.nombre_completo
+                      anexo.id,
+                      anexo.numero_anexo
                     )
                   }
                   style={{

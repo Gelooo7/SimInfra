@@ -56,6 +56,14 @@ export const getInitialCreateItem = (tab, dptosList = []) => {
         asignado_otro: '',
       };
 
+        case 'anexos':
+      return {
+        numero_anexo: '',
+        exterior: '',
+        usuario: '',
+        observaciones: '',
+      };
+
     default:
       return null;
   }

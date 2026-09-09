@@ -1,7 +1,7 @@
 export const prepareUpdatePayload = (tab, item, formatTipoEquipo) => {
   const payload = { ...item };
 
-  // Campos que no deben enviarse al backend
+  // Campos generales que no deben enviarse al backend
   delete payload.equipos;
   delete payload.historial;
   delete payload.id;
@@ -27,36 +27,83 @@ export const prepareUpdatePayload = (tab, item, formatTipoEquipo) => {
     if (!payload.usuario) {
       payload.estado = 'STOCK';
       payload.fecha_asignacion = null;
-
     } else if (payload.estado === 'STOCK') {
       payload.estado = 'ASIGNADO';
     }
   }
 
-  // Normalizar estados
-  if (payload.estado && tab !== 'ips') {
+  // ANEXOS
+  if (tab === 'anexos') {
+    // Estos datos provienen del usuario relacionado
+    // y son solamente de lectura.
+    delete payload.departamento;
+    delete payload.cargo;
+    delete payload.correo;
+
+    // El backend controla el estado automáticamente.
+    delete payload.estado;
+
+    // Fechas administradas por Django.
+    delete payload.fecha_creacion;
+    delete payload.fecha_actualizacion;
+
+    // Sin usuario = anexo disponible.
+    if (!payload.usuario) {
+      payload.usuario = null;
+    }
+
+    if (payload.numero_anexo) {
+      payload.numero_anexo =
+        payload.numero_anexo.trim();
+    }
+
+    if (payload.exterior) {
+      payload.exterior =
+        payload.exterior.trim();
+    }
+
+    if (payload.observaciones) {
+      payload.observaciones =
+        payload.observaciones.trim();
+    }
+  }
+
+  // Normalizar estados.
+  // No se aplica a IPs ni Anexos.
+  if (
+    payload.estado &&
+    tab !== 'ips' &&
+    tab !== 'anexos'
+  ) {
     payload.estado = payload.estado.toUpperCase();
   }
 
   // IPS
-// IPS
-if (tab === 'ips') {
-  const tieneAsignacion = Boolean(
-    payload.usuario ||
-    (payload.asignado_otro && payload.asignado_otro.trim())
-  );
+  if (tab === 'ips') {
+    const tieneAsignacion = Boolean(
+      payload.usuario ||
+      (
+        payload.asignado_otro &&
+        payload.asignado_otro.trim()
+      )
+    );
 
-  // Solo automatizamos LIBRE y RESERVADA.
-  // DUPLICADA y DESCONOCIDA se respetan tal como las selecciona el usuario.
+    // Solo automatizamos LIBRE y RESERVADA.
+    // DUPLICADA y DESCONOCIDA se respetan.
+    if (
+      payload.estado === 'LIBRE' &&
+      tieneAsignacion
+    ) {
+      payload.estado = 'RESERVADA';
+    }
 
-  if (payload.estado === 'LIBRE' && tieneAsignacion) {
-    payload.estado = 'RESERVADA';
+    if (
+      payload.estado === 'RESERVADA' &&
+      !tieneAsignacion
+    ) {
+      payload.estado = 'LIBRE';
+    }
   }
-
-  if (payload.estado === 'RESERVADA' && !tieneAsignacion) {
-    payload.estado = 'LIBRE';
-  }
-}
 
   return payload;
 };

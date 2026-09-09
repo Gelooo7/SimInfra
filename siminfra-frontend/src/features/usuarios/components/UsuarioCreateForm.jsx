@@ -1,9 +1,19 @@
+import { useState } from 'react';
+import PasswordInput from './PasswordInput';
+
+
+
 export default function UsuarioCreateForm({
   usuario,
   onChange,
   departments,
   availableIps,
 }) {
+
+  const [showPasswordGmail, setShowPasswordGmail] = useState(false);
+  const [showPasswordSimi, setShowPasswordSimi] = useState(false);
+  const [showPasswordVpn, setShowPasswordVpn] = useState(false);
+
   const updateField = (field, value) => {
     onChange({
       ...usuario,
@@ -218,42 +228,42 @@ export default function UsuarioCreateForm({
           gap: '0.5rem'
         }}
       >
-        <div>
-          <label style={labelStyle}>
-            Contraseña Gmail
-          </label>
+        <PasswordInput
+          label="Contraseña Gmail"
+          value={usuario.password_gmail}
+          onChange={(value) =>
+            updateField('password_gmail', value)
+          }
+          visible={showPasswordGmail}
+          onToggle={() =>
+            setShowPasswordGmail((prev) => !prev)
+          }
+        />
 
-          <input
-            type="text"
-            value={usuario.password_gmail || ''}
-            onChange={(e) =>
-              updateField(
-                'password_gmail',
-                e.target.value
-              )
-            }
-            style={inputStyle}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>
-            Contraseña Simi
-          </label>
-
-          <input
-            type="text"
-            value={usuario.password_simi || ''}
-            onChange={(e) =>
-              updateField(
-                'password_simi',
-                e.target.value
-              )
-            }
-            style={inputStyle}
-          />
-        </div>
+        <PasswordInput
+          label="Contraseña Simi"
+          value={usuario.password_simi}
+          onChange={(value) =>
+            updateField('password_simi', value)
+          }
+          visible={showPasswordSimi}
+          onToggle={() =>
+            setShowPasswordSimi((prev) => !prev)
+          }
+        />
       </div>
+
+      <PasswordInput
+        label="Contraseña VPN"
+        value={usuario.password_vpn}
+        onChange={(value) =>
+          updateField('password_vpn', value)
+        }
+        visible={showPasswordVpn}
+        onToggle={() =>
+          setShowPasswordVpn((prev) => !prev)
+        }
+      />
 
       {/* Celular */}
       <div>
@@ -278,51 +288,6 @@ export default function UsuarioCreateForm({
           }
           style={inputStyle}
         />
-      </div>
-
-      {/* Teléfono + Anexo */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '0.5rem'
-        }}
-      >
-        <div>
-          <label style={labelStyle}>
-            Teléfono Fijo
-          </label>
-
-          <input
-            type="text"
-            value={usuario.telefono || ''}
-            onChange={(e) =>
-              updateField(
-                'telefono',
-                e.target.value
-              )
-            }
-            style={inputStyle}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>
-            Anexo
-          </label>
-
-          <input
-            type="text"
-            value={usuario.anexo || ''}
-            onChange={(e) =>
-              updateField(
-                'anexo',
-                e.target.value
-              )
-            }
-            style={inputStyle}
-          />
-        </div>
       </div>
 
       {/* IP */}

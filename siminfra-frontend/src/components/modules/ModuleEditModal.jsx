@@ -4,6 +4,7 @@ import UsuarioEditForm from '../../features/usuarios/components/UsuarioEditForm'
 import EquipoEditForm from '../../features/equipos/components/EquipoEditForm';
 import PerfilEditForm from '../../features/perfiles/components/PerfilEditForm';
 import IpEditForm from '../../features/ips/components/IpEditForm';
+import AnexoEditForm from '../../features/anexos/components/AnexoEditForm';
 
 const getEditTitle = (tab) => {
   switch (tab) {
@@ -18,6 +19,9 @@ const getEditTitle = (tab) => {
 
     case 'ips':
       return 'Editar Dirección IP';
+    
+    case 'anexos':
+      return 'Editar Anexo';
 
     default:
       return 'Editar Registro';
@@ -78,6 +82,14 @@ export default function ModuleEditModal({
           onChange={setEditingItem}
           usuarios={usuarios}
           onIpChange={onIpChange}
+        />
+      )}
+
+      {tab === 'anexos' && (
+        <AnexoEditForm
+          anexo={editingItem}
+          onChange={setEditingItem}
+          usuarios={usuarios}
         />
       )}
     </EditModal>

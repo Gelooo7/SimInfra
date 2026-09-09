@@ -16,9 +16,11 @@ export default function UsuarioDetailModal({
 }) {
   const [showPassGmail, setShowPassGmail] = useState(false);
   const [showPassSimi, setShowPassSimi] = useState(false);
+  const [showPassVpn, setShowPassVpn] = useState(false);
 
   const [copiedGmail, setCopiedGmail] = useState(false);
   const [copiedSimi, setCopiedSimi] = useState(false);
+  const [copiedVpn, setCopiedVpn] = useState(false);
 
   if (!usuario) {
     return null;
@@ -63,6 +65,14 @@ export default function UsuarioDetailModal({
 
         setTimeout(() => {
           setCopiedSimi(false);
+        }, 2000);
+      }
+
+      if (type === 'vpn') {
+        setCopiedVpn(true);
+
+        setTimeout(() => {
+          setCopiedVpn(false);
         }, 2000);
       }
     } catch (error) {
@@ -255,27 +265,40 @@ export default function UsuarioDetailModal({
               </strong>
             </div>
 
+            {/* ANEXO AUTOMÁTICO */}
             <div>
               <span style={labelStyle}>
-                Teléfono Fijo / Anexo
+                Anexo
               </span>
 
-              <span
+              <strong
                 style={{
-                  color: '#475569',
-                  fontSize: '0.85rem'
+                  color: usuario.anexo_actual
+                    ? '#2563eb'
+                    : '#94a3b8'
                 }}
               >
-                {usuario.telefono
-                  ? `${usuario.telefono}${
-                      usuario.anexo
-                        ? ` (Anx: ${usuario.anexo})`
-                        : ''
-                    }`
-                  : usuario.anexo
-                  ? `Anexo ${usuario.anexo}`
-                  : 'Sin teléfono'}
+                {usuario.anexo_actual?.numero_anexo ||
+                  'Sin anexo asignado'}
+              </strong>
+            </div>
+
+            {/* EXTERIOR AUTOMÁTICO */}
+            <div>
+              <span style={labelStyle}>
+                Exterior
               </span>
+
+              <strong
+                style={{
+                  color: usuario.anexo_actual?.exterior
+                    ? '#2563eb'
+                    : '#94a3b8'
+                }}
+              >
+                {usuario.anexo_actual?.exterior ||
+                  'Sin exterior'}
+              </strong>
             </div>
 
             {/* GMAIL */}
@@ -327,10 +350,10 @@ export default function UsuarioDetailModal({
                   >
                     {showPassGmail
                       ? usuario.password_gmail ||
-                        'Sin Contraseña'
+                      'Sin Contraseña'
                       : usuario.password_gmail
-                      ? '••••••••'
-                      : 'Sin Contraseña'}
+                        ? '••••••••'
+                        : 'Sin Contraseña'}
                   </span>
 
                   {usuario.password_gmail && (
@@ -419,10 +442,10 @@ export default function UsuarioDetailModal({
                 >
                   {showPassSimi
                     ? usuario.password_simi ||
-                      'Sin Contraseña'
+                    'Sin Contraseña'
                     : usuario.password_simi
-                    ? '••••••••'
-                    : 'Sin Contraseña'}
+                      ? '••••••••'
+                      : 'Sin Contraseña'}
                 </span>
 
                 {usuario.password_simi && (
@@ -477,6 +500,95 @@ export default function UsuarioDetailModal({
             </div>
           </div>
 
+          {/* VPN */}
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#fff',
+              borderRadius: '6px',
+              padding: '0.75rem'
+            }}
+          >
+            <span style={labelStyle}>
+              Contraseña VPN
+            </span>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f1f5f9',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '4px'
+                }}
+              >
+                {showPassVpn
+                  ? usuario.password_vpn ||
+                  'Sin Contraseña'
+                  : usuario.password_vpn
+                    ? '••••••••'
+                    : 'Sin Contraseña'}
+              </span>
+
+              {usuario.password_vpn && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassVpn(!showPassVpn)
+                    }
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b'
+                    }}
+                    title="Mostrar / Ocultar"
+                  >
+                    {showPassVpn ? (
+                      <EyeOff size={16} />
+                    ) : (
+                      <Eye size={16} />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard(
+                        usuario.password_vpn,
+                        'vpn'
+                      )
+                    }
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      cursor: 'pointer',
+                      color: copiedVpn
+                        ? '#16a34a'
+                        : '#64748b'
+                    }}
+                    title="Copiar Contraseña"
+                  >
+                    {copiedVpn ? (
+                      <Check size={16} />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          
           {/* EQUIPOS */}
           <div
             style={{
@@ -495,7 +607,7 @@ export default function UsuarioDetailModal({
             </h4>
 
             {usuario.equipos &&
-            usuario.equipos.length > 0 ? (
+              usuario.equipos.length > 0 ? (
               <div
                 style={{
                   display: 'flex',

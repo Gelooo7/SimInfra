@@ -4,6 +4,7 @@ import UsuarioCreateForm from '../../features/usuarios/components/UsuarioCreateF
 import EquipoCreateForm from '../../features/equipos/components/EquipoCreateForm';
 import PerfilCreateForm from '../../features/perfiles/components/PerfilCreateForm';
 import IpCreateForm from '../../features/ips/components/IpCreateForm';
+import AnexoCreateForm from '../../features/anexos/components/AnexoCreateForm';
 
 const getCreateTitle = (tab) => {
   switch (tab) {
@@ -18,6 +19,9 @@ const getCreateTitle = (tab) => {
 
     case 'ips':
       return 'Nueva Dirección IP';
+
+    case 'anexos':
+      return 'Nuevo Anexo';
 
     default:
       return 'Nuevo Registro';
@@ -78,6 +82,14 @@ export default function ModuleCreateModal({
           onChange={setNewItem}
           usuarios={usuarios}
           onIpChange={onIpChange}
+        />
+      )}
+
+      {tab === 'anexos' && (
+        <AnexoCreateForm
+          anexo={newItem}
+          onChange={setNewItem}
+          usuarios={usuarios}
         />
       )}
     </CreateModal>

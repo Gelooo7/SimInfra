@@ -9,19 +9,25 @@ export default function Header({
   onLogout,
 }) {
   const getTitle = () => {
-    if (activeTab === 'usuarios') {
-      return 'Usuarios';
-    }
+    switch (activeTab) {
+      case 'usuarios':
+        return 'Usuarios';
 
-    if (activeTab === 'equipos') {
-      return 'Equipos';
-    }
+      case 'equipos':
+        return 'Equipos';
 
-    if (activeTab === 'perfiles') {
-      return 'Perfiles Genéricos';
-    }
+      case 'perfiles':
+        return 'Perfiles Genéricos';
 
-    return 'Gestión de IPs';
+      case 'ips':
+        return 'Gestión de IPs';
+
+      case 'anexos':
+        return 'Anexos';
+
+      default:
+        return 'SimInfra';
+    }
   };
 
   return (

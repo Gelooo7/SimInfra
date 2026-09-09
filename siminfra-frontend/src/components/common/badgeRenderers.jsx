@@ -147,3 +147,45 @@ export const renderIpStatusBadge = (estado) => {
       );
   }
 };
+export const renderAnexoStatusBadge = (estado) => {
+  switch (estado) {
+    case 'DISPONIBLE':
+      return (
+        <span
+          style={{
+            ...baseBadgeStyle,
+            backgroundColor: '#dcfce7',
+            color: '#15803d',
+          }}
+        >
+          🟢 Disponible
+        </span>
+      );
+
+    case 'ASIGNADO':
+      return (
+        <span
+          style={{
+            ...baseBadgeStyle,
+            backgroundColor: '#ffc1c1',
+            color: '#d81d1d',
+          }}
+        >
+          🔴 Asignado
+        </span>
+      );
+
+    default:
+      return (
+        <span
+          style={{
+            ...baseBadgeStyle,
+            backgroundColor: '#f1f5f9',
+            color: '#475569',
+          }}
+        >
+          ⚪ Sin estado
+        </span>
+      );
+  }
+};

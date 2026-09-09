@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import Usuario, Equipamiento, HistorialEquipo, HistorialUsuario, PerfilGenerico, IP
+from .models import (
+    Usuario,
+    Equipamiento,
+    HistorialEquipo,
+    HistorialUsuario,
+    PerfilGenerico,
+    IP,
+    Anexo,
+    HistorialAnexo,
+)
 from .crypto import decrypt_val
 
 class IPSerializer(serializers.ModelSerializer):
@@ -9,6 +18,103 @@ class IPSerializer(serializers.ModelSerializer):
         model = IP
         fields = '__all__'
 
+class HistorialAnexoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistorialAnexo
+        fields = '__all__'
+
+
+class AnexoSerializer(serializers.ModelSerializer):
+    usuario_nombre = serializers.ReadOnlyField(
+        source='usuario.nombre_completo'
+    )
+
+    departamento = serializers.ReadOnlyField(
+        source='usuario.dpto_area'
+    )
+
+    cargo = serializers.ReadOnlyField(
+        source='usuario.cargo'
+    )
+
+    correo = serializers.ReadOnlyField(
+        source='usuario.correo_corp'
+    )
+
+    historial = HistorialAnexoSerializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = Anexo
+        fields = '__all__'
+        read_only_fields = [
+            'estado',
+            'fecha_creacion',
+            'fecha_actualizacion',
+        ]
+
+    def validate_numero_anexo(self, value):
+        value = value.strip()
+
+        instance = getattr(self, 'instance', None)
+
+        if Anexo.objects.filter(
+            numero_anexo__iexact=value
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError(
+                "Este número de anexo ya está registrado."
+            )
+
+        return value
+
+    def validate_usuario(self, value):
+        if value is None:
+            return None
+
+        if value.estado == 'BAJA':
+            raise serializers.ValidationError(
+                "No se puede asignar un anexo a un usuario dado de baja."
+            )
+
+        instance = getattr(self, 'instance', None)
+
+        if Anexo.objects.filter(
+            usuario=value
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError(
+                "Este usuario ya tiene un anexo asignado."
+            )
+
+        return value
+
+    def validate_exterior(self, value):
+        if not value:
+            return value
+
+        value = value.strip()
+
+        if len(value) > 12:
+         raise serializers.ValidationError(
+            "El exterior no puede superar los 12 caracteres."
+        )
+
+        if value.startswith('+'):
+            numero = value[1:]
+        else:
+            numero = value
+
+        if not numero.isdigit():
+            raise serializers.ValidationError(
+            "El exterior solo puede contener números y opcionalmente un + al inicio."
+        )
+
+        return value
 
 class HistorialUsuarioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,6 +163,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     ip_actual = serializers.SerializerMethodField()
 
+    anexo_actual = serializers.SerializerMethodField()
+
     ip_seleccionada = serializers.IPAddressField(
         write_only=True,
         required=False,
@@ -90,7 +198,21 @@ class UsuarioSerializer(serializers.ModelSerializer):
             return obj.ip.direccion_ip
         except IP.DoesNotExist:
             return None
+        
+    def get_anexo_actual(self, obj):
+        try:
+            anexo = obj.anexo_asignado
 
+            return {
+                'id': anexo.id,
+                'numero_anexo': anexo.numero_anexo,
+                'exterior': anexo.exterior,
+                'estado': anexo.estado,
+            }
+
+        except Anexo.DoesNotExist:
+            return None
+        
     def validate_ip_seleccionada(self, value):
         if value is None:
             return None

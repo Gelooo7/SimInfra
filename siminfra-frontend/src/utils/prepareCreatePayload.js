@@ -28,5 +28,27 @@ if (tab === 'ips') {
     payload.estado = 'LIBRE';
   }
 }
+
+  // ANEXOS
+  if (tab === 'anexos') {
+    // El estado es administrado automáticamente
+    // por el backend según tenga o no usuario.
+    delete payload.estado;
+
+    if (payload.numero_anexo) {
+      payload.numero_anexo =
+        payload.numero_anexo.trim();
+    }
+
+    if (payload.exterior) {
+      payload.exterior =
+        payload.exterior.trim();
+    }
+
+    if (payload.observaciones) {
+      payload.observaciones =
+        payload.observaciones.trim();
+    }
+  }
   return payload;
 };

@@ -7,6 +7,7 @@ export const useModuleData = ({
   search,
   selectedDpto,
   selectedEstadoIP,
+  selectedEstadoAnexo,
   onUnauthorized,
 }) => {
   const [data, setData] = useState([]);
@@ -38,6 +39,13 @@ export const useModuleData = ({
         params.estado = selectedEstadoIP;
       }
 
+      if (
+        selectedEstadoAnexo &&
+        tab === 'anexos'
+      ) {
+        params.estado = selectedEstadoAnexo;
+      }
+
       const result = await getItemsByTab(
         tab,
         params
@@ -62,6 +70,7 @@ export const useModuleData = ({
     search,
     selectedDpto,
     selectedEstadoIP,
+    selectedEstadoAnexo,
     onUnauthorized,
   ]);
 

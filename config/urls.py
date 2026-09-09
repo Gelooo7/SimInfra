@@ -6,16 +6,18 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from core.views import (
-    UsuarioViewSet, 
-    EquipamientoViewSet, 
+    UsuarioViewSet,
+    EquipamientoViewSet,
     PerfilGenericoViewSet,
-    IPViewSet
+    IPViewSet,
+    AnexoViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet, basename='usuario')
 router.register(r'equipos', EquipamientoViewSet, basename='equipo')
 router.register(r'perfiles-genericos', PerfilGenericoViewSet, basename='perfilgenerico')
+router.register(r'anexos', AnexoViewSet, basename='anexo')
 router.register(r'ips', IPViewSet, basename='ip')
 
 urlpatterns = [

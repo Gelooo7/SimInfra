@@ -3,7 +3,8 @@ import {
   User,
   Monitor,
   Key,
-  Network
+  Network,
+  Phone
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -164,6 +165,20 @@ export default function Sidebar({
               }
               onClick={() =>
                 onSelectTab('ips')
+              }
+            />
+
+            <SidebarButton
+              active={activeTab === 'anexos'}
+              icon={<Phone size={18} />}
+              label="Anexos"
+              count={
+                activeTab === 'anexos'
+                  ? activeCount
+                  : ''
+              }
+              onClick={() =>
+                onSelectTab('anexos')
               }
             />
           </nav>

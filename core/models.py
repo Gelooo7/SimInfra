@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from .crypto import encrypt_val, decrypt_val
@@ -33,6 +33,10 @@ ESTADOS_IP = [
     ('ASIGNADA', 'Asignada'),
 ]
 
+ESTADOS_ANEXO = [
+    ('DISPONIBLE', 'Disponible'),
+    ('ASIGNADO', 'Asignado'),
+]
 
 class Usuario(models.Model):
     nombre_completo = models.CharField(max_length=150)
@@ -69,6 +73,99 @@ class Usuario(models.Model):
     def __str__(self):
         return f"{self.nombre_completo} ({self.usuario_red})"
 
+class Anexo(models.Model):
+    numero_anexo = models.CharField(
+        max_length=10,
+        unique=True
+    )
+
+    exterior = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True
+    )
+
+    usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='anexo_asignado'
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS_ANEXO,
+        default='DISPONIBLE'
+    )
+
+    observaciones = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    fecha_actualizacion = models.DateTimeField(
+        auto_now=True
+    )
+
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def save(self, *args, **kwargs):
+        self.estado = (
+            'ASIGNADO'
+            if self.usuario_id
+            else 'DISPONIBLE'
+        )
+
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['numero_anexo']
+
+    def __str__(self):
+        return f"{self.numero_anexo} - {self.estado}"
+
+
+class HistorialAnexo(models.Model):
+    anexo = models.ForeignKey(
+        Anexo,
+        on_delete=models.CASCADE,
+        related_name='historial'
+    )
+
+    usuario_anterior = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+
+    usuario_nuevo = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+
+    fecha_movimiento = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    accion = models.CharField(
+        max_length=50,
+        default='MODIFICACION'
+    )
+
+    observacion = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['-fecha_movimiento']
+
+    def __str__(self):
+        return f"{self.anexo.numero_anexo} - {self.accion}"
 
 class IP(models.Model):
     direccion_ip = models.GenericIPAddressField(unique=True)
@@ -220,6 +317,99 @@ class PerfilGenerico(models.Model):
         if self.password and not self.password.startswith('ENC::'):
             self.password = encrypt_val(self.password)
         super().save(*args, **kwargs)
+
+# --- HISTORIAL DE ANEXOS ---
+
+@receiver(pre_save, sender=Anexo)
+def track_historial_anexo(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+
+    try:
+        anexo_previo = Anexo.objects.get(pk=instance.pk)
+    except Anexo.DoesNotExist:
+        return
+
+    cambios = []
+
+    def add_cambio(campo, anterior, actual):
+        if str(anterior) != str(actual):
+            cambios.append(
+                f"{campo}:::{anterior or 'N/I'}:::{actual or 'N/I'}"
+            )
+
+    usuario_anterior = (
+        anexo_previo.usuario.nombre_completo
+        if anexo_previo.usuario
+        else "Sin asignar"
+    )
+
+    usuario_nuevo = (
+        instance.usuario.nombre_completo
+        if instance.usuario
+        else "Sin asignar"
+    )
+
+    add_cambio(
+        "Número Anexo",
+        anexo_previo.numero_anexo,
+        instance.numero_anexo
+    )
+
+    add_cambio(
+        "Exterior",
+        anexo_previo.exterior,
+        instance.exterior
+    )
+
+    add_cambio(
+        "Usuario Asignado",
+        usuario_anterior,
+        usuario_nuevo
+    )
+
+    add_cambio(
+        "Estado",
+        anexo_previo.estado,
+        instance.estado
+    )
+
+    add_cambio(
+        "Observaciones",
+        anexo_previo.observaciones,
+        instance.observaciones
+    )
+
+    if cambios:
+        HistorialAnexo.objects.create(
+            anexo=instance,
+            usuario_anterior=usuario_anterior,
+            usuario_nuevo=usuario_nuevo,
+            accion="MODIFICACION",
+            observacion="||".join(cambios)
+        )
+
+
+@receiver(post_save, sender=Anexo)
+def registrar_creacion_anexo(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    usuario_nuevo = (
+        instance.usuario.nombre_completo
+        if instance.usuario
+        else "Sin asignar"
+    )
+
+    HistorialAnexo.objects.create(
+        anexo=instance,
+        usuario_anterior="Sin asignar",
+        usuario_nuevo=usuario_nuevo,
+        accion="CREACION",
+        observacion=(
+            f"Anexo creado con estado {instance.estado}"
+        )
+    )        
 
 # --- HISTORIAL DE EQUIPAMIENTO ---
 
@@ -473,6 +663,14 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
             asignado_otro=None
         )
 
+        anexo = Anexo.objects.filter(
+            usuario=instance
+        ).first()
+
+        if anexo:
+            anexo.usuario = None
+            anexo.save()
+
         return
 
     # Vincular automáticamente equipamiento por hostname
@@ -483,3 +681,13 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
             usuario=instance,
             estado='ASIGNADO'
         )
+
+        @receiver(pre_delete, sender=Usuario)
+        def liberar_anexo_al_eliminar_usuario(sender, instance, **kwargs):
+            anexo = Anexo.objects.filter(
+        usuario=instance
+    ).first()
+
+    if anexo:
+        anexo.usuario = None
+        anexo.save()

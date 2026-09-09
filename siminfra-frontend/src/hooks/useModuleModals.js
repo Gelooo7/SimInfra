@@ -8,6 +8,7 @@ export const useModuleModals = () => {
 
   const [historyEquipo, setHistoryEquipo] = useState(null);
   const [historyUsuario, setHistoryUsuario] = useState(null);
+  const [historyAnexo, setHistoryAnexo] = useState(null);
 
   return {
     editingItem,
@@ -24,5 +25,8 @@ export const useModuleModals = () => {
 
     historyUsuario,
     setHistoryUsuario,
+
+    historyAnexo,
+    setHistoryAnexo,
   };
 };

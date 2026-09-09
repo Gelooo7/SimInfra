@@ -2,6 +2,7 @@ import { createUsuario } from '../api/usuariosApi';
 import { createEquipo } from '../api/equiposApi';
 import { createPerfil } from '../api/perfilesApi';
 import { createIp } from '../api/ipsApi';
+import { createAnexo } from '../api/anexosApi';
 
 export const createItemByTab = async (tab, payload) => {
   switch (tab) {
@@ -16,6 +17,9 @@ export const createItemByTab = async (tab, payload) => {
 
     case 'ips':
       return await createIp(payload);
+
+    case 'anexos':
+       return await createAnexo(payload);
 
     default:
       throw new Error(`Módulo de creación no soportado: ${tab}`);

@@ -12,24 +12,54 @@ export default function ModuleToolbar({
   onEquipmentCategoryChange,
   selectedIpStatus,
   onIpStatusChange,
+  selectedAnexoStatus,
+  onAnexoStatusChange,
   search,
   onSearchChange,
   onCreate,
 }) {
   const getCreateLabel = () => {
-    if (activeTab === 'usuarios') {
-      return 'Usuario';
-    }
+    switch (activeTab) {
+      case 'usuarios':
+        return 'Usuario';
 
-    if (activeTab === 'equipos') {
-      return 'Equipo';
-    }
+      case 'equipos':
+        return 'Equipo';
 
-    if (activeTab === 'perfiles') {
-      return 'Perfil';
-    }
+      case 'perfiles':
+        return 'Perfil';
 
-    return 'IP';
+      case 'ips':
+        return 'IP';
+
+      case 'anexos':
+        return 'Anexo';
+
+      default:
+        return 'Registro';
+    }
+  };
+
+  const getSearchPlaceholder = () => {
+    switch (activeTab) {
+      case 'usuarios':
+        return 'Buscar por nombre, usuario, correo, hostname...';
+
+      case 'equipos':
+        return 'Buscar por marca, modelo, serie, hostname, AF...';
+
+      case 'perfiles':
+        return 'Buscar por nombre, usuario o correo...';
+
+      case 'ips':
+        return 'Buscar por IP, usuario u observación...';
+
+      case 'anexos':
+        return 'Buscar por anexo, usuario, departamento, cargo...';
+
+      default:
+        return 'Buscar...';
+    }
   };
 
   return (
@@ -240,6 +270,54 @@ export default function ModuleToolbar({
           </div>
         )}
 
+        {/* Filtro Anexos */}
+        {activeTab === 'anexos' && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backgroundColor: '#fff',
+              border: '1px solid #cbd5e1',
+              padding: '0.4rem 0.8rem',
+              borderRadius: '8px'
+            }}
+          >
+            <Filter
+              size={16}
+              color="#64748b"
+            />
+
+            <select
+              value={selectedAnexoStatus}
+              onChange={(e) =>
+                onAnexoStatusChange(e.target.value)
+              }
+              style={{
+                border: 'none',
+                outline: 'none',
+                backgroundColor: 'transparent',
+                fontSize: '0.85rem',
+                color: '#334155',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              <option value="">
+                Todos los Estados
+              </option>
+
+              <option value="DISPONIBLE">
+                🟢 Disponible
+              </option>
+
+              <option value="ASIGNADO">
+                🔵 Asignado
+              </option>
+            </select>
+          </div>
+        )}
+
         {/* Buscador */}
         <div
           style={{
@@ -249,7 +327,7 @@ export default function ModuleToolbar({
         >
           <input
             type="text"
-            placeholder="Buscar por nombre, IP, hostname, AF..."
+            placeholder={getSearchPlaceholder()}
             value={search}
             onChange={(e) =>
               onSearchChange(e.target.value)

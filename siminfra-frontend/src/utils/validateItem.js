@@ -17,7 +17,8 @@ export const validateItem = (tab, item, data = []) => {
     const dupIP = data.find(
       (ip) =>
         ip.id !== item.id &&
-        ip.direccion_ip?.trim() === item.direccion_ip.trim()
+        ip.direccion_ip?.trim() ===
+          item.direccion_ip.trim()
     );
 
     if (dupIP) {
@@ -28,9 +29,73 @@ export const validateItem = (tab, item, data = []) => {
     }
   }
 
+  // ANEXOS
+  if (tab === 'anexos') {
+    const numeroAnexo =
+      (item.numero_anexo || '').trim();
+
+    if (!numeroAnexo) {
+      return {
+        valid: false,
+        message:
+          'Debe ingresar un número de anexo.',
+      };
+    }
+
+    if (!/^\d+$/.test(numeroAnexo)) {
+      return {
+        valid: false,
+        message:
+          'El número de anexo debe contener solo números.',
+      };
+    }
+
+    if (numeroAnexo.length > 10) {
+      return {
+        valid: false,
+        message:
+          'El número de anexo puede tener como máximo 10 dígitos.',
+      };
+    }
+
+    const dupAnexo = data.find(
+      (anexo) =>
+        anexo.id !== item.id &&
+        anexo.numero_anexo?.trim() === numeroAnexo
+    );
+
+    if (dupAnexo) {
+      return {
+        valid: false,
+        message:
+          `Error: El anexo "${numeroAnexo}" ya existe en el sistema.`,
+      };
+    }
+
+    if (item.usuario) {
+      const dupUsuario = data.find(
+        (anexo) =>
+          anexo.id !== item.id &&
+          Number(anexo.usuario) ===
+            Number(item.usuario)
+      );
+
+      if (dupUsuario) {
+        return {
+          valid: false,
+          message:
+            `Error: Este usuario ya tiene asignado el anexo "${dupUsuario.numero_anexo}".`,
+        };
+      }
+    }
+  }
+
   // ACTIVO FIJO
   if (item.af) {
-    if (item.af.length > 12 || !/^\d+$/.test(item.af)) {
+    if (
+      item.af.length > 12 ||
+      !/^\d+$/.test(item.af)
+    ) {
       return {
         valid: false,
         message:
@@ -44,28 +109,38 @@ export const validateItem = (tab, item, data = []) => {
     const dupNombre = data.find(
       (usuario) =>
         usuario.id !== item.id &&
-        usuario.nombre_completo?.trim().toLowerCase() ===
-          (item.nombre_completo || '').trim().toLowerCase()
+        usuario.nombre_completo
+          ?.trim()
+          .toLowerCase() ===
+          (item.nombre_completo || '')
+            .trim()
+            .toLowerCase()
     );
 
     if (dupNombre) {
       return {
         valid: false,
-        message: `Error: Ya existe un usuario llamado "${item.nombre_completo}".`,
+        message:
+          `Error: Ya existe un usuario llamado "${item.nombre_completo}".`,
       };
     }
 
     const dupRed = data.find(
       (usuario) =>
         usuario.id !== item.id &&
-        usuario.usuario_red?.trim().toLowerCase() ===
-          (item.usuario_red || '').trim().toLowerCase()
+        usuario.usuario_red
+          ?.trim()
+          .toLowerCase() ===
+          (item.usuario_red || '')
+            .trim()
+            .toLowerCase()
     );
 
     if (dupRed) {
       return {
         valid: false,
-        message: `Error: El usuario de red "${item.usuario_red}" ya existe.`,
+        message:
+          `Error: El usuario de red "${item.usuario_red}" ya existe.`,
       };
     }
   }
@@ -75,14 +150,19 @@ export const validateItem = (tab, item, data = []) => {
     const dupSerie = data.find(
       (equipo) =>
         equipo.id !== item.id &&
-        equipo.numero_serie?.trim().toLowerCase() ===
-          (item.numero_serie || '').trim().toLowerCase()
+        equipo.numero_serie
+          ?.trim()
+          .toLowerCase() ===
+          (item.numero_serie || '')
+            .trim()
+            .toLowerCase()
     );
 
     if (dupSerie) {
       return {
         valid: false,
-        message: `Error: El número de serie "${item.numero_serie}" ya está registrado.`,
+        message:
+          `Error: El número de serie "${item.numero_serie}" ya está registrado.`,
       };
     }
 
@@ -96,7 +176,8 @@ export const validateItem = (tab, item, data = []) => {
       if (dupAF) {
         return {
           valid: false,
-          message: `Error: El Activo Fijo (AF) "${item.af}" ya pertenece a otro equipo.`,
+          message:
+            `Error: El Activo Fijo (AF) "${item.af}" ya pertenece a otro equipo.`,
         };
       }
     }
