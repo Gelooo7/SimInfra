@@ -4,6 +4,7 @@ import { deleteEquipo } from '../api/equiposApi';
 import { deletePerfil } from '../api/perfilesApi';
 import { deleteIp } from '../api/ipsApi';
 import { deleteAnexo } from '../api/anexosApi';
+import { deletePcGenerico } from '../api/pcsGenericosApi';
 
 export const deleteItemByTab = async (tab, id) => {
   switch (tab) {
@@ -21,6 +22,9 @@ export const deleteItemByTab = async (tab, id) => {
 
     case 'anexos':
       return await deleteAnexo(id);
+
+    case 'pcs-genericos':
+       return await deletePcGenerico(id);
 
     default:
       throw new Error(`Módulo de eliminación no soportado: ${tab}`);

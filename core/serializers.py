@@ -8,7 +8,10 @@ from .models import (
     IP,
     Anexo,
     HistorialAnexo,
+    PCGenerico,
+    HistorialPCGenerico,
 )
+
 from .crypto import decrypt_val
 
 class IPSerializer(serializers.ModelSerializer):
@@ -389,3 +392,104 @@ class PerfilGenericoSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+
+class HistorialPCGenericoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistorialPCGenerico
+        fields = '__all__'
+
+
+class PCGenericoSerializer(serializers.ModelSerializer):
+    historial = HistorialPCGenericoSerializer(
+        many=True,
+        read_only=True
+    )
+
+    password = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True
+    )
+
+    class Meta:
+        model = PCGenerico
+        fields = '__all__'
+        read_only_fields = [
+            'fecha_creacion',
+            'fecha_actualizacion',
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if (
+            instance.password
+            and instance.password.startswith('ENC::')
+        ):
+            data['password'] = decrypt_val(
+                instance.password
+            )
+
+        return data
+
+    def validate_hostname(self, value):
+        value = value.strip()
+
+        instance = getattr(
+            self,
+            'instance',
+            None
+        )
+
+        if PCGenerico.objects.filter(
+            hostname__iexact=value
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError(
+                "Ya existe un PC Genérico con este Hostname."
+            )
+
+        return value
+
+    def validate(self, attrs):
+        if attrs.get('usuario_local'):
+            attrs['usuario_local'] = (
+                attrs['usuario_local'].strip()
+            )
+
+        if attrs.get('dpto_area'):
+            attrs['dpto_area'] = (
+                attrs['dpto_area'].strip()
+            )
+
+        if attrs.get('marca'):
+            attrs['marca'] = attrs['marca'].strip()
+
+        if attrs.get('modelo'):
+            attrs['modelo'] = attrs['modelo'].strip()
+
+        if attrs.get('numero_serie'):
+            attrs['numero_serie'] = (
+                attrs['numero_serie'].strip()
+            )
+
+        if attrs.get('activo_fijo'):
+            attrs['activo_fijo'] = (
+                attrs['activo_fijo'].strip()
+            )
+
+        if attrs.get('ram'):
+            attrs['ram'] = attrs['ram'].strip()
+
+        if attrs.get('almacenamiento'):
+            attrs['almacenamiento'] = (
+                attrs['almacenamiento'].strip()
+            )
+
+        if attrs.get('observaciones'):
+            attrs['observaciones'] = (
+                attrs['observaciones'].strip()
+            )
+
+        return attrs   

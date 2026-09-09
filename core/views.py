@@ -7,6 +7,7 @@ from .models import (
     PerfilGenerico,
     IP,
     Anexo,
+    PCGenerico,
 )
 
 from .serializers import (
@@ -15,6 +16,7 @@ from .serializers import (
     PerfilGenericoSerializer,
     IPSerializer,
     AnexoSerializer,
+    PCGenericoSerializer,
 )
 
 
@@ -87,6 +89,52 @@ class PerfilGenericoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = PerfilGenerico.objects.all()
         dpto = self.request.query_params.get('dpto_area', None)
+
+        if dpto and dpto.strip():
+            queryset = queryset.filter(
+                dpto_area__icontains=dpto.strip()
+            )
+
+        return queryset
+
+class PCGenericoViewSet(viewsets.ModelViewSet):
+    queryset = PCGenerico.objects.prefetch_related(
+        'historial'
+    ).all()
+
+    serializer_class = PCGenericoSerializer
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter
+    ]
+
+    filterset_fields = [
+        'dpto_area'
+    ]
+
+    search_fields = [
+        'usuario_local',
+        'hostname',
+        'dpto_area',
+        'marca',
+        'modelo',
+        'numero_serie',
+        'activo_fijo',
+        'ram',
+        'almacenamiento',
+        'observaciones',
+    ]
+
+    def get_queryset(self):
+        queryset = PCGenerico.objects.prefetch_related(
+            'historial'
+        ).all()
+
+        dpto = self.request.query_params.get(
+            'dpto_area',
+            None
+        )
 
         if dpto and dpto.strip():
             queryset = queryset.filter(

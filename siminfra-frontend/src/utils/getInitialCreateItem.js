@@ -12,9 +12,8 @@ export const getInitialCreateItem = (tab, dptosList = []) => {
         gmail: '',
         password_gmail: '',
         password_simi: '',
+        password_vpn: '',
         celular: '',
-        telefono: '',
-        anexo: '',
         ip_seleccionada: null,
       };
 
@@ -56,11 +55,26 @@ export const getInitialCreateItem = (tab, dptosList = []) => {
         asignado_otro: '',
       };
 
-        case 'anexos':
+    case 'anexos':
       return {
         numero_anexo: '',
         exterior: '',
         usuario: '',
+        observaciones: '',
+      };
+
+    case 'pcs-genericos':
+      return {
+        usuario_local: '',
+        password: '',
+        hostname: '',
+        dpto_area: dptosList[0] || '',
+        marca: '',
+        modelo: '',
+        numero_serie: '',
+        activo_fijo: '',
+        ram: '',
+        almacenamiento: '',
         observaciones: '',
       };
 

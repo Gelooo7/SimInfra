@@ -50,5 +50,58 @@ if (tab === 'ips') {
         payload.observaciones.trim();
     }
   }
+
+  // PCS GENERICOS
+if (tab === 'pcs-genericos') {
+  if (payload.usuario_local) {
+    payload.usuario_local =
+      payload.usuario_local.trim();
+  }
+
+  if (payload.hostname) {
+    payload.hostname =
+      payload.hostname.trim();
+  }
+
+  if (payload.dpto_area) {
+    payload.dpto_area =
+      payload.dpto_area.trim();
+  }
+
+  if (payload.marca) {
+    payload.marca =
+      payload.marca.trim();
+  }
+
+  if (payload.modelo) {
+    payload.modelo =
+      payload.modelo.trim();
+  }
+
+  if (payload.numero_serie) {
+    payload.numero_serie =
+      payload.numero_serie.trim();
+  }
+
+  if (payload.activo_fijo) {
+    payload.activo_fijo =
+      payload.activo_fijo.trim();
+  }
+
+  if (payload.ram) {
+    payload.ram =
+      payload.ram.trim();
+  }
+
+  if (payload.almacenamiento) {
+    payload.almacenamiento =
+      payload.almacenamiento.trim();
+  }
+
+  if (payload.observaciones) {
+    payload.observaciones =
+      payload.observaciones.trim();
+  }
+}
   return payload;
 };

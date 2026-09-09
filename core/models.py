@@ -303,6 +303,10 @@ class HistorialEquipo(models.Model):
     class Meta:
         ordering = ['-fecha_movimiento']
 
+    def save(self, *args, **kwargs):
+        if self.password and not self.password.startswith('ENC::'):
+            self.password = encrypt_val(self.password)
+        super().save(*args, **kwargs)
 
 class PerfilGenerico(models.Model):
     nombre = models.CharField(max_length=150, null=True, blank=True)
@@ -311,12 +315,257 @@ class PerfilGenerico(models.Model):
     correo = models.EmailField(null=True, blank=True)
     dpto_area = models.CharField(max_length=100, null=True, blank=True)
     tipo = models.CharField(max_length=20, default='On Premise')
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='ACTIVO', null=True, blank=True)
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='ACTIVO',
+        null=True,
+        blank=True
+    )
 
     def save(self, *args, **kwargs):
         if self.password and not self.password.startswith('ENC::'):
             self.password = encrypt_val(self.password)
+
         super().save(*args, **kwargs)
+
+
+class PCGenerico(models.Model):
+    usuario_local = models.CharField(
+        max_length=150
+    )
+
+    password = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
+    hostname = models.CharField(
+        max_length=100,
+        unique=True
+    )
+
+    dpto_area = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+
+    marca = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    modelo = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    numero_serie = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+
+    activo_fijo = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    ram = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    almacenamiento = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    observaciones = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    fecha_actualizacion = models.DateTimeField(
+        auto_now=True
+    )
+
+    def save(self, *args, **kwargs):
+        if self.password and not self.password.startswith('ENC::'):
+            self.password = encrypt_val(self.password)
+
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['hostname']
+
+    def __str__(self):
+        return f"{self.hostname} - {self.usuario_local}"
+
+
+class HistorialPCGenerico(models.Model):
+    pc = models.ForeignKey(
+        PCGenerico,
+        on_delete=models.CASCADE,
+        related_name='historial'
+    )
+
+    accion = models.CharField(
+        max_length=50,
+        default='MODIFICACION'
+    )
+
+    observacion = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    fecha_movimiento = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ['-fecha_movimiento']
+
+    def __str__(self):
+        return f"{self.pc.hostname} - {self.accion}"
+
+# --- HISTORIAL DE PCs GENERICOS ---
+
+@receiver(pre_save, sender=PCGenerico)
+def track_historial_pc_generico(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+
+    try:
+        pc_previo = PCGenerico.objects.get(pk=instance.pk)
+    except PCGenerico.DoesNotExist:
+        return
+
+    cambios = []
+
+    def add_cambio(campo, anterior, actual):
+        if str(anterior) != str(actual):
+            cambios.append(
+                f"{campo}:::{anterior or 'N/I'}:::{actual or 'N/I'}"
+            )
+
+    add_cambio(
+        "Usuario Local",
+        pc_previo.usuario_local,
+        instance.usuario_local
+    )
+
+    add_cambio(
+        "Hostname",
+        pc_previo.hostname,
+        instance.hostname
+    )
+
+    add_cambio(
+        "Departamento / Área",
+        pc_previo.dpto_area,
+        instance.dpto_area
+    )
+
+    add_cambio(
+        "Marca",
+        pc_previo.marca,
+        instance.marca
+    )
+
+    add_cambio(
+        "Modelo",
+        pc_previo.modelo,
+        instance.modelo
+    )
+
+    add_cambio(
+        "Número de Serie",
+        pc_previo.numero_serie,
+        instance.numero_serie
+    )
+
+    add_cambio(
+        "Activo Fijo",
+        pc_previo.activo_fijo,
+        instance.activo_fijo
+    )
+
+    add_cambio(
+        "RAM",
+        pc_previo.ram,
+        instance.ram
+    )
+
+    add_cambio(
+        "Almacenamiento",
+        pc_previo.almacenamiento,
+        instance.almacenamiento
+    )
+
+    add_cambio(
+        "Observaciones",
+        pc_previo.observaciones,
+        instance.observaciones
+    )
+
+    # Comparar contraseña desencriptada para evitar
+    # registrar falsos cambios por el cifrado
+    password_anterior = (
+        decrypt_val(pc_previo.password)
+        if pc_previo.password
+        else None
+    )
+
+    password_nueva = (
+        decrypt_val(instance.password)
+        if instance.password
+        else None
+    )
+
+    if password_anterior != password_nueva:
+        cambios.append(
+            "Contraseña:::••••••••:::••••••••"
+        )
+
+    if cambios:
+        HistorialPCGenerico.objects.create(
+            pc=instance,
+            accion="MODIFICACION",
+            observacion="||".join(cambios)
+        )
+
+
+@receiver(post_save, sender=PCGenerico)
+def registrar_creacion_pc_generico(
+    sender,
+    instance,
+    created,
+    **kwargs
+):
+    if not created:
+        return
+
+    HistorialPCGenerico.objects.create(
+        pc=instance,
+        accion="CREACION",
+        observacion=(
+            f"PC Genérico creado - "
+            f"Hostname: {instance.hostname}"
+        )
+    )
 
 # --- HISTORIAL DE ANEXOS ---
 
@@ -691,3 +940,5 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
     if anexo:
         anexo.usuario = None
         anexo.save()
+
+    

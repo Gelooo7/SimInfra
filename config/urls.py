@@ -11,6 +11,7 @@ from core.views import (
     PerfilGenericoViewSet,
     IPViewSet,
     AnexoViewSet,
+    PCGenericoViewSet,
 )
 
 router = DefaultRouter()
@@ -19,7 +20,7 @@ router.register(r'equipos', EquipamientoViewSet, basename='equipo')
 router.register(r'perfiles-genericos', PerfilGenericoViewSet, basename='perfilgenerico')
 router.register(r'anexos', AnexoViewSet, basename='anexo')
 router.register(r'ips', IPViewSet, basename='ip')
-
+router.register(r'pcs-genericos', PCGenericoViewSet, basename='pc')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
