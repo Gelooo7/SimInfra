@@ -59,6 +59,9 @@
     0 4px 6px -1px rgba(0, 0, 0, 0.05);
 
   -webkit-overflow-scrolling: touch;
+
+  container-type: inline-size;
+  container-name: module-table;
 }
 
 /* =========================
@@ -85,6 +88,7 @@
 
   .app-table-container {
     border-radius: 10px;
+    
   }
 }
 

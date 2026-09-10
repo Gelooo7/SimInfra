@@ -10,6 +10,8 @@ import {
   Check
 } from 'lucide-react';
 
+import './PCsGenericosTable.css';
+
 export default function PCsGenericosTable({
   pcs,
   onShowHistory,
@@ -27,9 +29,7 @@ export default function PCsGenericosTable({
   };
 
   const copyPassword = async (pc) => {
-    if (!pc.password) {
-      return;
-    }
+    if (!pc.password) return;
 
     try {
       await navigator.clipboard.writeText(pc.password);
@@ -53,342 +53,326 @@ export default function PCsGenericosTable({
     }
   };
 
-  const cellStyle = {
-    padding: '1rem 1.2rem',
-    whiteSpace: 'nowrap'
+  const PasswordField = ({ pc }) => {
+    if (!pc.password) {
+      return (
+        <span className="pc-password-empty">
+          Sin contraseña
+        </span>
+      );
+    }
+
+    const visible = !!visiblePasswords[pc.id];
+    const copied = !!copiedPasswords[pc.id];
+
+    return (
+      <div className="pc-password-container">
+        <span className="pc-password-value">
+          {visible
+            ? pc.password
+            : '••••••••'}
+        </span>
+
+        <button
+          type="button"
+          className="pc-password-button"
+          onClick={() =>
+            togglePassword(pc.id)
+          }
+          title={
+            visible
+              ? 'Ocultar contraseña'
+              : 'Mostrar contraseña'
+          }
+        >
+          {visible ? (
+            <EyeOff size={16} />
+          ) : (
+            <Eye size={16} />
+          )}
+        </button>
+
+        <button
+          type="button"
+          className={`pc-password-button ${copied
+              ? 'pc-password-copied'
+              : ''
+            }`}
+          onClick={() =>
+            copyPassword(pc)
+          }
+          title="Copiar contraseña"
+        >
+          {copied ? (
+            <Check size={16} />
+          ) : (
+            <Copy size={16} />
+          )}
+        </button>
+      </div>
+    );
   };
 
+  const Actions = ({ pc }) => (
+    <div className="pcs-actions">
+      <button
+        type="button"
+        className="pc-action pc-action-history"
+        onClick={() =>
+          onShowHistory(pc)
+        }
+        title="Ver Historial"
+        aria-label="Ver historial"
+      >
+        <History size={18} />
+      </button>
+
+      <button
+        type="button"
+        className="pc-action pc-action-edit"
+        onClick={() =>
+          onEdit(pc)
+        }
+        title="Editar"
+        aria-label="Editar PC Genérico"
+      >
+        <Edit size={18} />
+      </button>
+
+      <button
+        type="button"
+        className="pc-action pc-action-delete"
+        onClick={() =>
+          onDelete(
+            pc.id,
+            pc.hostname
+          )
+        }
+        title="Eliminar"
+        aria-label="Eliminar PC Genérico"
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
+  );
+
   return (
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        textAlign: 'left',
-        fontSize: '0.9rem'
-      }}
-    >
-      <thead>
-        <tr
-          style={{
-            backgroundColor: '#f1f5f9',
-            borderBottom: '2px solid #e2e8f0',
-            color: '#475569'
-          }}
-        >
-          <th style={cellStyle}>
-            Usuario Local
-          </th>
-
-          <th style={cellStyle}>
-            Contraseña
-          </th>
-
-          <th style={cellStyle}>
-            Hostname
-          </th>
-
-          <th style={cellStyle}>
-            Departamento / Área
-          </th>
-
-          <th style={cellStyle}>
-            Marca
-          </th>
-
-          <th style={cellStyle}>
-            Modelo
-          </th>
-
-          <th style={cellStyle}>
-            N.º de Serie
-          </th>
-
-          <th style={cellStyle}>
-            Activo Fijo
-          </th>
-
-          <th style={cellStyle}>
-            RAM
-          </th>
-
-          <th style={cellStyle}>
-            Almacenamiento
-          </th>
-
-          <th style={cellStyle}>
-            Observaciones
-          </th>
-
-          <th
-            style={{
-              ...cellStyle,
-              textAlign: 'center'
-            }}
-          >
-            Acciones
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {pcs.map((pc) => {
-          const passwordVisible =
-            !!visiblePasswords[pc.id];
-
-          const passwordCopied =
-            !!copiedPasswords[pc.id];
-
-          return (
-            <tr
-              key={pc.id}
-              style={{
-                borderBottom: '1px solid #f1f5f9',
-                color: '#334155'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  '#f8fafc';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  'transparent';
-              }}
-            >
-              {/* USUARIO LOCAL */}
-              <td
-                style={{
-                  ...cellStyle,
-                  fontWeight: '600',
-                  color: '#2563eb'
-                }}
-              >
-                {pc.usuario_local || 'N/I'}
-              </td>
-
-              {/* CONTRASEÑA */}
-              <td style={cellStyle}>
-                {pc.password ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem'
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: 'monospace',
-                        fontWeight: 'bold',
-                        backgroundColor: '#f1f5f9',
-                        padding: '0.2rem 0.45rem',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      {passwordVisible
-                        ? pc.password
-                        : '••••••••'}
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        togglePassword(pc.id)
-                      }
-                      title={
-                        passwordVisible
-                          ? 'Ocultar contraseña'
-                          : 'Mostrar contraseña'
-                      }
-                      style={{
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        color: '#64748b',
-                        padding: '2px',
-                        display: 'flex'
-                      }}
-                    >
-                      {passwordVisible ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        copyPassword(pc)
-                      }
-                      title="Copiar contraseña"
-                      style={{
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        color: passwordCopied
-                          ? '#16a34a'
-                          : '#64748b',
-                        padding: '2px',
-                        display: 'flex'
-                      }}
-                    >
-                      {passwordCopied ? (
-                        <Check size={16} />
-                      ) : (
-                        <Copy size={16} />
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <span
-                    style={{
-                      color: '#94a3b8'
-                    }}
-                  >
-                    Sin contraseña
-                  </span>
-                )}
-              </td>
-
-              {/* HOSTNAME */}
-              <td
-                style={{
-                  ...cellStyle,
-                  fontFamily: 'monospace',
-                  fontWeight: 'bold',
-                  color: '#0284c7'
-                }}
-              >
-                {pc.hostname || 'N/I'}
-              </td>
-
-              {/* DEPARTAMENTO */}
-              <td style={cellStyle}>
-                {pc.dpto_area || 'N/I'}
-              </td>
-
-              {/* MARCA */}
-              <td style={cellStyle}>
-                {pc.marca || 'N/I'}
-              </td>
-
-              {/* MODELO */}
-              <td style={cellStyle}>
-                {pc.modelo || 'N/I'}
-              </td>
-
-              {/* SERIE */}
-              <td
-                style={{
-                  ...cellStyle,
-                  fontFamily: 'monospace'
-                }}
-              >
-                {pc.numero_serie || 'N/I'}
-              </td>
-
-              {/* ACTIVO FIJO */}
-              <td
-                style={{
-                  ...cellStyle,
-                  fontWeight: '600'
-                }}
-              >
-                {pc.activo_fijo || 'N/I'}
-              </td>
-
-              {/* RAM */}
-              <td style={cellStyle}>
-                {pc.ram || 'N/I'}
-              </td>
-
-              {/* ALMACENAMIENTO */}
-              <td style={cellStyle}>
-                {pc.almacenamiento || 'N/I'}
-              </td>
-
-              {/* OBSERVACIONES */}
-              <td
-                style={{
-                  ...cellStyle,
-                  whiteSpace: 'normal',
-                  minWidth: '180px',
-                  color: '#64748b'
-                }}
-              >
-                {pc.observaciones || 'Sin observaciones'}
-              </td>
-
-              {/* ACCIONES */}
-              <td
-                style={{
-                  ...cellStyle,
-                  textAlign: 'center'
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '0.6rem'
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onShowHistory(pc)
-                    }
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      color: '#d97706'
-                    }}
-                    title="Ver Historial"
-                  >
-                    <History size={18} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onEdit(pc)
-                    }
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      color: '#2563eb'
-                    }}
-                    title="Editar"
-                  >
-                    <Edit size={18} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onDelete(
-                        pc.id,
-                        pc.hostname
-                      )
-                    }
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      color: '#ef4444'
-                    }}
-                    title="Eliminar"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </td>
+    <>
+      {/* TABLA DESKTOP */}
+      <div className="pcs-table-desktop">
+        <table className="pcs-table">
+          <thead>
+            <tr>
+              <th>Usuario Local</th>
+              <th>Contraseña</th>
+              <th>Hostname</th>
+              <th>Departamento / Área</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>N.º de Serie</th>
+              <th>Activo Fijo</th>
+              <th>RAM</th>
+              <th>Almacenamiento</th>
+              <th>Observaciones</th>
+              <th className="pcs-actions-header">
+                Acciones
+              </th>
             </tr>
-          );
-        })}
-      </tbody>
-    </table>
+          </thead>
+
+          <tbody>
+            {pcs.map((pc) => (
+              <tr key={pc.id}>
+                <td className="pc-user">
+                  {pc.usuario_local || 'N/I'}
+                </td>
+
+                <td>
+                  <PasswordField pc={pc} />
+                </td>
+
+                <td className="pc-hostname">
+                  {pc.hostname || 'N/I'}
+                </td>
+
+                <td>
+                  {pc.dpto_area || 'N/I'}
+                </td>
+
+                <td>
+                  {pc.marca || 'N/I'}
+                </td>
+
+                <td>
+                  {pc.modelo || 'N/I'}
+                </td>
+
+                <td className="pc-monospace">
+                  {pc.numero_serie || 'N/I'}
+                </td>
+
+                <td className="pc-af">
+                  {pc.activo_fijo || 'N/I'}
+                </td>
+
+                <td>
+                  {pc.ram || 'N/I'}
+                </td>
+
+                <td>
+                  {pc.almacenamiento || 'N/I'}
+                </td>
+
+                <td className="pc-observations">
+                  {pc.observaciones ||
+                    'Sin observaciones'}
+                </td>
+
+                <td className="pcs-actions-cell">
+                  <Actions pc={pc} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TARJETAS MÓVIL */}
+      <div className="pcs-cards-mobile">
+        {pcs.map((pc) => (
+          <article
+            key={pc.id}
+            className="pc-card"
+          >
+            <div className="pc-card-header">
+              <div className="pc-card-title">
+                <span className="pc-card-icon">
+                  🖥️
+                </span>
+
+                <div>
+                  <h3>
+                    {pc.usuario_local ||
+                      'Usuario local no informado'}
+                  </h3>
+
+                  <span className="pc-card-hostname">
+                    Hostname · {pc.hostname || 'N/I'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pc-card-password-section">
+              <span className="pc-mobile-label">
+                Contraseña
+              </span>
+
+              <PasswordField pc={pc} />
+            </div>
+
+            <div className="pc-card-grid">
+              <MobileField
+                label="Departamento / Área"
+                value={
+                  pc.dpto_area || 'N/I'
+                }
+                full
+              />
+
+              <MobileField
+                label="Marca"
+                value={pc.marca || 'N/I'}
+              />
+
+              <MobileField
+                label="Modelo"
+                value={pc.modelo || 'N/I'}
+              />
+
+              <MobileField
+                label="N.º de Serie"
+                value={
+                  pc.numero_serie || 'N/I'
+                }
+                monospace
+              />
+
+              <MobileField
+                label="Activo Fijo"
+                value={
+                  pc.activo_fijo || 'N/I'
+                }
+                monospace
+              />
+
+              <MobileField
+                label="RAM"
+                value={pc.ram || 'N/I'}
+              />
+
+              <MobileField
+                label="Almacenamiento"
+                value={
+                  pc.almacenamiento || 'N/I'
+                }
+              />
+
+              <MobileField
+                label="Observaciones"
+                value={
+                  pc.observaciones ||
+                  'Sin observaciones'
+                }
+                full
+              />
+            </div>
+
+            <div className="pc-card-footer">
+              <span className="pc-card-info">
+                Gestión de PC Genérico
+              </span>
+
+              <Actions pc={pc} />
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {pcs.length === 0 && (
+        <div className="pcs-empty">
+          No existen PCs Genéricos para mostrar.
+        </div>
+      )}
+    </>
+  );
+}
+
+function MobileField({
+  label,
+  value,
+  monospace = false,
+  full = false,
+}) {
+  return (
+    <div
+      className={`pc-mobile-field ${full
+          ? 'pc-mobile-field-full'
+          : ''
+        }`}
+    >
+      <span className="pc-mobile-label">
+        {label}
+      </span>
+
+      <span
+        className={`pc-mobile-value ${monospace
+            ? 'pc-mobile-monospace'
+            : ''
+          }`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }

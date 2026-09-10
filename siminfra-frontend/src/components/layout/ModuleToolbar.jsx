@@ -1,3 +1,4 @@
+import './ModuleToolbar.css';
 import {
   Filter,
   Plus
@@ -65,288 +66,164 @@ export default function ModuleToolbar({
     }
   };
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '1.5rem',
-        gap: '1rem',
-        width: '100%',
-        flexWrap: 'wrap'
-      }}
-    >
-      <div />
-
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'center',
-          flexWrap: 'wrap'
-        }}
+return (
+  <div className="module-toolbar">
+    <div className="module-toolbar-actions">
+      {/* BOTÓN AGREGAR */}
+      <button
+        type="button"
+        onClick={onCreate}
+        className="module-toolbar-create"
       >
-        {/* Botón agregar */}
-        <button
-          type="button"
-          onClick={onCreate}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.65rem 1.2rem',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: '#16a34a',
-            color: '#fff',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}
-        >
-          <Plus size={18} />
+        <Plus size={18} />
+
+        <span>
           Agregar {getCreateLabel()}
-        </button>
+        </span>
+      </button>
 
-        {/* Filtro Departamento */}
-          {(activeTab === 'usuarios' ||
-            activeTab === 'perfiles' ||
-            activeTab === 'pcs-genericos') && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#fff',
-              border: '1px solid #cbd5e1',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '8px'
-            }}
-          >
-            <Filter
-              size={16}
-              color="#64748b"
-            />
+      {/* FILTRO DEPARTAMENTO */}
+      {(activeTab === 'usuarios' ||
+        activeTab === 'perfiles' ||
+        activeTab === 'pcs-genericos') && (
+        <div className="module-toolbar-filter">
+          <Filter size={16} />
 
-            <select
-              value={selectedDepartment}
-              onChange={(e) =>
-                onDepartmentChange(e.target.value)
-              }
-              style={{
-                border: 'none',
-                outline: 'none',
-                backgroundColor: 'transparent',
-                fontSize: '0.85rem',
-                color: '#334155',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="">
-                Todos los Departamentos
-              </option>
-
-              {departments.map((department, index) => (
-                <option
-                  key={index}
-                  value={department}
-                >
-                  {department}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Filtro Equipos */}
-        {activeTab === 'equipos' && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#fff',
-              border: '1px solid #cbd5e1',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '8px'
-            }}
-          >
-            <Filter
-              size={16}
-              color="#64748b"
-            />
-
-            <select
-              value={selectedEquipmentCategory}
-              onChange={(e) =>
-                onEquipmentCategoryChange(e.target.value)
-              }
-              style={{
-                border: 'none',
-                outline: 'none',
-                backgroundColor: 'transparent',
-                fontSize: '0.85rem',
-                color: '#334155',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              <option value="">
-                Todas las Categorías
-              </option>
-
-              <option value="Notebook">
-                Notebook
-              </option>
-
-              <option value="Celular">
-                Celular
-              </option>
-
-              <option value="Tablet">
-                Tablet
-              </option>
-
-              <option value="Mac">
-                Mac
-              </option>
-
-              <option value="BAM / Router">
-                BAM / Router
-              </option>
-            </select>
-          </div>
-        )}
-
-        {/* Filtro IP */}
-        {activeTab === 'ips' && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#fff',
-              border: '1px solid #cbd5e1',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '8px'
-            }}
-          >
-            <Filter
-              size={16}
-              color="#64748b"
-            />
-
-            <select
-              value={selectedIpStatus}
-              onChange={(e) =>
-                onIpStatusChange(e.target.value)
-              }
-              style={{
-                border: 'none',
-                outline: 'none',
-                backgroundColor: 'transparent',
-                fontSize: '0.85rem',
-                color: '#334155',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              <option value="">
-                Todos los Estados
-              </option>
-
-              <option value="LIBRE">
-                🟢 Libre
-              </option>
-
-              <option value="RESERVADA">
-                🔴 Reservada
-              </option>
-
-              <option value="DUPLICADA">
-                🔵 Duplicada
-              </option>
-
-              <option value="DESCONOCIDA">
-                🟡 Desconocida
-              </option>
-            </select>
-          </div>
-        )}
-
-        {/* Filtro Anexos */}
-        {activeTab === 'anexos' && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#fff',
-              border: '1px solid #cbd5e1',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '8px'
-            }}
-          >
-            <Filter
-              size={16}
-              color="#64748b"
-            />
-
-            <select
-              value={selectedAnexoStatus}
-              onChange={(e) =>
-                onAnexoStatusChange(e.target.value)
-              }
-              style={{
-                border: 'none',
-                outline: 'none',
-                backgroundColor: 'transparent',
-                fontSize: '0.85rem',
-                color: '#334155',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              <option value="">
-                Todos los Estados
-              </option>
-
-              <option value="DISPONIBLE">
-                🟢 Disponible
-              </option>
-
-              <option value="ASIGNADO">
-                🔵 Asignado
-              </option>
-            </select>
-          </div>
-        )}
-
-        {/* Buscador */}
-        <div
-          style={{
-            position: 'relative',
-            width: '300px'
-          }}
-        >
-          <input
-            type="text"
-            placeholder={getSearchPlaceholder()}
-            value={search}
+          <select
+            value={selectedDepartment}
             onChange={(e) =>
-              onSearchChange(e.target.value)
+              onDepartmentChange(e.target.value)
             }
-            style={{
-              width: '100%',
-              padding: '0.7rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
-          />
+          >
+            <option value="">
+              Todos los Departamentos
+            </option>
+
+            {departments.map((department, index) => (
+              <option
+                key={index}
+                value={department}
+              >
+                {department}
+              </option>
+            ))}
+          </select>
         </div>
+      )}
+
+      {/* FILTRO EQUIPOS */}
+      {activeTab === 'equipos' && (
+        <div className="module-toolbar-filter">
+          <Filter size={16} />
+
+          <select
+            value={selectedEquipmentCategory}
+            onChange={(e) =>
+              onEquipmentCategoryChange(
+                e.target.value
+              )
+            }
+          >
+            <option value="">
+              Todas las Categorías
+            </option>
+
+            <option value="Notebook">
+              Notebook
+            </option>
+
+            <option value="Celular">
+              Celular
+            </option>
+
+            <option value="Tablet">
+              Tablet
+            </option>
+
+            <option value="Mac">
+              Mac
+            </option>
+
+            <option value="BAM / Router">
+              BAM / Router
+            </option>
+          </select>
+        </div>
+      )}
+
+      {/* FILTRO IP */}
+      {activeTab === 'ips' && (
+        <div className="module-toolbar-filter">
+          <Filter size={16} />
+
+          <select
+            value={selectedIpStatus}
+            onChange={(e) =>
+              onIpStatusChange(e.target.value)
+            }
+          >
+            <option value="">
+              Todos los Estados
+            </option>
+
+            <option value="LIBRE">
+              🟢 Libre
+            </option>
+
+            <option value="RESERVADA">
+              🔴 Reservada
+            </option>
+
+            <option value="DUPLICADA">
+              🔵 Duplicada
+            </option>
+
+            <option value="DESCONOCIDA">
+              🟡 Desconocida
+            </option>
+          </select>
+        </div>
+      )}
+
+      {/* FILTRO ANEXOS */}
+      {activeTab === 'anexos' && (
+        <div className="module-toolbar-filter">
+          <Filter size={16} />
+
+          <select
+            value={selectedAnexoStatus}
+            onChange={(e) =>
+              onAnexoStatusChange(e.target.value)
+            }
+          >
+            <option value="">
+              Todos los Estados
+            </option>
+
+            <option value="DISPONIBLE">
+              🟢 Disponible
+            </option>
+
+            <option value="ASIGNADO">
+              🔵 Asignado
+            </option>
+          </select>
+        </div>
+      )}
+
+      {/* BUSCADOR */}
+      <div className="module-toolbar-search">
+        <input
+          type="text"
+          placeholder={getSearchPlaceholder()}
+          value={search}
+          onChange={(e) =>
+            onSearchChange(e.target.value)
+          }
+        />
       </div>
     </div>
-  );
+  </div>
+);
+
 }

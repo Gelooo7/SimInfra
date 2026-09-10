@@ -4,6 +4,8 @@ import {
   History
 } from 'lucide-react';
 
+import './AnexosTable.css';
+
 export default function AnexosTable({
   anexos,
   renderAnexoStatusBadge,
@@ -11,207 +13,245 @@ export default function AnexosTable({
   onEdit,
   onDelete,
 }) {
+  const Actions = ({ anexo }) => (
+    <div className="anexos-actions">
+      <button
+        type="button"
+        className="anexo-action anexo-action-history"
+        onClick={() =>
+          onShowHistory(anexo)
+        }
+        title="Ver historial"
+        aria-label="Ver historial"
+      >
+        <History size={18} />
+      </button>
+
+      <button
+        type="button"
+        className="anexo-action anexo-action-edit"
+        onClick={() =>
+          onEdit(anexo)
+        }
+        title="Editar"
+        aria-label="Editar anexo"
+      >
+        <Edit size={18} />
+      </button>
+
+      <button
+        type="button"
+        className="anexo-action anexo-action-delete"
+        onClick={() =>
+          onDelete(
+            anexo.id,
+            anexo.numero_anexo
+          )
+        }
+        title="Eliminar"
+        aria-label="Eliminar anexo"
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
+  );
+
   return (
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        textAlign: 'left',
-        fontSize: '0.95rem'
-      }}
-    >
-      <thead>
-        <tr
-          style={{
-            backgroundColor: '#f1f5f9',
-            borderBottom: '2px solid #e2e8f0',
-            color: '#475569'
-          }}
-        >
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Nombre Completo
-          </th>
+    <>
+      {/* TABLA DESKTOP */}
+      <div className="anexos-table-desktop">
+        <table className="anexos-table">
+          <thead>
+            <tr>
+              <th>Nombre Completo</th>
+              <th>Departamento / Área</th>
+              <th>Cargo</th>
+              <th>Anexo</th>
+              <th>Exterior</th>
+              <th>Correo</th>
+              <th>Estado</th>
+              <th>Observaciones</th>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Departamento / Área
-          </th>
+              <th className="anexos-actions-header">
+                Acciones
+              </th>
+            </tr>
+          </thead>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Cargo
-          </th>
+          <tbody>
+            {anexos.map((anexo) => (
+              <tr key={anexo.id}>
+                <td
+                  className={
+                    anexo.usuario_nombre
+                      ? 'anexo-user-assigned'
+                      : 'anexo-user-unassigned'
+                  }
+                >
+                  {anexo.usuario_nombre ||
+                    'Sin asignar'}
+                </td>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Anexo
-          </th>
+                <td>
+                  {anexo.departamento || '—'}
+                </td>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Exterior
-          </th>
+                <td>
+                  {anexo.cargo || '—'}
+                </td>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Correo
-          </th>
+                <td className="anexo-number">
+                  {anexo.numero_anexo}
+                </td>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Estado
-          </th>
+                <td className="anexo-exterior">
+                  {anexo.exterior || '—'}
+                </td>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Observaciones
-          </th>
+                <td>
+                  {anexo.correo || '—'}
+                </td>
 
-          <th
-            style={{
-              padding: '1rem 1.2rem',
-              textAlign: 'center'
-            }}
-          >
-            Acciones
-          </th>
-        </tr>
-      </thead>
+                <td>
+                  {renderAnexoStatusBadge(
+                    anexo.estado
+                  )}
+                </td>
 
-      <tbody>
+                <td className="anexo-observations">
+                  {anexo.observaciones ||
+                    'Sin observaciones'}
+                </td>
+
+                <td className="anexos-actions-cell">
+                  <Actions anexo={anexo} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TARJETAS MÓVIL */}
+      <div className="anexos-cards-mobile">
         {anexos.map((anexo) => (
-          <tr
+          <article
             key={anexo.id}
-            style={{
-              borderBottom: '1px solid #f1f5f9',
-              color: '#334155'
-            }}
+            className="anexo-card"
           >
-            {/* Nombre */}
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontWeight: 'bold'
-              }}
-            >
-              {anexo.usuario_nombre || 'Sin asignar'}
-            </td>
+            <div className="anexo-card-header">
+              <div className="anexo-card-title">
+                <span className="anexo-card-icon">
+                  ☎️
+                </span>
 
-            {/* Departamento */}
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {anexo.departamento || '—'}
-            </td>
+                <div>
+                  <h3>
+                    Anexo {anexo.numero_anexo}
+                  </h3>
 
-            {/* Cargo */}
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {anexo.cargo || '—'}
-            </td>
-
-            {/* Anexo */}
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontFamily: 'monospace',
-                fontWeight: 'bold',
-                color: '#0284c7'
-              }}
-            >
-              {anexo.numero_anexo}
-            </td>
-
-            {/* Exterior */}
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontFamily: 'monospace'
-              }}
-            >
-              {anexo.exterior || '—'}
-            </td>
-
-            {/* Correo */}
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {anexo.correo || '—'}
-            </td>
-
-            {/* Estado */}
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {renderAnexoStatusBadge(
-                anexo.estado
-              )}
-            </td>
-
-            {/* Observaciones */}
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontSize: '0.85rem'
-              }}
-            >
-              {anexo.observaciones ||
-                'Sin observaciones'}
-            </td>
-
-            {/* Acciones */}
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                textAlign: 'center'
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '0.75rem'
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() =>
-                    onShowHistory(anexo)
-                  }
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: '#64748b'
-                  }}
-                  title="Ver historial"
-                >
-                  <History size={18} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onEdit(anexo)}
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: '#2563eb'
-                  }}
-                  title="Editar"
-                >
-                  <Edit size={18} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    onDelete(
-                      anexo.id,
-                      anexo.numero_anexo
-                    )
-                  }
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: '#ef4444'
-                  }}
-                  title="Eliminar"
-                >
-                  <Trash2 size={18} />
-                </button>
+                  <span className="anexo-card-user">
+                    {anexo.usuario_nombre ||
+                      'Sin usuario asignado'}
+                  </span>
+                </div>
               </div>
-            </td>
-          </tr>
+
+              <div className="anexo-card-status">
+                {renderAnexoStatusBadge(
+                  anexo.estado
+                )}
+              </div>
+            </div>
+
+            <div className="anexo-card-grid">
+              <MobileField
+                label="Departamento / Área"
+                value={
+                  anexo.departamento || '—'
+                }
+              />
+
+              <MobileField
+                label="Cargo"
+                value={
+                  anexo.cargo || '—'
+                }
+              />
+
+              <MobileField
+                label="Exterior"
+                value={
+                  anexo.exterior || '—'
+                }
+                monospace
+              />
+
+              <MobileField
+                label="Correo"
+                value={
+                  anexo.correo || '—'
+                }
+                full
+              />
+
+              <MobileField
+                label="Observaciones"
+                value={
+                  anexo.observaciones ||
+                  'Sin observaciones'
+                }
+                full
+              />
+            </div>
+
+            <div className="anexo-card-footer">
+              <span className="anexo-card-info">
+                Gestión de anexo
+              </span>
+
+              <Actions anexo={anexo} />
+            </div>
+          </article>
         ))}
-      </tbody>
-    </table>
+      </div>
+
+      {anexos.length === 0 && (
+        <div className="anexos-empty">
+          No existen anexos para mostrar.
+        </div>
+      )}
+    </>
+  );
+}
+
+function MobileField({
+  label,
+  value,
+  full = false,
+  monospace = false,
+}) {
+  return (
+    <div
+      className={`anexo-mobile-field ${
+        full
+          ? 'anexo-mobile-field-full'
+          : ''
+      }`}
+    >
+      <span className="anexo-mobile-label">
+        {label}
+      </span>
+
+      <span
+        className={`anexo-mobile-value ${
+          monospace
+            ? 'anexo-mobile-monospace'
+            : ''
+        }`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }

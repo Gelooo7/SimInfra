@@ -191,7 +191,6 @@
 @media (max-width: 480px) {
   .main-header {
     gap: 0.6rem;
-
     margin-bottom: 1rem;
   }
 
@@ -205,11 +204,24 @@
     height: 40px;
   }
 
-  .main-header-titles h1 {
-    max-width: 190px;
+  .main-header-titles {
+    min-width: 0;
+    flex: 1;
+  }
 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .main-header-titles h1 {
+    max-width: none;
+
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  .main-header-module {
+    margin-top: 3px;
+    font-size: 0.85rem;
   }
 }

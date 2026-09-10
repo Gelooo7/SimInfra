@@ -3,154 +3,193 @@ import {
   Trash2
 } from 'lucide-react';
 
+import './IpsTable.css';
+
 export default function IpsTable({
   ips,
   renderIpStatusBadge,
   onEdit,
   onDelete,
 }) {
+  const Actions = ({ ip }) => (
+    <div className="ips-actions">
+      <button
+        type="button"
+        className="ip-action ip-action-edit"
+        onClick={() => onEdit(ip)}
+        title="Editar"
+        aria-label="Editar IP"
+      >
+        <Edit size={18} />
+      </button>
+
+      <button
+        type="button"
+        className="ip-action ip-action-delete"
+        onClick={() =>
+          onDelete(
+            ip.id,
+            ip.direccion_ip
+          )
+        }
+        title="Eliminar"
+        aria-label="Eliminar IP"
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
+  );
+
   return (
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        textAlign: 'left',
-        fontSize: '0.95rem'
-      }}
-    >
-      <thead>
-        <tr
-          style={{
-            backgroundColor: '#f1f5f9',
-            borderBottom: '2px solid #e2e8f0',
-            color: '#475569'
-          }}
-        >
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Dirección IP
-          </th>
+    <>
+      {/* TABLA DESKTOP */}
+      <div className="ips-table-desktop">
+        <table className="ips-table">
+          <thead>
+            <tr>
+              <th>Dirección IP</th>
+              <th>Estado</th>
+              <th>Asignado a</th>
+              <th>Observaciones</th>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Estado
-          </th>
+              <th className="ips-actions-header">
+                Acciones
+              </th>
+            </tr>
+          </thead>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Asignado a
-          </th>
+          <tbody>
+            {ips.map((ip) => (
+              <tr key={ip.id}>
+                <td className="ip-address">
+                  {ip.direccion_ip}
+                </td>
 
-          <th style={{ padding: '1rem 1.2rem' }}>
-            Observaciones
-          </th>
+                <td>
+                  {renderIpStatusBadge(
+                    ip.estado
+                  )}
+                </td>
 
-          <th
-            style={{
-              padding: '1rem 1.2rem',
-              textAlign: 'center'
-            }}
-          >
-            Acciones
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {ips.map((ip) => (
-          <tr
-            key={ip.id}
-            style={{
-              borderBottom: '1px solid #f1f5f9',
-              color: '#334155'
-            }}
-          >
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontFamily: 'monospace',
-                fontWeight: 'bold',
-                color: '#0284c7'
-              }}
-            >
-              {ip.direccion_ip}
-            </td>
-
-            <td style={{ padding: '1rem 1.2rem' }}>
-              {renderIpStatusBadge(ip.estado)}
-            </td>
-
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontWeight: 'bold',
-                color:
-                  ip.usuario_nombre || ip.asignado_otro
-                    ? '#2563eb'
-                    : '#94a3b8'
-              }}
-            >
-              {ip.usuario_nombre ||
-                ip.asignado_otro ||
-                'Sin asignar'}
-            </td>
-
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                fontSize: '0.85rem'
-              }}
-            >
-              {ip.observacion || 'Sin observaciones'}
-            </td>
-
-            <td
-              style={{
-                padding: '1rem 1.2rem',
-                textAlign: 'center'
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '0.75rem'
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => onEdit(ip)}
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: '#2563eb'
-                  }}
-                  title="Editar"
-                >
-                  <Edit size={18} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    onDelete(
-                      ip.id,
-                      ip.direccion_ip
-                    )
+                <td
+                  className={
+                    ip.usuario_nombre ||
+                    ip.asignado_otro
+                      ? 'ip-assigned'
+                      : 'ip-unassigned'
                   }
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: '#ef4444'
-                  }}
-                  title="Eliminar"
                 >
-                  <Trash2 size={18} />
-                </button>
+                  {ip.usuario_nombre ||
+                    ip.asignado_otro ||
+                    'Sin asignar'}
+                </td>
+
+                <td className="ip-observation">
+                  {ip.observacion ||
+                    'Sin observaciones'}
+                </td>
+
+                <td className="ips-actions-cell">
+                  <Actions ip={ip} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TARJETAS MÓVIL */}
+      <div className="ips-cards-mobile">
+        {ips.map((ip) => (
+          <article
+            key={ip.id}
+            className="ip-card"
+          >
+            <div className="ip-card-header">
+              <div className="ip-card-title">
+                <span className="ip-card-icon">
+                  🌐
+                </span>
+
+                <div>
+                  <h3>
+                    {ip.direccion_ip}
+                  </h3>
+
+                  <span className="ip-card-subtitle">
+                    Dirección IP
+                  </span>
+                </div>
               </div>
-            </td>
-          </tr>
+
+              <div className="ip-card-status">
+                {renderIpStatusBadge(
+                  ip.estado
+                )}
+              </div>
+            </div>
+
+            <div className="ip-card-grid">
+              <MobileField
+                label="Asignado a"
+                value={
+                  ip.usuario_nombre ||
+                  ip.asignado_otro ||
+                  'Sin asignar'
+                }
+                full
+              />
+
+              <MobileField
+                label="Observaciones"
+                value={
+                  ip.observacion ||
+                  'Sin observaciones'
+                }
+                full
+              />
+            </div>
+
+            <div className="ip-card-footer">
+              <span className="ip-card-info">
+                Gestión de IP
+              </span>
+
+              <Actions ip={ip} />
+            </div>
+          </article>
         ))}
-      </tbody>
-    </table>
+      </div>
+
+      {ips.length === 0 && (
+        <div className="ips-empty">
+          No existen direcciones IP para mostrar.
+        </div>
+      )}
+    </>
+  );
+}
+
+function MobileField({
+  label,
+  value,
+  full = false,
+}) {
+  return (
+    <div
+      className={`ip-mobile-field ${
+        full
+          ? 'ip-mobile-field-full'
+          : ''
+      }`}
+    >
+      <span className="ip-mobile-label">
+        {label}
+      </span>
+
+      <span className="ip-mobile-value">
+        {value}
+      </span>
+    </div>
   );
 }
