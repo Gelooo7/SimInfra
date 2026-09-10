@@ -2,8 +2,8 @@ import UsuariosTable from '../../features/usuarios/components/UsuariosTable';
 import EquiposTable from '../../features/equipos/components/EquiposTable';
 import PerfilesTable from '../../features/perfiles/components/PerfilesTable';
 import IpsTable from '../../features/ips/components/IpsTable';
-import  AnexosTable from '../../features/anexos/components/AnexosTable';
-
+import AnexosTable from '../../features/anexos/components/AnexosTable';
+import PCsGenericosTable from '../../features/pcsGenericos/components/PCsGenericosTable';
 
 export default function ModuleTable({
   tab,
@@ -21,6 +21,7 @@ export default function ModuleTable({
   onDelete,
   renderAnexoStatusBadge,
   onShowAnexoHistory,
+  onShowPCGenericoHistory,
 }) {
   if (tab === 'usuarios') {
     return (
@@ -77,6 +78,17 @@ export default function ModuleTable({
         anexos={data}
         renderAnexoStatusBadge={renderAnexoStatusBadge}
         onShowHistory={onShowAnexoHistory}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    );
+  }
+
+  if (tab === 'pcs-genericos') {
+    return (
+      <PCsGenericosTable
+        pcs={data}
+        onShowHistory={onShowPCGenericoHistory}
         onEdit={onEdit}
         onDelete={onDelete}
       />

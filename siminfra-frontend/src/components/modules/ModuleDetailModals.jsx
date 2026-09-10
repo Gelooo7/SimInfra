@@ -2,6 +2,7 @@ import UsuarioDetailModal from '../../features/usuarios/components/UsuarioDetail
 import UsuarioHistoryModal from '../../features/usuarios/components/UsuarioHistoryModal';
 import EquipoHistoryModal from '../../features/equipos/components/EquipoHistoryModal';
 import AnexoHistoryModal from '../../features/anexos/components/AnexoHistoryModal';
+import PCGenericoHistoryModal from '../../features/pcsGenericos/components/PCGenericoHistoryModal';
 
 export default function ModuleDetailModals({
   selectedUser,
@@ -14,6 +15,8 @@ export default function ModuleDetailModals({
   onCloseEquipmentHistory,
   renderUsuarioStatusBadge,
   formatEquipmentType,
+  historyPCGenerico,
+onClosePCGenericoHistory,
 }) {
 
   return (
@@ -39,6 +42,12 @@ export default function ModuleDetailModals({
       <AnexoHistoryModal
         anexo={historyAnexo}
         onClose={onCloseAnexoHistory}
+      />
+
+      <PCGenericoHistoryModal
+        pc={historyPCGenerico}
+        onClose={onClosePCGenericoHistory}
+
       />
     </>
   );

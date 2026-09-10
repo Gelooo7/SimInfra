@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import './App.css';
+
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
 import { useModuleCrud } from './hooks/useModuleCrud';
 
@@ -75,10 +77,15 @@ export default function App() {
 
   const {
     tab,
+
     sidebarOpen,
-    selectTab,
     openSidebar,
     closeSidebar,
+
+    sidebarCollapsed,
+    toggleSidebarCollapsed,
+
+    selectTab,
   } = useModuleNavigation(resetFilters);
 
   const {
@@ -99,6 +106,9 @@ export default function App() {
 
     historyAnexo,
     setHistoryAnexo,
+
+    historyPCGenerico,
+    setHistoryPCGenerico,
   } = useModuleModals();
 
   const {
@@ -219,222 +229,281 @@ export default function App() {
   }
 
   return (
-    <div
-      style={{
-        padding: '1.5rem 3rem',
-        fontFamily: 'system-ui, sans-serif',
-        backgroundColor: '#f8fafc',
-        minHeight: '100vh',
-        boxSizing: 'border-box'
-      }}
-    >
+    <div className="app-shell">
+      {/* SIDEBAR */}
       <Sidebar
         isOpen={sidebarOpen}
+        collapsed={sidebarCollapsed}
         activeTab={tab}
         activeCount={filteredData.length}
         onClose={closeSidebar}
+        onToggleCollapse={toggleSidebarCollapsed}
         onSelectTab={selectTab}
       />
 
-      {/* ENCABEZADO */}
-      <Header
-        activeTab={tab}
-        onOpenSidebar={openSidebar}
-        onLogout={logout}
-      />
-
-      {/* FILTROS Y ACCIONES */}
-      <ModuleToolbar
-        activeTab={tab}
-        departments={dptosList}
-
-        selectedDepartment={selectedDpto}
-        onDepartmentChange={setSelectedDpto}
-
-        selectedEquipmentCategory={
-          selectedCategoriaEquipo
-        }
-        onEquipmentCategoryChange={
-          setSelectedCategoriaEquipo
-        }
-
-        selectedIpStatus={selectedEstadoIP}
-        onIpStatusChange={setSelectedEstadoIP}
-
-        selectedAnexoStatus={
-          selectedEstadoAnexo
-        }
-        onAnexoStatusChange={
-          setSelectedEstadoAnexo
-        }
-
-        search={search}
-        onSearchChange={setSearch}
-        onCreate={handleOpenCreateModal}
-      />
-
-      {/* TABLA PRINCIPAL */}
-      <div
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0',
-          overflowX: 'auto',
-          boxShadow:
-            '0 4px 6px -1px rgba(0,0,0,0.05)',
-          width: '100%'
-        }}
+      {/* CONTENIDO PRINCIPAL */}
+      <main
+        className={`app-main ${
+          sidebarCollapsed
+            ? 'app-main-sidebar-collapsed'
+            : ''
+        }`}
       >
-        <ModuleTable
-          tab={tab}
-          data={filteredData}
-          formatEquipmentType={
-            formatEquipmentType
+        {/* ENCABEZADO */}
+        <Header
+          activeTab={tab}
+          onOpenSidebar={openSidebar}
+          onLogout={logout}
+        />
+
+        {/* FILTROS Y ACCIONES */}
+        <ModuleToolbar
+          activeTab={tab}
+          departments={dptosList}
+
+          selectedDepartment={selectedDpto}
+          onDepartmentChange={setSelectedDpto}
+
+          selectedEquipmentCategory={
+            selectedCategoriaEquipo
+          }
+          onEquipmentCategoryChange={
+            setSelectedCategoriaEquipo
           }
 
-          visibleProfilePasswords={
-            visibleProfilePasswords
+          selectedIpStatus={selectedEstadoIP}
+          onIpStatusChange={setSelectedEstadoIP}
+
+          selectedAnexoStatus={
+            selectedEstadoAnexo
           }
-          setVisibleProfilePasswords={
-            setVisibleProfilePasswords
+          onAnexoStatusChange={
+            setSelectedEstadoAnexo
+          }
+
+          search={search}
+          onSearchChange={setSearch}
+          onCreate={handleOpenCreateModal}
+        />
+
+        {/* TABLA PRINCIPAL */}
+        <div className="app-table-container">
+          <ModuleTable
+            tab={tab}
+            data={filteredData}
+            formatEquipmentType={
+              formatEquipmentType
+            }
+
+            visibleProfilePasswords={
+              visibleProfilePasswords
+            }
+
+            setVisibleProfilePasswords={
+              setVisibleProfilePasswords
+            }
+
+            renderUsuarioStatusBadge={
+              renderUsuarioStatusBadge
+            }
+
+            renderAccountTypeBadge={
+              renderAccountTypeBadge
+            }
+
+            renderIpStatusBadge={
+              renderIpStatusBadge
+            }
+
+            renderAnexoStatusBadge={
+              renderAnexoStatusBadge
+            }
+
+            onSelectUser={
+              setSelectedUser
+            }
+
+            onShowUserHistory={
+              setHistoryUsuario
+            }
+
+            onShowEquipmentHistory={
+              setHistoryEquipo
+            }
+
+            onShowAnexoHistory={
+              setHistoryAnexo
+            }
+
+            onShowPCGenericoHistory={
+              setHistoryPCGenerico
+            }
+
+            onEdit={
+              setEditingItem
+            }
+
+            onDelete={
+              handleDelete
+            }
+          />
+        </div>
+
+        {/* MODALES DE DETALLE / HISTORIAL */}
+        <ModuleDetailModals
+          selectedUser={
+            selectedUser
+          }
+
+          historyUsuario={
+            historyUsuario
+          }
+
+          historyEquipo={
+            historyEquipo
+          }
+
+          historyAnexo={
+            historyAnexo
+          }
+
+          historyPCGenerico={
+            historyPCGenerico
+          }
+
+          onCloseUser={() =>
+            setSelectedUser(null)
+          }
+
+          onCloseUserHistory={() =>
+            setHistoryUsuario(null)
+          }
+
+          onCloseEquipmentHistory={() =>
+            setHistoryEquipo(null)
+          }
+
+          onCloseAnexoHistory={() =>
+            setHistoryAnexo(null)
+          }
+
+          onClosePCGenericoHistory={() =>
+            setHistoryPCGenerico(null)
           }
 
           renderUsuarioStatusBadge={
             renderUsuarioStatusBadge
           }
-          renderAccountTypeBadge={
-            renderAccountTypeBadge
-          }
-          renderIpStatusBadge={
-            renderIpStatusBadge
-          }
-          renderAnexoStatusBadge={
-            renderAnexoStatusBadge
-          }
 
-          onSelectUser={setSelectedUser}
-
-          onShowUserHistory={
-            setHistoryUsuario
+          formatEquipmentType={
+            formatEquipmentType
           }
-
-          onShowEquipmentHistory={
-            setHistoryEquipo
-          }
-
-          onShowAnexoHistory={
-            setHistoryAnexo
-          }
-
-          onEdit={setEditingItem}
-          onDelete={handleDelete}
         />
-      </div>
 
-      {/* MODALES DE DETALLE / HISTORIAL */}
-      <ModuleDetailModals
-        selectedUser={selectedUser}
+        {/* CREAR */}
+        <ModuleCreateModal
+          tab={tab}
+          newItem={newItem}
+          setNewItem={setNewItem}
 
-        historyUsuario={
-          historyUsuario
-        }
+          onSubmit={
+            handleCreateSave
+          }
 
-        historyEquipo={
-          historyEquipo
-        }
+          onClose={() =>
+            setNewItem(null)
+          }
 
-        historyAnexo={
-          historyAnexo
-        }
+          departments={
+            dptosList
+          }
 
-        onCloseUser={() =>
-          setSelectedUser(null)
-        }
+          usuarios={
+            usuariosList
+          }
 
-        onCloseUserHistory={() =>
-          setHistoryUsuario(null)
-        }
+          availableIps={
+            availableIpsForUser(
+              newItem?.ip_seleccionada
+            )
+          }
 
-        onCloseEquipmentHistory={() =>
-          setHistoryEquipo(null)
-        }
+          formatEquipmentType={
+            formatEquipmentType
+          }
 
-        onCloseAnexoHistory={() =>
-          setHistoryAnexo(null)
-        }
+          onHostnameChange={(value) =>
+            handleHostnameEquipoChange(
+              value,
+              newItem,
+              setNewItem
+            )
+          }
 
-        renderUsuarioStatusBadge={
-          renderUsuarioStatusBadge
-        }
+          onIpChange={(value) =>
+            handleIPInputChange(
+              value,
+              newItem,
+              setNewItem
+            )
+          }
+        />
 
-        formatEquipmentType={
-          formatEquipmentType
-        }
-      />
+        {/* EDITAR */}
+        <ModuleEditModal
+          tab={tab}
 
-      {/* CREAR */}
-      <ModuleCreateModal
-        tab={tab}
-        newItem={newItem}
-        setNewItem={setNewItem}
-        onSubmit={handleCreateSave}
-        onClose={() => setNewItem(null)}
-        departments={dptosList}
-        usuarios={usuariosList}
-        availableIps={availableIpsForUser(
-          newItem?.ip_seleccionada
-        )}
-        formatEquipmentType={
-          formatEquipmentType
-        }
-        onHostnameChange={(value) =>
-          handleHostnameEquipoChange(
-            value,
-            newItem,
-            setNewItem
-          )
-        }
-        onIpChange={(value) =>
-          handleIPInputChange(
-            value,
-            newItem,
-            setNewItem
-          )
-        }
-      />
+          editingItem={
+            editingItem
+          }
 
-      {/* EDITAR */}
-      <ModuleEditModal
-        tab={tab}
-        editingItem={editingItem}
-        setEditingItem={setEditingItem}
-        onSubmit={handleSave}
-        onClose={() =>
-          setEditingItem(null)
-        }
-        departments={dptosList}
-        usuarios={usuariosList}
-        availableIps={availableIpsForUser(
-          editingItem?.ip_actual
-        )}
-        formatEquipmentType={
-          formatEquipmentType
-        }
-        onHostnameChange={(value) =>
-          handleHostnameEquipoChange(
-            value,
-            editingItem,
+          setEditingItem={
             setEditingItem
-          )
-        }
-        onIpChange={(value) =>
-          handleIPInputChange(
-            value,
-            editingItem,
-            setEditingItem
-          )
-        }
-      />
+          }
+
+          onSubmit={
+            handleSave
+          }
+
+          onClose={() =>
+            setEditingItem(null)
+          }
+
+          departments={
+            dptosList
+          }
+
+          usuarios={
+            usuariosList
+          }
+
+          availableIps={
+            availableIpsForUser(
+              editingItem?.ip_actual
+            )
+          }
+
+          formatEquipmentType={
+            formatEquipmentType
+          }
+
+          onHostnameChange={(value) =>
+            handleHostnameEquipoChange(
+              value,
+              editingItem,
+              setEditingItem
+            )
+          }
+
+          onIpChange={(value) =>
+            handleIPInputChange(
+              value,
+              editingItem,
+              setEditingItem
+            )
+          }
+        />
+      </main>
     </div>
   );
 }

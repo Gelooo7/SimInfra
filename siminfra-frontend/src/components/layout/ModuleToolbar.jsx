@@ -26,6 +26,9 @@ export default function ModuleToolbar({
       case 'equipos':
         return 'Equipo';
 
+      case 'pcs-genericos':
+        return 'PC Genérico';
+
       case 'perfiles':
         return 'Perfil';
 
@@ -106,8 +109,9 @@ export default function ModuleToolbar({
         </button>
 
         {/* Filtro Departamento */}
-        {(activeTab === 'usuarios' ||
-          activeTab === 'perfiles') && (
+          {(activeTab === 'usuarios' ||
+            activeTab === 'perfiles' ||
+            activeTab === 'pcs-genericos') && (
           <div
             style={{
               display: 'flex',

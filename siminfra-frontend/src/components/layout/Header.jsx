@@ -3,6 +3,8 @@ import {
   LogOut
 } from 'lucide-react';
 
+import './Header.css';
+
 export default function Header({
   activeTab,
   onOpenSidebar,
@@ -16,6 +18,9 @@ export default function Header({
       case 'equipos':
         return 'Equipos';
 
+      case 'pcs-genericos':
+        return 'PCs Genéricos';
+
       case 'perfiles':
         return 'Perfiles Genéricos';
 
@@ -26,74 +31,33 @@ export default function Header({
         return 'Anexos';
 
       default:
-        return 'SimInfra';
+        return 'Portal Infraestructura TI Chile';
     }
   };
 
   return (
-    <header
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '1.5rem',
-        width: '100%'
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem'
-        }}
-      >
+    <header className="main-header">
+      <div className="main-header-left">
+        {/* Solo visible en tablet / móvil */}
         <button
           type="button"
           onClick={onOpenSidebar}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.65rem 1rem',
-            borderRadius: '8px',
-            border: '1px solid #cbd5e1',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            color: '#1e293b',
-            fontWeight: 'bold',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-          }}
-          title="Abrir Menú de Módulos"
+          className="header-menu-button"
+          title="Abrir menú de módulos"
         >
-          <Menu
-            size={20}
-            color="#2563eb"
-          />
-
-          <span>
-            Módulos
-          </span>
+          <Menu size={21} />
         </button>
 
-        <div>
-          <h1
-            style={{
-              fontSize: '1.8rem',
-              color: '#0f172a',
-              margin: 0,
-              fontWeight: '800'
-            }}
-          >
-            SimInfra — {getTitle()}
+        <div className="main-header-titles">
+          <h1>
+            Portal Infraestructura TI Chile
           </h1>
 
-          <p
-            style={{
-              color: '#64748b',
-              marginTop: '0.1rem',
-              fontSize: '0.9rem'
-            }}
-          >
+          <div className="main-header-module">
+            {getTitle()}
+          </div>
+
+          <p>
             Panel Administrador de Infraestructura y Redes
           </p>
         </div>
@@ -102,22 +66,14 @@ export default function Header({
       <button
         type="button"
         onClick={onLogout}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.6rem 1.2rem',
-          borderRadius: '8px',
-          border: '1px solid #cbd5e1',
-          backgroundColor: '#fff',
-          cursor: 'pointer',
-          color: '#ef4444',
-          fontWeight: 'bold'
-        }}
+        className="header-logout-button"
+        title="Cerrar sesión"
       >
-        <LogOut size={16} />
+        <LogOut size={17} />
 
-        Cerrar Sesión
+        <span>
+          Cerrar Sesión
+        </span>
       </button>
     </header>
   );

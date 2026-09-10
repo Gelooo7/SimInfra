@@ -18,7 +18,7 @@ export const validateItem = (tab, item, data = []) => {
       (ip) =>
         ip.id !== item.id &&
         ip.direccion_ip?.trim() ===
-          item.direccion_ip.trim()
+        item.direccion_ip.trim()
     );
 
     if (dupIP) {
@@ -77,7 +77,7 @@ export const validateItem = (tab, item, data = []) => {
         (anexo) =>
           anexo.id !== item.id &&
           Number(anexo.usuario) ===
-            Number(item.usuario)
+          Number(item.usuario)
       );
 
       if (dupUsuario) {
@@ -90,6 +90,66 @@ export const validateItem = (tab, item, data = []) => {
     }
   }
 
+  // PCS GENERICOS
+  if (tab === 'pcs-genericos') {
+    const usuarioLocal =
+      (item.usuario_local || '').trim();
+
+    const hostname =
+      (item.hostname || '').trim();
+
+    // Usuario local obligatorio
+    if (!usuarioLocal) {
+      return {
+        valid: false,
+        message:
+          'Debe ingresar el Usuario Local del PC Genérico.',
+      };
+    }
+
+    if (usuarioLocal.length > 150) {
+      return {
+        valid: false,
+        message:
+          'El Usuario Local puede tener como máximo 150 caracteres.',
+      };
+    }
+
+    // Hostname obligatorio
+    if (!hostname) {
+      return {
+        valid: false,
+        message:
+          'Debe ingresar el Hostname del PC Genérico.',
+      };
+    }
+
+    if (hostname.length > 100) {
+      return {
+        valid: false,
+        message:
+          'El Hostname puede tener como máximo 100 caracteres.',
+      };
+    }
+
+    // Hostname duplicado
+    const dupHostname = data.find(
+      (pc) =>
+        pc.id !== item.id &&
+        pc.hostname
+          ?.trim()
+          .toLowerCase() ===
+        hostname.toLowerCase()
+    );
+
+    if (dupHostname) {
+      return {
+        valid: false,
+        message:
+          `Error: El Hostname "${hostname}" ya está registrado en otro PC Genérico.`,
+      };
+    }
+  }
   // ACTIVO FIJO
   if (item.af) {
     if (
@@ -112,9 +172,9 @@ export const validateItem = (tab, item, data = []) => {
         usuario.nombre_completo
           ?.trim()
           .toLowerCase() ===
-          (item.nombre_completo || '')
-            .trim()
-            .toLowerCase()
+        (item.nombre_completo || '')
+          .trim()
+          .toLowerCase()
     );
 
     if (dupNombre) {
@@ -131,9 +191,9 @@ export const validateItem = (tab, item, data = []) => {
         usuario.usuario_red
           ?.trim()
           .toLowerCase() ===
-          (item.usuario_red || '')
-            .trim()
-            .toLowerCase()
+        (item.usuario_red || '')
+          .trim()
+          .toLowerCase()
     );
 
     if (dupRed) {
@@ -153,9 +213,9 @@ export const validateItem = (tab, item, data = []) => {
         equipo.numero_serie
           ?.trim()
           .toLowerCase() ===
-          (item.numero_serie || '')
-            .trim()
-            .toLowerCase()
+        (item.numero_serie || '')
+          .trim()
+          .toLowerCase()
     );
 
     if (dupSerie) {

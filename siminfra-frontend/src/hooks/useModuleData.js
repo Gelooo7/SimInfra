@@ -27,8 +27,15 @@ export const useModuleData = ({
 
       if (
         selectedDpto &&
-        (tab === 'usuarios' || tab === 'perfiles')
+        (
+          tab === 'usuarios' ||
+          tab === 'perfiles' ||
+          tab === 'pcs-genericos'
+        )
       ) {
+        params.dpto_area = selectedDpto;
+      }
+      {
         params.dpto_area = selectedDpto;
       }
 

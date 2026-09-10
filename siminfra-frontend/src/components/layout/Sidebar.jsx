@@ -1,247 +1,181 @@
 import {
   X,
-  User,
-  Monitor,
-  Key,
-  Network,
-  Phone
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+
+import './Sidebar.css';
+
+const modules = [
+  {
+    id: 'usuarios',
+    icon: '👤',
+    label: 'Usuarios',
+  },
+  {
+    id: 'equipos',
+    icon: '📦',
+    label: 'Equipos',
+  },
+  {
+    id: 'pcs-genericos',
+    icon: '🖥️',
+    label: 'PCs Genéricos',
+  },
+  {
+    id: 'perfiles',
+    icon: '📧',
+    label: 'Perfiles Genéricos',
+  },
+  {
+    id: 'ips',
+    icon: '🌐',
+    label: 'Gestión de IPs',
+  },
+  {
+    id: 'anexos',
+    icon: '☎️',
+    label: 'Anexos',
+  },
+];
 
 export default function Sidebar({
   isOpen,
+  collapsed,
   activeTab,
   activeCount,
   onClose,
+  onToggleCollapse,
   onSelectTab,
 }) {
   return (
     <>
-      {/* Fondo oscuro */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.4)',
-            zIndex: 1100,
-            backdropFilter: 'blur(2px)',
-            transition: 'opacity 0.3s'
-          }}
-        />
-      )}
+      {/* Overlay móvil */}
+      <div
+        className={`sidebar-overlay ${isOpen ? 'sidebar-overlay-open' : ''
+          }`}
+        onClick={onClose}
+      />
 
-      {/* Panel lateral */}
       <aside
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '280px',
-          height: '100vh',
-          backgroundColor: '#0f172a',
-          color: '#fff',
-          zIndex: 1200,
-          padding: '1.5rem',
-          boxSizing: 'border-box',
-          transform: isOpen
-            ? 'translateX(0)'
-            : 'translateX(-100%)',
-          transition:
-            'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '4px 0 25px rgba(0,0,0,0.3)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}
+        className={[
+          'sidebar',
+          collapsed ? 'sidebar-collapsed' : '',
+          isOpen ? 'sidebar-mobile-open' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
-        <div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '2rem'
-            }}
-          >
-            <div>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: '1.25rem',
-                  color: '#fff',
-                  fontWeight: 'bold'
-                }}
-              >
-                SimInfra
-              </h2>
-
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '0.75rem',
-                  color: '#94a3b8'
-                }}
-              >
-                Módulos del Sistema
-              </p>
+        {/* CABECERA */}
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <div className="sidebar-logo">
+              TI
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                border: 'none',
-                background: 'none',
-                color: '#94a3b8',
-                cursor: 'pointer',
-                padding: '4px'
-              }}
-            >
-              <X size={20} />
-            </button>
+            {!collapsed && (
+              <div className="sidebar-brand-text">
+                <h2>Portal Infraestructura</h2>
+                <span>TI Chile</span>
+              </div>
+            )}
           </div>
 
-          <nav
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem'
-            }}
+          {/* Contraer escritorio */}
+          <button
+            type="button"
+            className="sidebar-collapse-button"
+            onClick={onToggleCollapse}
+            title={
+              collapsed
+                ? 'Expandir menú'
+                : 'Contraer menú'
+            }
           >
-            <SidebarButton
-              active={activeTab === 'usuarios'}
-              icon={<User size={18} />}
-              label="Usuarios"
-              count={
-                activeTab === 'usuarios'
-                  ? activeCount
-                  : ''
-              }
-              onClick={() =>
-                onSelectTab('usuarios')
-              }
-            />
+            {collapsed ? (
+              <ChevronRight size={18} />
+            ) : (
+              <ChevronLeft size={18} />
+            )}
+          </button>
 
-            <SidebarButton
-              active={activeTab === 'equipos'}
-              icon={<Monitor size={18} />}
-              label="Equipos"
-              count={
-                activeTab === 'equipos'
-                  ? activeCount
-                  : ''
-              }
-              onClick={() =>
-                onSelectTab('equipos')
-              }
-            />
-
-            <SidebarButton
-              active={activeTab === 'perfiles'}
-              icon={<Key size={18} />}
-              label="Perfiles Genéricos"
-              count={
-                activeTab === 'perfiles'
-                  ? activeCount
-                  : ''
-              }
-              onClick={() =>
-                onSelectTab('perfiles')
-              }
-            />
-
-            <SidebarButton
-              active={activeTab === 'ips'}
-              icon={<Network size={18} />}
-              label="Gestión de IPs"
-              count={
-                activeTab === 'ips'
-                  ? activeCount
-                  : ''
-              }
-              onClick={() =>
-                onSelectTab('ips')
-              }
-            />
-
-            <SidebarButton
-              active={activeTab === 'anexos'}
-              icon={<Phone size={18} />}
-              label="Anexos"
-              count={
-                activeTab === 'anexos'
-                  ? activeCount
-                  : ''
-              }
-              onClick={() =>
-                onSelectTab('anexos')
-              }
-            />
-          </nav>
+          {/* Cerrar móvil */}
+          <button
+            type="button"
+            className="sidebar-mobile-close"
+            onClick={onClose}
+            title="Cerrar menú"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        <div
-          style={{
-            borderTop: '1px solid #334155',
-            paddingTop: '1rem'
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: '0.75rem',
-              color: '#64748b',
-              textAlign: 'center'
-            }}
-          >
-            SimInfra v2.0 — 2026
-          </p>
+        {/* NAVEGACIÓN */}
+        <nav className="sidebar-nav">
+          {modules.map((module) => {
+            const active =
+              activeTab === module.id;
+
+            return (
+              <button
+                key={module.id}
+                type="button"
+                className={`sidebar-module-button ${active
+                  ? 'sidebar-module-active'
+                  : ''
+                  }`}
+                onClick={() =>
+                  onSelectTab(module.id)
+                }
+                title={
+                  collapsed
+                    ? module.label
+                    : undefined
+                }
+              >
+                <span className="sidebar-module-icon">
+                  {module.icon}
+                </span>
+
+                <span className="sidebar-module-content">
+                  <span className="sidebar-module-label">
+                    {module.label}
+                  </span>
+
+                  {active &&
+                    activeCount !== undefined && (
+                      <span className="sidebar-module-count">
+                        {activeCount}
+                      </span>
+                    )}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* FOOTER */}
+        <div className="sidebar-footer">
+          {collapsed ? (
+            <span
+              className="sidebar-footer-mini"
+              title="Portal Infraestructura TI Chile"
+            >
+              TI
+            </span>
+          ) : (
+            <>
+              <strong>
+                Portal Infraestructura TI Chile
+              </strong>
+
+              <span>
+                v2.0 — 2026
+              </span>
+            </>
+          )}
         </div>
       </aside>
     </>
-  );
-}
-
-function SidebarButton({
-  active,
-  icon,
-  label,
-  count,
-  onClick,
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '0.75rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        cursor: 'pointer',
-        fontWeight: '600',
-        fontSize: '0.9rem',
-        textAlign: 'left',
-        backgroundColor: active
-          ? '#2563eb'
-          : 'transparent',
-        color: active
-          ? '#fff'
-          : '#cbd5e1'
-      }}
-    >
-      {icon}
-
-      <span>
-        {label}
-        {count !== '' ? ` (${count})` : ''}
-      </span>
-    </button>
   );
 }

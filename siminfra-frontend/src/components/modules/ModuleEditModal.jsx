@@ -5,6 +5,7 @@ import EquipoEditForm from '../../features/equipos/components/EquipoEditForm';
 import PerfilEditForm from '../../features/perfiles/components/PerfilEditForm';
 import IpEditForm from '../../features/ips/components/IpEditForm';
 import AnexoEditForm from '../../features/anexos/components/AnexoEditForm';
+import PCGenericoEditForm from '../../features/pcsGenericos/components/PCGenericoEditForm';
 
 const getEditTitle = (tab) => {
   switch (tab) {
@@ -22,6 +23,9 @@ const getEditTitle = (tab) => {
     
     case 'anexos':
       return 'Editar Anexo';
+
+    case 'pcs-genericos':
+      return 'Editar PC Genérico';
 
     default:
       return 'Editar Registro';
@@ -90,6 +94,14 @@ export default function ModuleEditModal({
           anexo={editingItem}
           onChange={setEditingItem}
           usuarios={usuarios}
+        />
+      )}
+
+      {tab === 'pcs-genericos' && (
+        <PCGenericoEditForm
+          pc={editingItem}
+          onChange={setEditingItem}
+          departments={departments}
         />
       )}
     </EditModal>

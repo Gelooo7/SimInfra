@@ -5,6 +5,7 @@ import EquipoCreateForm from '../../features/equipos/components/EquipoCreateForm
 import PerfilCreateForm from '../../features/perfiles/components/PerfilCreateForm';
 import IpCreateForm from '../../features/ips/components/IpCreateForm';
 import AnexoCreateForm from '../../features/anexos/components/AnexoCreateForm';
+import PCGenericoCreateForm from '../../features/pcsGenericos/components/PCGenericoCreateForm';
 
 const getCreateTitle = (tab) => {
   switch (tab) {
@@ -22,6 +23,9 @@ const getCreateTitle = (tab) => {
 
     case 'anexos':
       return 'Nuevo Anexo';
+
+    case 'pcs-genericos':
+      return 'Nuevo PC Genérico';
 
     default:
       return 'Nuevo Registro';
@@ -90,6 +94,14 @@ export default function ModuleCreateModal({
           anexo={newItem}
           onChange={setNewItem}
           usuarios={usuarios}
+        />
+      )}
+
+      {tab === 'pcs-genericos' && (
+        <PCGenericoCreateForm
+          pc={newItem}
+          onChange={setNewItem}
+          departments={departments}
         />
       )}
     </CreateModal>
