@@ -70,13 +70,16 @@ export default function Sidebar({
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="sidebar-logo">
-              TI
+              <img
+                src="/branding/dr-simi-logo.png"
+                alt="Farmacias Dr. Simi"
+              />
             </div>
 
             {!collapsed && (
               <div className="sidebar-brand-text">
-                <h2>Portal Infraestructura</h2>
-                <span>TI Chile</span>
+                <h2>TI Chile</h2>
+                <span>Infraestructura</span>
               </div>
             )}
           </div>
@@ -159,18 +162,18 @@ export default function Sidebar({
           {collapsed ? (
             <span
               className="sidebar-footer-mini"
-              title="Portal Infraestructura TI Chile"
+              title="Farmacias Dr. Simi"
             >
               TI
             </span>
           ) : (
             <>
               <strong>
-                Portal Infraestructura TI Chile
+                Farmacias Dr. Simi
               </strong>
 
               <span>
-                v2.0 — 2026
+                Infraestructura TI
               </span>
             </>
           )}

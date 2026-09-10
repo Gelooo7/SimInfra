@@ -1,3 +1,8 @@
+:root {
+  --simi-blue: #2b5aa5;
+  --simi-blue-hover: #244d91;
+  --sidebar-dark: #0f172a;
+}
 .sidebar {
   position: fixed;
   top: 0;
@@ -59,12 +64,22 @@
   align-items: center;
   justify-content: center;
 
-  border-radius: 10px;
+  border-radius: 50%;
+  overflow: hidden;
 
-  background: #2563eb;
+  background-color: #fff;
 
-  font-weight: 800;
-  font-size: 14px;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-logo img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
 }
 
 .sidebar-brand-text {
@@ -74,21 +89,22 @@
 .sidebar-brand-text h2 {
   margin: 0;
 
-  font-size: 17px;
-  font-weight: 800;
+  color: #ffffff;
 
-  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .sidebar-brand-text span {
   display: block;
 
-  margin-top: 2px;
+  margin-top: 3px;
 
-  font-size: 11px;
-  color: #94a3b8;
+  color: #a9bad6;
 
-  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* =========================
@@ -173,17 +189,16 @@
 }
 
 .sidebar-module-button:hover {
-  background: #1e293b;
-  color: white;
+  background-color: rgba(43, 90, 165, 0.18);
 }
 
 .sidebar-module-active {
-  background: #2563eb;
-  color: white;
+  background-color: var(--simi-blue);
+  color: #fff;
 }
 
 .sidebar-module-active:hover {
-  background: #2563eb;
+  background-color: var(--simi-blue-hover);
 }
 
 .sidebar-module-icon {
