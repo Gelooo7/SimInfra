@@ -207,23 +207,26 @@ export const validateItem = (tab, item, data = []) => {
 
   // EQUIPOS
   if (tab === 'equipos') {
-    const dupSerie = data.find(
-      (equipo) =>
-        equipo.id !== item.id &&
-        equipo.numero_serie
-          ?.trim()
-          .toLowerCase() ===
-        (item.numero_serie || '')
-          .trim()
-          .toLowerCase()
-    );
+    const numeroSerie =
+      (item.numero_serie || '').trim();
 
-    if (dupSerie) {
-      return {
-        valid: false,
-        message:
-          `Error: El número de serie "${item.numero_serie}" ya está registrado.`,
-      };
+    if (numeroSerie) {
+      const dupSerie = data.find(
+        (equipo) =>
+          equipo.id !== item.id &&
+          equipo.numero_serie
+            ?.trim()
+            .toLowerCase() ===
+          numeroSerie.toLowerCase()
+      );
+
+      if (dupSerie) {
+        return {
+          valid: false,
+          message:
+            `Error: El número de serie "${numeroSerie}" ya está registrado.`,
+        };
+      }
     }
 
     if (item.af) {

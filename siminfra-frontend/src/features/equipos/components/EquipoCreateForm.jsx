@@ -27,7 +27,32 @@ export default function EquipoCreateForm({
     fontWeight: 'bold'
   };
 
+
   const tipoActual = formatEquipmentType(equipo.tipo);
+
+  const peripheralTypes = [
+    'Monitor',
+    'Adaptador',
+    'Audífonos',
+    'Teclado',
+    'Mouse',
+    'Docking',
+    'Otro Periférico',
+  ];
+
+  const handleTipoChange = (nuevoTipo) => {
+    const nuevoEsPeriferico = peripheralTypes.includes(nuevoTipo);
+
+    onChange({
+      ...equipo,
+      tipo: nuevoTipo,
+      hostname: nuevoEsPeriferico
+        ? ''
+        : equipo.hostname || '',
+    });
+  };
+
+  const esPeriferico = peripheralTypes.includes(tipoActual);
 
   return (
     <>
@@ -39,29 +64,61 @@ export default function EquipoCreateForm({
         <select
           value={tipoActual}
           onChange={(e) =>
-            updateField('tipo', e.target.value)
+            handleTipoChange(e.target.value)
           }
           style={inputStyle}
         >
-          <option value="Notebook">
-            Notebook
-          </option>
+          <optgroup label="Equipos principales">
+            <option value="Notebook">
+              Notebook
+            </option>
 
-          <option value="Celular">
-            Celular
-          </option>
+            <option value="Celular">
+              Celular
+            </option>
 
-          <option value="Tablet">
-            Tablet
-          </option>
+            <option value="Tablet">
+              Tablet
+            </option>
 
-          <option value="Mac">
-            Mac
-          </option>
+            <option value="Mac">
+              Mac
+            </option>
 
-          <option value="BAM / Router">
-            BAM / Router
-          </option>
+            <option value="BAM / Router">
+              BAM / Router
+            </option>
+          </optgroup>
+
+          <optgroup label="Periféricos">
+            <option value="Monitor">
+              Monitor
+            </option>
+
+            <option value="Adaptador">
+              Adaptador
+            </option>
+
+            <option value="Audífonos">
+              Audífonos
+            </option>
+
+            <option value="Teclado">
+              Teclado
+            </option>
+
+            <option value="Mouse">
+              Mouse
+            </option>
+
+            <option value="Docking">
+              Docking
+            </option>
+
+            <option value="Otro Periférico">
+              Otro Periférico
+            </option>
+          </optgroup>
         </select>
       </div>
 
@@ -99,12 +156,11 @@ export default function EquipoCreateForm({
 
       <div>
         <label style={labelStyle}>
-          N° de Serie *
+          N° de Serie
         </label>
 
         <input
           type="text"
-          required
           value={equipo.numero_serie || ''}
           onChange={(e) =>
             updateField(
@@ -112,6 +168,7 @@ export default function EquipoCreateForm({
               e.target.value
             )
           }
+          placeholder="Opcional"
           style={inputStyle}
         />
       </div>
@@ -289,25 +346,27 @@ export default function EquipoCreateForm({
         </div>
       )}
 
-      <div>
-        <label
-          style={{
-            ...labelStyle,
-            color: '#0284c7'
-          }}
-        >
-          Hostname (Autocompleta usuario asignado)
-        </label>
+      {!esPeriferico && (
+        <div>
+          <label
+            style={{
+              ...labelStyle,
+              color: '#0284c7'
+            }}
+          >
+            Hostname (Autocompleta usuario asignado)
+          </label>
 
-        <input
-          type="text"
-          value={equipo.hostname || ''}
-          onChange={(e) =>
-            onHostnameChange(e.target.value)
-          }
-          style={inputStyle}
-        />
-      </div>
+          <input
+            type="text"
+            value={equipo.hostname || ''}
+            onChange={(e) =>
+              onHostnameChange(e.target.value)
+            }
+            style={inputStyle}
+          />
+        </div>
+      )}
 
       <div>
         <label style={labelStyle}>

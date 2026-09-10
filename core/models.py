@@ -18,11 +18,21 @@ ESTADOS_EQUIPO = [
 ]
 
 TIPOS_EQUIPO = [
+    # EQUIPOS PRINCIPALES
     ('Notebook', 'Notebook'),
     ('Celular', 'Celular'),
     ('Tablet', 'Tablet'),
     ('BAM / Router', 'BAM / Router'),
     ('Mac', 'Mac'),
+
+    # PERIFÉRICOS
+    ('Monitor', 'Monitor'),
+    ('Adaptador', 'Adaptador'),
+    ('Audífonos', 'Audífonos'),
+    ('Teclado', 'Teclado'),
+    ('Mouse', 'Mouse'),
+    ('Docking', 'Docking'),
+    ('Otro Periférico', 'Otro Periférico'),
 ]
 
 ESTADOS_IP = [
@@ -293,20 +303,35 @@ class Equipamiento(models.Model):
 
 
 class HistorialEquipo(models.Model):
-    equipo = models.ForeignKey(Equipamiento, on_delete=models.CASCADE, related_name='historial')
-    usuario_anterior = models.CharField(max_length=150, null=True, blank=True)
-    usuario_nuevo = models.CharField(max_length=150, null=True, blank=True)
-    fecha_movimiento = models.DateTimeField(auto_now_add=True)
-    accion = models.CharField(max_length=50, default='MODIFICACION')
-    observacion = models.TextField(null=True, blank=True)
+    equipo = models.ForeignKey(
+        Equipamiento,
+        on_delete=models.CASCADE,
+        related_name='historial'
+    )
+    usuario_anterior = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+    usuario_nuevo = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+    fecha_movimiento = models.DateTimeField(
+        auto_now_add=True
+    )
+    accion = models.CharField(
+        max_length=50,
+        default='MODIFICACION'
+    )
+    observacion = models.TextField(
+        null=True,
+        blank=True
+    )
 
     class Meta:
         ordering = ['-fecha_movimiento']
-
-    def save(self, *args, **kwargs):
-        if self.password and not self.password.startswith('ENC::'):
-            self.password = encrypt_val(self.password)
-        super().save(*args, **kwargs)
 
 class PerfilGenerico(models.Model):
     nombre = models.CharField(max_length=150, null=True, blank=True)
@@ -365,7 +390,8 @@ class PCGenerico(models.Model):
     )
 
     numero_serie = models.CharField(
-        max_length=150,
+        max_length=100,
+        unique=True,
         null=True,
         blank=True
     )

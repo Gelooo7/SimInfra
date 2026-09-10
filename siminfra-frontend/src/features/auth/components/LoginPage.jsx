@@ -164,17 +164,6 @@ export default function LoginPage({
             Ingresar al Portal
           </span>
         </button>
-
-        {/* FOOTER */}
-        <div className="login-footer">
-          <span>
-            Portal Infraestructura TI Chile
-          </span>
-
-          <small>
-            v2.0 — 2026
-          </small>
-        </div>
       </form>
     </div>
   );

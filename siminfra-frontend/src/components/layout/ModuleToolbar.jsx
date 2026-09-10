@@ -66,164 +66,172 @@ export default function ModuleToolbar({
     }
   };
 
-return (
-  <div className="module-toolbar">
-    <div className="module-toolbar-actions">
-      {/* BOTÓN AGREGAR */}
-      <button
-        type="button"
-        onClick={onCreate}
-        className="module-toolbar-create"
-      >
-        <Plus size={18} />
+  return (
+    <div className="module-toolbar">
+      <div className="module-toolbar-actions">
+        {/* BOTÓN AGREGAR */}
+        <button
+          type="button"
+          onClick={onCreate}
+          className="module-toolbar-create"
+        >
+          <Plus size={18} />
 
-        <span>
-          Agregar {getCreateLabel()}
-        </span>
-      </button>
+          <span>
+            Agregar {getCreateLabel()}
+          </span>
+        </button>
 
-      {/* FILTRO DEPARTAMENTO */}
-      {(activeTab === 'usuarios' ||
-        activeTab === 'perfiles' ||
-        activeTab === 'pcs-genericos') && (
-        <div className="module-toolbar-filter">
-          <Filter size={16} />
+        {/* FILTRO DEPARTAMENTO */}
+        {(activeTab === 'usuarios' ||
+          activeTab === 'perfiles' ||
+          activeTab === 'pcs-genericos') && (
+            <div className="module-toolbar-filter">
+              <Filter size={16} />
 
-          <select
-            value={selectedDepartment}
-            onChange={(e) =>
-              onDepartmentChange(e.target.value)
-            }
-          >
-            <option value="">
-              Todos los Departamentos
-            </option>
-
-            {departments.map((department, index) => (
-              <option
-                key={index}
-                value={department}
+              <select
+                value={selectedDepartment}
+                onChange={(e) =>
+                  onDepartmentChange(e.target.value)
+                }
               >
-                {department}
+                <option value="">
+                  Todos los Departamentos
+                </option>
+
+                {departments.map((department, index) => (
+                  <option
+                    key={index}
+                    value={department}
+                  >
+                    {department}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+        {/* FILTRO EQUIPOS */}
+        {activeTab === 'equipos' && (
+          <div className="module-toolbar-filter">
+            <Filter size={16} />
+
+            <select
+              value={selectedEquipmentCategory}
+              onChange={(e) =>
+                onEquipmentCategoryChange(
+                  e.target.value
+                )
+              }
+            >
+              <option value="">
+                Todas las Categorías
               </option>
-            ))}
-          </select>
-        </div>
-      )}
 
-      {/* FILTRO EQUIPOS */}
-      {activeTab === 'equipos' && (
-        <div className="module-toolbar-filter">
-          <Filter size={16} />
+              <optgroup label="Equipos principales">
+                <option value="Notebook">
+                  Notebook
+                </option>
 
-          <select
-            value={selectedEquipmentCategory}
+                <option value="Celular">
+                  Celular
+                </option>
+
+                <option value="Tablet">
+                  Tablet
+                </option>
+
+                <option value="Mac">
+                  Mac
+                </option>
+
+                <option value="BAM / Router">
+                  BAM / Router
+                </option>
+              </optgroup>
+
+              <optgroup label="Categorías">
+                <option value="PERIFERICOS">
+                  Periféricos
+                </option>
+              </optgroup>
+            </select>
+          </div>
+        )}
+
+        {/* FILTRO IP */}
+        {activeTab === 'ips' && (
+          <div className="module-toolbar-filter">
+            <Filter size={16} />
+
+            <select
+              value={selectedIpStatus}
+              onChange={(e) =>
+                onIpStatusChange(e.target.value)
+              }
+            >
+              <option value="">
+                Todos los Estados
+              </option>
+
+              <option value="LIBRE">
+                🟢 Libre
+              </option>
+
+              <option value="RESERVADA">
+                🔴 Reservada
+              </option>
+
+              <option value="DUPLICADA">
+                🔵 Duplicada
+              </option>
+
+              <option value="DESCONOCIDA">
+                🟡 Desconocida
+              </option>
+            </select>
+          </div>
+        )}
+
+        {/* FILTRO ANEXOS */}
+        {activeTab === 'anexos' && (
+          <div className="module-toolbar-filter">
+            <Filter size={16} />
+
+            <select
+              value={selectedAnexoStatus}
+              onChange={(e) =>
+                onAnexoStatusChange(e.target.value)
+              }
+            >
+              <option value="">
+                Todos los Estados
+              </option>
+
+              <option value="DISPONIBLE">
+                🟢 Disponible
+              </option>
+
+              <option value="ASIGNADO">
+                🔵 Asignado
+              </option>
+            </select>
+          </div>
+        )}
+
+        {/* BUSCADOR */}
+        <div className="module-toolbar-search">
+          <input
+            type="text"
+            placeholder={getSearchPlaceholder()}
+            value={search}
             onChange={(e) =>
-              onEquipmentCategoryChange(
-                e.target.value
-              )
+              onSearchChange(e.target.value)
             }
-          >
-            <option value="">
-              Todas las Categorías
-            </option>
-
-            <option value="Notebook">
-              Notebook
-            </option>
-
-            <option value="Celular">
-              Celular
-            </option>
-
-            <option value="Tablet">
-              Tablet
-            </option>
-
-            <option value="Mac">
-              Mac
-            </option>
-
-            <option value="BAM / Router">
-              BAM / Router
-            </option>
-          </select>
+          />
         </div>
-      )}
-
-      {/* FILTRO IP */}
-      {activeTab === 'ips' && (
-        <div className="module-toolbar-filter">
-          <Filter size={16} />
-
-          <select
-            value={selectedIpStatus}
-            onChange={(e) =>
-              onIpStatusChange(e.target.value)
-            }
-          >
-            <option value="">
-              Todos los Estados
-            </option>
-
-            <option value="LIBRE">
-              🟢 Libre
-            </option>
-
-            <option value="RESERVADA">
-              🔴 Reservada
-            </option>
-
-            <option value="DUPLICADA">
-              🔵 Duplicada
-            </option>
-
-            <option value="DESCONOCIDA">
-              🟡 Desconocida
-            </option>
-          </select>
-        </div>
-      )}
-
-      {/* FILTRO ANEXOS */}
-      {activeTab === 'anexos' && (
-        <div className="module-toolbar-filter">
-          <Filter size={16} />
-
-          <select
-            value={selectedAnexoStatus}
-            onChange={(e) =>
-              onAnexoStatusChange(e.target.value)
-            }
-          >
-            <option value="">
-              Todos los Estados
-            </option>
-
-            <option value="DISPONIBLE">
-              🟢 Disponible
-            </option>
-
-            <option value="ASIGNADO">
-              🔵 Asignado
-            </option>
-          </select>
-        </div>
-      )}
-
-      {/* BUSCADOR */}
-      <div className="module-toolbar-search">
-        <input
-          type="text"
-          placeholder={getSearchPlaceholder()}
-          value={search}
-          onChange={(e) =>
-            onSearchChange(e.target.value)
-          }
-        />
       </div>
     </div>
-  </div>
-);
+  );
 
 }

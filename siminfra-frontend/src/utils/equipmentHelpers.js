@@ -35,6 +35,28 @@ export const filterEquiposByCategory = (
     return data;
   }
 
+  const peripheralTypes = [
+    'monitor',
+    'adaptador',
+    'audífonos',
+    'teclado',
+    'mouse',
+    'docking',
+    'otro periférico',
+  ];
+
+  // Categoría agrupadora de periféricos
+  if (selectedCategory === 'PERIFERICOS') {
+    return data.filter((item) => {
+      const itemType = formatEquipmentType(
+        item.tipo
+      ).toLowerCase();
+
+      return peripheralTypes.includes(itemType);
+    });
+  }
+
+  // Categorías normales
   const selectedType = formatEquipmentType(
     selectedCategory
   ).toLowerCase();
