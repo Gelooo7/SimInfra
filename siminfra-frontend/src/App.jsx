@@ -5,6 +5,12 @@ import React, {
 } from 'react';
 import './App.css';
 
+import UserDepartmentCards
+  from './features/usuarios/components/UserDepartmentCards';
+
+import IpSegmentCards
+  from './features/ips/components/IpSegmentCards';
+
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
 import { useModuleCrud } from './hooks/useModuleCrud';
 
@@ -29,6 +35,8 @@ import {
 import {
   sanitizeIpInput,
   getAvailableIpsForUser,
+  filterIpsBySegment,
+  IP_SEGMENTS,
 } from './utils/ipHelpers';
 
 import Sidebar from './components/layout/Sidebar';
@@ -61,6 +69,11 @@ export default function App() {
     visibleProfilePasswords,
     setVisibleProfilePasswords
   ] = useState({});
+
+  const [
+    selectedIpSegment,
+    setSelectedIpSegment
+  ] = useState('');
 
   const {
     search,
@@ -212,14 +225,72 @@ export default function App() {
         selectedCategoriaEquipo,
         formatEquipmentType
       )
-      : data;
+      : tab === 'ips'
+        ? filterIpsBySegment(
+          data,
+          selectedIpSegment
+        )
+        : data;
 
   const equipmentResultsRef = useRef(null);
+  const userResultsRef = useRef(null);
+  const ipResultsRef = useRef(null);
+
+  const getDepartmentDisplayLabel = (department) => {
+    if (!department) {
+      return '';
+    }
+
+    const normalizedDepartment =
+      department.trim().toLowerCase();
+
+    if (
+      normalizedDepartment === 'infraestructura ti' ||
+      normalizedDepartment === 'ti'
+    ) {
+      return 'TECNOLOGÍA';
+    }
+
+    return department;
+  };
+
+  const selectedDepartmentLabel =
+    getDepartmentDisplayLabel(selectedDpto);
+
+  useEffect(() => {
+    if (
+      tab === 'usuarios' &&
+      selectedDpto &&
+      userResultsRef.current
+    ) {
+      const timeout = setTimeout(() => {
+        userResultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [tab, selectedDpto]);
 
   const selectedEquipmentLabel =
     selectedCategoriaEquipo === 'PERIFERICOS'
       ? 'Periféricos'
       : selectedCategoriaEquipo;
+
+  const selectedIpSegmentData =
+    IP_SEGMENTS.find(
+      (segment) =>
+        segment.id === selectedIpSegment
+    );
+
+  const selectedIpSegmentLabel =
+    selectedIpSegmentData?.label || '';
+
+  /* =========================
+     SCROLL RESULTADOS EQUIPOS
+  ========================= */
 
   useEffect(() => {
     if (
@@ -238,11 +309,43 @@ export default function App() {
     }
   }, [tab, selectedCategoriaEquipo]);
 
+
+  /* =========================
+     SCROLL RESULTADOS IPS
+  ========================= */
+
+  useEffect(() => {
+    if (
+      tab === 'ips' &&
+      selectedIpSegment &&
+      ipResultsRef.current
+    ) {
+      const timeout = setTimeout(() => {
+        ipResultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [tab, selectedIpSegment]);
+
+
+  /* =========================
+     IPS DISPONIBLES USUARIO
+  ========================= */
+
   const availableIpsForUser = (currentIp) => {
     return getAvailableIpsForUser(
       ipsList,
       currentIp
     );
+  };
+
+  const handleSelectTab = (selectedTab) => {
+    setSelectedIpSegment('');
+    selectTab(selectedTab);
   };
 
   if (!token) {
@@ -268,7 +371,7 @@ export default function App() {
         activeCount={filteredData.length}
         onClose={closeSidebar}
         onToggleCollapse={toggleSidebarCollapsed}
-        onSelectTab={selectTab}
+        onSelectTab={handleSelectTab}
       />
 
       {/* CONTENIDO PRINCIPAL */}
@@ -296,134 +399,220 @@ export default function App() {
           />
         )}
 
-        {/* RESULTADOS DEL MÓDULO */}
-        {(tab !== 'equipos' || selectedCategoriaEquipo) && (
-          <>
-            {/* ENCABEZADO DEL RESULTADO DE EQUIPOS */}
-            {tab === 'equipos' && (
-              <div
-                ref={equipmentResultsRef}
-                className="equipment-results-header"
-              >
-                <div>
-                  <span className="equipment-results-eyebrow">
-                    Categoría seleccionada
-                  </span>
-
-                  <h2>
-                    {selectedEquipmentLabel}
-                  </h2>
-                </div>
-
-                <div className="equipment-results-count">
-                  <strong>
-                    {filteredData.length}
-                  </strong>
-
-                  <span>
-                    {filteredData.length === 1
-                      ? ' equipo'
-                      : ' equipos'}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* FILTROS Y ACCIONES */}
-            <ModuleToolbar
-              activeTab={tab}
-              departments={dptosList}
-
-              selectedDepartment={selectedDpto}
-              onDepartmentChange={setSelectedDpto}
-
-              selectedEquipmentCategory={
-                selectedCategoriaEquipo
-              }
-              onEquipmentCategoryChange={
-                setSelectedCategoriaEquipo
-              }
-
-              selectedIpStatus={selectedEstadoIP}
-              onIpStatusChange={setSelectedEstadoIP}
-
-              selectedAnexoStatus={
-                selectedEstadoAnexo
-              }
-              onAnexoStatusChange={
-                setSelectedEstadoAnexo
-              }
-
-              search={search}
-              onSearchChange={setSearch}
-              onCreate={handleOpenCreateModal}
-            />
-
-            {/* TABLA PRINCIPAL */}
-            <div className="app-table-container">
-              <ModuleTable
-                tab={tab}
-                data={filteredData}
-
-                formatEquipmentType={
-                  formatEquipmentType
-                }
-
-                visibleProfilePasswords={
-                  visibleProfilePasswords
-                }
-
-                setVisibleProfilePasswords={
-                  setVisibleProfilePasswords
-                }
-
-                renderUsuarioStatusBadge={
-                  renderUsuarioStatusBadge
-                }
-
-                renderAccountTypeBadge={
-                  renderAccountTypeBadge
-                }
-
-                renderIpStatusBadge={
-                  renderIpStatusBadge
-                }
-
-                renderAnexoStatusBadge={
-                  renderAnexoStatusBadge
-                }
-
-                onSelectUser={
-                  setSelectedUser
-                }
-
-                onShowUserHistory={
-                  setHistoryUsuario
-                }
-
-                onShowEquipmentHistory={
-                  setHistoryEquipo
-                }
-
-                onShowAnexoHistory={
-                  setHistoryAnexo
-                }
-
-                onShowPCGenericoHistory={
-                  setHistoryPCGenerico
-                }
-
-                onEdit={
-                  setEditingItem
-                }
-
-                onDelete={
-                  handleDelete
-                }
-              />
-            </div>
-          </>
+        {/* ÁREAS DE USUARIOS */}
+        {tab === 'usuarios' && (
+          <UserDepartmentCards
+            usuarios={usuariosList}
+            selectedDepartment={selectedDpto}
+            onSelectDepartment={setSelectedDpto}
+          />
         )}
+
+        {/* SEGMENTOS DE IP */}
+        {tab === 'ips' && (
+          <IpSegmentCards
+            ips={ipsList}
+            selectedSegment={selectedIpSegment}
+            onSelectSegment={setSelectedIpSegment}
+          />
+        )}
+
+        {/* RESULTADOS DEL MÓDULO */}
+        {(
+          (tab === 'equipos' && selectedCategoriaEquipo) ||
+          (tab === 'usuarios' && selectedDpto) ||
+          (tab === 'ips' && selectedIpSegment) ||
+          (
+            tab !== 'equipos' &&
+            tab !== 'usuarios' &&
+            tab !== 'ips'
+          )
+        ) && (
+            <>
+              {/* ENCABEZADO DEL RESULTADO DE EQUIPOS */}
+              {tab === 'equipos' && (
+                <div
+                  ref={equipmentResultsRef}
+                  className="equipment-results-header"
+                >
+                  <div>
+                    <span className="equipment-results-eyebrow">
+                      Categoría seleccionada
+                    </span>
+
+                    <h2>
+                      {selectedEquipmentLabel}
+                    </h2>
+                  </div>
+
+                  <div className="equipment-results-count">
+                    <strong>
+                      {filteredData.length}
+                    </strong>
+
+                    <span>
+                      {filteredData.length === 1
+                        ? ' equipo'
+                        : ' equipos'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* ENCABEZADO DEL RESULTADO DE USUARIOS */}
+              {tab === 'usuarios' && (
+                <div
+                  ref={userResultsRef}
+                  className="equipment-results-header"
+                >
+                  <div>
+                    <span className="equipment-results-eyebrow">
+                      Departamento / Área seleccionada
+                    </span>
+
+                    <h2>
+                      {selectedDepartmentLabel}
+                    </h2>
+                  </div>
+
+                  <div className="equipment-results-count">
+                    <strong>
+                      {filteredData.length}
+                    </strong>
+
+                    <span>
+                      {filteredData.length === 1
+                        ? ' usuario'
+                        : ' usuarios'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* ENCABEZADO DEL RESULTADO DE IPS */}
+              {tab === 'ips' && (
+                <div
+                  ref={ipResultsRef}
+                  className="equipment-results-header"
+                >
+                  <div>
+                    <span className="equipment-results-eyebrow">
+                      Segmento seleccionado
+                    </span>
+
+                    <h2>
+                      {selectedIpSegmentLabel}
+                    </h2>
+                  </div>
+
+                  <div className="equipment-results-count">
+                    <strong>
+                      {filteredData.length}
+                    </strong>
+
+                    <span>
+                      {filteredData.length === 1
+                        ? ' IP'
+                        : ' IPs'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {/* FILTROS Y ACCIONES */}
+              <ModuleToolbar
+                activeTab={tab}
+                departments={dptosList}
+
+                selectedDepartment={selectedDpto}
+                onDepartmentChange={setSelectedDpto}
+
+                selectedEquipmentCategory={
+                  selectedCategoriaEquipo
+                }
+                onEquipmentCategoryChange={
+                  setSelectedCategoriaEquipo
+                }
+
+                selectedIpStatus={selectedEstadoIP}
+                onIpStatusChange={setSelectedEstadoIP}
+
+                selectedAnexoStatus={
+                  selectedEstadoAnexo
+                }
+                onAnexoStatusChange={
+                  setSelectedEstadoAnexo
+                }
+
+                search={search}
+                onSearchChange={setSearch}
+                onCreate={handleOpenCreateModal}
+              />
+
+              {/* TABLA PRINCIPAL */}
+              <div className="app-table-container">
+                <ModuleTable
+                  tab={tab}
+                  data={filteredData}
+
+                  formatEquipmentType={
+                    formatEquipmentType
+                  }
+
+                  visibleProfilePasswords={
+                    visibleProfilePasswords
+                  }
+
+                  setVisibleProfilePasswords={
+                    setVisibleProfilePasswords
+                  }
+
+                  renderUsuarioStatusBadge={
+                    renderUsuarioStatusBadge
+                  }
+
+                  renderAccountTypeBadge={
+                    renderAccountTypeBadge
+                  }
+
+                  renderIpStatusBadge={
+                    renderIpStatusBadge
+                  }
+
+                  renderAnexoStatusBadge={
+                    renderAnexoStatusBadge
+                  }
+
+                  onSelectUser={
+                    setSelectedUser
+                  }
+
+                  onShowUserHistory={
+                    setHistoryUsuario
+                  }
+
+                  onShowEquipmentHistory={
+                    setHistoryEquipo
+                  }
+
+                  onShowAnexoHistory={
+                    setHistoryAnexo
+                  }
+
+                  onShowPCGenericoHistory={
+                    setHistoryPCGenerico
+                  }
+
+                  onEdit={
+                    setEditingItem
+                  }
+
+                  onDelete={
+                    handleDelete
+                  }
+                />
+              </div>
+            </>
+          )}
 
         {/* MODALES DE DETALLE / HISTORIAL */}
         <ModuleDetailModals

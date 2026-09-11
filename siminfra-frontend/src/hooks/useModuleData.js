@@ -35,9 +35,6 @@ export const useModuleData = ({
       ) {
         params.dpto_area = selectedDpto;
       }
-      {
-        params.dpto_area = selectedDpto;
-      }
 
       if (
         selectedEstadoIP &&

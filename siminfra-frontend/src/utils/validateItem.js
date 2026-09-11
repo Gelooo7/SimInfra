@@ -152,15 +152,11 @@ export const validateItem = (tab, item, data = []) => {
   }
   // ACTIVO FIJO
   if (item.af) {
-    if (
-      item.af.length > 12 ||
-      !/^\d+$/.test(item.af)
-    ) {
-      return {
-        valid: false,
-        message:
-          'El Activo Fijo (AF) debe ser numérico y tener máximo 12 dígitos.',
-      };
+    if (item.af.trim().length > 12) {
+      alert(
+        'El Activo Fijo (AF) puede tener máximo 12 caracteres.'
+      );
+      return false;
     }
   }
 

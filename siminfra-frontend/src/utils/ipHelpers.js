@@ -1,6 +1,15 @@
+/* =========================
+   SANITIZAR IP
+========================= */
+
 export const sanitizeIpInput = (value) => {
   return value.replace(/[^0-9.]/g, '');
 };
+
+
+/* =========================
+   IPs DISPONIBLES
+========================= */
 
 export const getAvailableIpsForUser = (
   ipsList = [],
@@ -11,4 +20,154 @@ export const getAvailableIpsForUser = (
       ip.estado === 'LIBRE' ||
       ip.direccion_ip === currentIp
   );
+};
+
+
+/* =========================
+   SEGMENTOS DE RED
+========================= */
+
+export const IP_SEGMENTS = [
+  {
+    id: '172.23',
+    label: '172.23',
+    network: '172.23.x.x',
+    prefix: '172.23.',
+  },
+  {
+    id: '172.25',
+    label: '172.25',
+    network: '172.25.x.x',
+    prefix: '172.25.',
+  },
+  {
+    id: '192.168.10',
+    label: '192.168.10',
+    network: '192.168.10.x',
+    prefix: '192.168.10.',
+  },
+  {
+    id: '192.168.20',
+    label: '192.168.20',
+    network: '192.168.20.x',
+    prefix: '192.168.20.',
+  },
+  {
+    id: '192.168.90',
+    label: '192.168.90',
+    network: '192.168.90.x',
+    prefix: '192.168.90.',
+  },
+];
+
+
+/* =========================
+   OBTENER SEGMENTO DE UNA IP
+========================= */
+
+export const getIpSegment = (
+  direccionIp = ''
+) => {
+  const ip = direccionIp.trim();
+
+  const segment = IP_SEGMENTS.find(
+    (item) =>
+      ip.startsWith(item.prefix)
+  );
+
+  return segment || null;
+};
+
+
+/* =========================
+   FILTRAR POR SEGMENTO
+========================= */
+
+export const filterIpsBySegment = (
+  ips = [],
+  selectedSegment
+) => {
+  if (!selectedSegment) {
+    return ips;
+  }
+
+  const segment = IP_SEGMENTS.find(
+    (item) =>
+      item.id === selectedSegment
+  );
+
+  if (!segment) {
+    return ips;
+  }
+
+  return ips.filter((ip) =>
+    ip.direccion_ip
+      ?.trim()
+      .startsWith(segment.prefix)
+  );
+};
+
+
+/* =========================
+   CONTAR IPs POR SEGMENTO
+========================= */
+
+export const countIpsBySegment = (
+  ips = [],
+  segmentId
+) => {
+  const segment = IP_SEGMENTS.find(
+    (item) =>
+      item.id === segmentId
+  );
+
+  if (!segment) {
+    return 0;
+  }
+
+  return ips.filter((ip) =>
+    ip.direccion_ip
+      ?.trim()
+      .startsWith(segment.prefix)
+  ).length;
+};
+
+
+/* =========================
+   CONTADORES DE ESTADO
+========================= */
+
+export const getIpSegmentStats = (
+  ips = [],
+  segmentId
+) => {
+  const segmentIps =
+    filterIpsBySegment(
+      ips,
+      segmentId
+    );
+
+  return {
+    total: segmentIps.length,
+
+    libres: segmentIps.filter(
+      (ip) =>
+        ip.estado === 'LIBRE'
+    ).length,
+
+    reservadas: segmentIps.filter(
+      (ip) =>
+        ip.estado === 'RESERVADA'
+    ).length,
+
+    duplicadas: segmentIps.filter(
+      (ip) =>
+        ip.estado === 'DUPLICADA'
+    ).length,
+
+    desconocidas: segmentIps.filter(
+      (ip) =>
+        ip.estado === 'DESCONOCIDA'
+    ).length,
+  };
 };

@@ -1,3 +1,9 @@
+import {
+  equipmentUsesHostname,
+  equipmentUsesMobileLine,
+  normalizeEquipmentFieldsByType,
+} from '../../../utils/equipmentHelpers';
+
 export default function EquipoEditForm({
   equipo,
   onChange,
@@ -8,7 +14,7 @@ export default function EquipoEditForm({
   const updateField = (field, value) => {
     onChange({
       ...equipo,
-      [field]: value
+      [field]: value,
     });
   };
 
@@ -18,44 +24,47 @@ export default function EquipoEditForm({
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
     marginTop: '4px',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
   };
 
   const labelStyle = {
     fontSize: '0.8rem',
     color: '#64748b',
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   };
 
-  const tipoActual = formatEquipmentType(equipo.tipo);
+  const tipoActual = formatEquipmentType(
+    equipo.tipo
+  );
 
-  const peripheralTypes = [
-    'Monitor',
-    'Adaptador',
-    'Audífonos',
-    'Teclado',
-    'Mouse',
-    'Docking',
-    'Otro Periférico',
-  ];
+  const usaHostname =
+    equipmentUsesHostname(tipoActual);
+
+  const usaLineaMovil =
+    equipmentUsesMobileLine(tipoActual);
+
+  const esCelular =
+    tipoActual === 'Celular';
+
+  const esMac =
+    tipoActual === 'Mac';
 
   const handleTipoChange = (nuevoTipo) => {
-    const nuevoEsPeriferico = peripheralTypes.includes(nuevoTipo);
+    const nuevoEstado =
+      normalizeEquipmentFieldsByType(
+        equipo,
+        nuevoTipo
+      );
 
-    onChange({
-      ...equipo,
-      tipo: nuevoTipo,
-      hostname: nuevoEsPeriferico
-        ? ''
-        : equipo.hostname || '',
-    });
+    onChange(nuevoEstado);
   };
-
-  const esPeriferico = peripheralTypes.includes(tipoActual);
 
   return (
     <>
-      {/* Tipo */}
+      {/* =========================
+          TIPO
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Tipo de Equipo
@@ -69,20 +78,52 @@ export default function EquipoEditForm({
           style={inputStyle}
         >
           <optgroup label="Equipos principales">
-            <option value="Notebook">Notebook</option>
-            <option value="Celular">Celular</option>
-            <option value="Tablet">Tablet</option>
-            <option value="Mac">Mac</option>
-            <option value="BAM / Router">BAM / Router</option>
+            <option value="Notebook">
+              Notebook
+            </option>
+
+            <option value="Celular">
+              Celular
+            </option>
+
+            <option value="Tablet">
+              Tablet
+            </option>
+
+            <option value="Mac">
+              Mac
+            </option>
+
+            <option value="BAM / Router">
+              BAM / Router
+            </option>
           </optgroup>
 
           <optgroup label="Periféricos">
-            <option value="Monitor">Monitor</option>
-            <option value="Adaptador">Adaptador</option>
-            <option value="Audífonos">Audífonos</option>
-            <option value="Teclado">Teclado</option>
-            <option value="Mouse">Mouse</option>
-            <option value="Docking">Docking</option>
+            <option value="Monitor">
+              Monitor
+            </option>
+
+            <option value="Adaptador">
+              Adaptador
+            </option>
+
+            <option value="Audífonos">
+              Audífonos
+            </option>
+
+            <option value="Teclado">
+              Teclado
+            </option>
+
+            <option value="Mouse">
+              Mouse
+            </option>
+
+            <option value="Docking">
+              Docking
+            </option>
+
             <option value="Otro Periférico">
               Otro Periférico
             </option>
@@ -90,7 +131,10 @@ export default function EquipoEditForm({
         </select>
       </div>
 
-      {/* Marca */}
+      {/* =========================
+          MARCA
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Marca
@@ -100,13 +144,19 @@ export default function EquipoEditForm({
           type="text"
           value={equipo.marca || ''}
           onChange={(e) =>
-            updateField('marca', e.target.value)
+            updateField(
+              'marca',
+              e.target.value
+            )
           }
           style={inputStyle}
         />
       </div>
 
-      {/* Modelo */}
+      {/* =========================
+          MODELO
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Modelo
@@ -116,13 +166,19 @@ export default function EquipoEditForm({
           type="text"
           value={equipo.modelo || ''}
           onChange={(e) =>
-            updateField('modelo', e.target.value)
+            updateField(
+              'modelo',
+              e.target.value
+            )
           }
           style={inputStyle}
         />
       </div>
 
-      {/* Serie */}
+      {/* =========================
+          NÚMERO DE SERIE
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           N° de Serie
@@ -130,7 +186,9 @@ export default function EquipoEditForm({
 
         <input
           type="text"
-          value={equipo.numero_serie || ''}
+          value={
+            equipo.numero_serie || ''
+          }
           onChange={(e) =>
             updateField(
               'numero_serie',
@@ -142,8 +200,11 @@ export default function EquipoEditForm({
         />
       </div>
 
-      {/* Celular */}
-      {tipoActual === 'Celular' && (
+      {/* =========================
+          CELULAR
+      ========================= */}
+
+      {esCelular && (
         <div
           style={{
             backgroundColor: '#f0fdf4',
@@ -152,7 +213,7 @@ export default function EquipoEditForm({
             border: '1px solid #bbf7d0',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.5rem'
+            gap: '0.5rem',
           }}
         >
           <span
@@ -160,7 +221,7 @@ export default function EquipoEditForm({
               fontSize: '0.75rem',
               fontWeight: 'bold',
               color: '#166534',
-              textTransform: 'uppercase'
+              textTransform: 'uppercase',
             }}
           >
             Detalles de Celular
@@ -170,21 +231,24 @@ export default function EquipoEditForm({
             <label
               style={{
                 ...labelStyle,
-                color: '#166534'
+                color: '#166534',
               }}
             >
-              Número de Teléfono
+              SIM / N° Celular
             </label>
 
             <input
               type="text"
-              value={equipo.numero_telefono || ''}
+              value={
+                equipo.numero_telefono || ''
+              }
               onChange={(e) =>
                 updateField(
                   'numero_telefono',
                   e.target.value
                 )
               }
+              placeholder="+56 9 1234 5678"
               style={inputStyle}
             />
           </div>
@@ -192,15 +256,16 @@ export default function EquipoEditForm({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem'
+              gridTemplateColumns:
+                '1fr 1fr',
+              gap: '0.5rem',
             }}
           >
             <div>
               <label
                 style={{
                   ...labelStyle,
-                  color: '#166534'
+                  color: '#166534',
                 }}
               >
                 IMEI
@@ -223,7 +288,7 @@ export default function EquipoEditForm({
               <label
                 style={{
                   ...labelStyle,
-                  color: '#166534'
+                  color: '#166534',
                 }}
               >
                 PIN
@@ -245,8 +310,50 @@ export default function EquipoEditForm({
         </div>
       )}
 
-      {/* Mac */}
-      {tipoActual === 'Mac' && (
+      {/* =========================
+          TABLET / BAM
+      ========================= */}
+
+      {usaLineaMovil && !esCelular && (
+        <div
+          style={{
+            backgroundColor: '#f0fdf4',
+            padding: '0.8rem',
+            borderRadius: '8px',
+            border: '1px solid #bbf7d0',
+          }}
+        >
+          <label
+            style={{
+              ...labelStyle,
+              color: '#166534',
+            }}
+          >
+            SIM / N° Celular
+          </label>
+
+          <input
+            type="text"
+            value={
+              equipo.numero_telefono || ''
+            }
+            onChange={(e) =>
+              updateField(
+                'numero_telefono',
+                e.target.value
+              )
+            }
+            placeholder="Opcional"
+            style={inputStyle}
+          />
+        </div>
+      )}
+
+      {/* =========================
+          MAC
+      ========================= */}
+
+      {esMac && (
         <div
           style={{
             backgroundColor: '#eff6ff',
@@ -255,7 +362,7 @@ export default function EquipoEditForm({
             border: '1px solid #bfdbfe',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.5rem'
+            gap: '0.5rem',
           }}
         >
           <span
@@ -263,7 +370,7 @@ export default function EquipoEditForm({
               fontSize: '0.75rem',
               fontWeight: 'bold',
               color: '#1e40af',
-              textTransform: 'uppercase'
+              textTransform: 'uppercase',
             }}
           >
             Detalles de iCloud (Mac)
@@ -273,7 +380,7 @@ export default function EquipoEditForm({
             <label
               style={{
                 ...labelStyle,
-                color: '#1e40af'
+                color: '#1e40af',
               }}
             >
               Cuenta iCloud
@@ -281,7 +388,9 @@ export default function EquipoEditForm({
 
             <input
               type="email"
-              value={equipo.icloud_cuenta || ''}
+              value={
+                equipo.icloud_cuenta || ''
+              }
               onChange={(e) =>
                 updateField(
                   'icloud_cuenta',
@@ -296,7 +405,7 @@ export default function EquipoEditForm({
             <label
               style={{
                 ...labelStyle,
-                color: '#1e40af'
+                color: '#1e40af',
               }}
             >
               Contraseña iCloud
@@ -304,7 +413,9 @@ export default function EquipoEditForm({
 
             <input
               type="text"
-              value={equipo.icloud_password || ''}
+              value={
+                equipo.icloud_password || ''
+              }
               onChange={(e) =>
                 updateField(
                   'icloud_password',
@@ -317,34 +428,47 @@ export default function EquipoEditForm({
         </div>
       )}
 
-      {/* Hostname - solo equipos principales */}
-      {!esPeriferico && (
+      {/* =========================
+          HOSTNAME
+          SOLO NOTEBOOK / MAC
+      ========================= */}
+
+      {usaHostname && (
         <div>
           <label
             style={{
               ...labelStyle,
-              color: '#0284c7'
+              color: '#0284c7',
             }}
           >
-            Hostname (Opcional)
+            Hostname
+            {' '}
+            (Autocompleta usuario asignado)
           </label>
 
           <input
             type="text"
             value={equipo.hostname || ''}
             onChange={(e) =>
-              onHostnameChange(e.target.value)
+              onHostnameChange(
+                e.target.value
+              )
             }
-            placeholder="Solo si corresponde"
+            placeholder="Ej: CL-NB-001"
             style={inputStyle}
           />
         </div>
       )}
 
-      {/* AF */}
+      {/* =========================
+          AF
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
-          Activo Fijo (AF)
+          Activo Fijo
+          {' '}
+          (AF - Máx. 12 caracteres)
         </label>
 
         <input
@@ -352,18 +476,25 @@ export default function EquipoEditForm({
           maxLength={12}
           value={equipo.af || ''}
           onChange={(e) =>
-            updateField('af', e.target.value)
+            updateField(
+              'af',
+              e.target.value
+            )
           }
+          placeholder="Ej: 123456 o SIN AF"
           style={inputStyle}
         />
       </div>
 
-      {/* Usuario */}
+      {/* =========================
+          USUARIO
+      ========================= */}
+
       <div>
         <label
           style={{
             ...labelStyle,
-            color: '#2563eb'
+            color: '#2563eb',
           }}
         >
           Asignar a Usuario
@@ -396,7 +527,10 @@ export default function EquipoEditForm({
         </select>
       </div>
 
-      {/* Fecha */}
+      {/* =========================
+          FECHA
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Fecha de Asignación
@@ -404,7 +538,9 @@ export default function EquipoEditForm({
 
         <input
           type="date"
-          value={equipo.fecha_asignacion || ''}
+          value={
+            equipo.fecha_asignacion || ''
+          }
           onChange={(e) =>
             updateField(
               'fecha_asignacion',
@@ -415,14 +551,19 @@ export default function EquipoEditForm({
         />
       </div>
 
-      {/* Estado */}
+      {/* =========================
+          ESTADO
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Estado
         </label>
 
         <select
-          value={equipo.estado || 'ASIGNADO'}
+          value={
+            equipo.estado || 'ASIGNADO'
+          }
           onChange={(e) =>
             updateField(
               'estado',

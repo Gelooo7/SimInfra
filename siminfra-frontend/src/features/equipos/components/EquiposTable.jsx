@@ -4,6 +4,13 @@ import {
   History
 } from 'lucide-react';
 
+import {
+  equipmentUsesHostname,
+  equipmentUsesMobileLine,
+  getEquipmentIdentifier,
+  getEquipmentIdentifierLabel,
+} from '../../../utils/equipmentHelpers';
+
 import './EquiposTable.css';
 
 export default function EquiposTable({
@@ -13,6 +20,21 @@ export default function EquiposTable({
   onEdit,
   onDelete,
 }) {
+
+  /* =========================
+     NORMALIZAR EQUIPO
+  ========================= */
+
+  const normalizeEquipo = (equipo) => ({
+    ...equipo,
+    tipo: formatEquipmentType(equipo.tipo),
+  });
+
+
+  /* =========================
+     ACCIONES
+  ========================= */
+
   const Actions = ({ equipo }) => (
     <div className="equipos-actions">
       <button
@@ -41,7 +63,9 @@ export default function EquiposTable({
         onClick={() =>
           onDelete(
             equipo.id,
-            `${equipo.marca || ''} ${equipo.modelo || ''}`
+            `${equipo.marca || ''} ${
+              equipo.modelo || ''
+            }`
           )
         }
         title="Eliminar"
@@ -52,23 +76,140 @@ export default function EquiposTable({
     </div>
   );
 
+
+  /* =========================
+     NOMBRE COLUMNA IDENTIFICADOR
+  ========================= */
+
+  const getIdentifierColumnLabel = () => {
+    if (!equipos || equipos.length === 0) {
+      return 'Identificador';
+    }
+
+    const tipos = equipos.map(
+      (equipo) =>
+        formatEquipmentType(equipo.tipo)
+          .trim()
+          .toLowerCase()
+    );
+
+    const todosHostname = tipos.every(
+      (tipo) =>
+        ['notebook', 'mac'].includes(tipo)
+    );
+
+    if (todosHostname) {
+      return 'Hostname';
+    }
+
+    const todosLineaMovil = tipos.every(
+      (tipo) =>
+        [
+          'celular',
+          'tablet',
+          'bam / router',
+        ].includes(tipo)
+    );
+
+    if (todosLineaMovil) {
+      return 'SIM / N° Celular';
+    }
+
+    return 'Identificador';
+  };
+
+
+  /* =========================
+     IDENTIFICADOR
+  ========================= */
+
+  const renderIdentifier = (equipo) => {
+    const normalizedEquipo =
+      normalizeEquipo(equipo);
+
+    const identifier =
+      getEquipmentIdentifier(
+        normalizedEquipo
+      );
+
+    if (!identifier) {
+      return (
+        <span className="equipo-unassigned">
+          N/A
+        </span>
+      );
+    }
+
+    if (
+      equipmentUsesHostname(
+        normalizedEquipo.tipo
+      )
+    ) {
+      return (
+        <span className="equipo-hostname">
+          {identifier}
+        </span>
+      );
+    }
+
+    if (
+      equipmentUsesMobileLine(
+        normalizedEquipo.tipo
+      )
+    ) {
+      return (
+        <span className="equipo-mobile-line">
+          {identifier}
+        </span>
+      );
+    }
+
+    return identifier;
+  };
+
+
   return (
     <>
       {/* =========================
           TABLA DESKTOP
       ========================= */}
+
       <div className="equipos-table-desktop">
         <table className="equipos-table">
           <thead>
             <tr>
-              <th>Tipo</th>
-              <th>Marca / Modelo</th>
-              <th>N° Serie</th>
-              <th>Activo Fijo (AF)</th>
-              <th>Hostname</th>
-              <th>Asignado a</th>
-              <th>Fecha Asignación</th>
-              <th>Estado</th>
+              <th>
+                Tipo
+              </th>
+
+              <th>
+                Marca / Modelo
+              </th>
+
+              <th>
+                N° Serie
+              </th>
+
+              <th>
+                Activo Fijo (AF)
+              </th>
+
+              <th>
+                {getIdentifierColumnLabel()}
+              </th>
+
+              <th>
+                Asignado a
+              </th>
+
+              <th>
+                Fecha Asignación
+              </th>
+
+              <th>
+                Estado
+              </th>
+
               <th className="equipos-actions-header">
                 Acciones
               </th>
@@ -78,26 +219,48 @@ export default function EquiposTable({
           <tbody>
             {equipos.map((equipo) => (
               <tr key={equipo.id}>
+
+                {/* TIPO */}
+
                 <td className="equipo-type">
-                  {formatEquipmentType(equipo.tipo)}
+                  {formatEquipmentType(
+                    equipo.tipo
+                  )}
                 </td>
 
+
+                {/* MARCA / MODELO */}
+
                 <td>
-                  {`${equipo.marca || ''} ${equipo.modelo || ''}`.trim() ||
+                  {`${equipo.marca || ''} ${
+                    equipo.modelo || ''
+                  }`.trim() || 'N/I'}
+                </td>
+
+
+                {/* SERIE */}
+
+                <td className="equipo-monospace">
+                  {equipo.numero_serie ||
                     'N/I'}
                 </td>
 
-                <td className="equipo-monospace">
-                  {equipo.numero_serie || 'N/I'}
-                </td>
+
+                {/* AF */}
 
                 <td className="equipo-af">
                   {equipo.af || 'N/I'}
                 </td>
 
-                <td className="equipo-hostname">
-                  {equipo.hostname || 'N/I'}
+
+                {/* IDENTIFICADOR */}
+
+                <td className="equipo-identifier">
+                  {renderIdentifier(equipo)}
                 </td>
+
+
+                {/* ASIGNADO A */}
 
                 <td
                   className={
@@ -110,13 +273,24 @@ export default function EquiposTable({
                     'Disponible (Stock)'}
                 </td>
 
+
+                {/* FECHA */}
+
                 <td className="equipo-date">
-                  {equipo.fecha_asignacion || 'N/A'}
+                  {equipo.fecha_asignacion ||
+                    'N/A'}
                 </td>
 
+
+                {/* ESTADO */}
+
                 <td>
-                  {equipo.estado || 'ASIGNADO'}
+                  {equipo.estado ||
+                    'ASIGNADO'}
                 </td>
+
+
+                {/* ACCIONES */}
 
                 <td className="equipos-actions-cell">
                   <Actions equipo={equipo} />
@@ -127,107 +301,148 @@ export default function EquiposTable({
         </table>
       </div>
 
+
       {/* =========================
-          TARJETAS MÓVIL
+          TARJETAS RESPONSIVE
       ========================= */}
+
       <div className="equipos-cards-mobile">
-        {equipos.map((equipo) => (
-          <article
-            key={equipo.id}
-            className="equipo-card"
-          >
-            <div className="equipo-card-header">
-              <div className="equipo-card-title">
-                <span className="equipo-card-icon">
-                  📦
-                </span>
+        {equipos.map((equipo) => {
+          const normalizedEquipo =
+            normalizeEquipo(equipo);
 
-                <div>
-                  <h3>
-                    {`${equipo.marca || ''} ${equipo.modelo || ''}`.trim() ||
-                      'Equipo sin marca/modelo'}
-                  </h3>
+          const identifier =
+            getEquipmentIdentifier(
+              normalizedEquipo
+            );
 
-                  <span className="equipo-card-type">
-                    {formatEquipmentType(
-                      equipo.tipo
-                    )}
+          const identifierLabel =
+            getEquipmentIdentifierLabel(
+              normalizedEquipo.tipo
+            );
+
+          return (
+            <article
+              key={equipo.id}
+              className="equipo-card"
+            >
+              {/* HEADER */}
+
+              <div className="equipo-card-header">
+                <div className="equipo-card-title">
+                  <span className="equipo-card-icon">
+                    📦
                   </span>
+
+                  <div>
+                    <h3>
+                      {`${equipo.marca || ''} ${
+                        equipo.modelo || ''
+                      }`.trim() ||
+                        'Equipo sin marca/modelo'}
+                    </h3>
+
+                    <span className="equipo-card-type">
+                      {formatEquipmentType(
+                        equipo.tipo
+                      )}
+                    </span>
+                  </div>
                 </div>
+
+                <span
+                  className={`equipo-card-status ${
+                    equipo.usuario_nombre
+                      ? 'equipo-card-status-assigned'
+                      : 'equipo-card-status-stock'
+                  }`}
+                >
+                  {equipo.estado ||
+                    (equipo.usuario_nombre
+                      ? 'ASIGNADO'
+                      : 'STOCK')}
+                </span>
               </div>
 
-              <span
-                className={`equipo-card-status ${
-                  equipo.usuario_nombre
-                    ? 'equipo-card-status-assigned'
-                    : 'equipo-card-status-stock'
-                }`}
-              >
-                {equipo.estado ||
-                  (equipo.usuario_nombre
-                    ? 'ASIGNADO'
-                    : 'STOCK')}
-              </span>
-            </div>
 
-            <div className="equipo-card-grid">
-              <MobileField
-                label="N° Serie"
-                value={
-                  equipo.numero_serie || 'N/I'
-                }
-                monospace
-              />
+              {/* DATOS */}
 
-              <MobileField
-                label="Activo Fijo"
-                value={equipo.af || 'N/I'}
-                monospace
-              />
+              <div className="equipo-card-grid">
 
-              <MobileField
-                label="Hostname"
-                value={
-                  equipo.hostname || 'N/I'
-                }
-                monospace
-              />
+                <MobileField
+                  label="N° Serie"
+                  value={
+                    equipo.numero_serie ||
+                    'N/I'
+                  }
+                  monospace
+                />
 
-              <MobileField
-                label="Asignado a"
-                value={
-                  equipo.usuario_nombre ||
-                  'Disponible (Stock)'
-                }
-                full
-              />
+                <MobileField
+                  label="Activo Fijo"
+                  value={
+                    equipo.af ||
+                    'N/I'
+                  }
+                  monospace
+                />
 
-              <MobileField
-                label="Fecha Asignación"
-                value={
-                  equipo.fecha_asignacion ||
-                  'N/A'
-                }
-              />
+                {identifierLabel && (
+                  <MobileField
+                    label={identifierLabel}
+                    value={
+                      identifier ||
+                      'N/A'
+                    }
+                    monospace
+                  />
+                )}
 
-              <MobileField
-                label="Estado"
-                value={
-                  equipo.estado || 'ASIGNADO'
-                }
-              />
-            </div>
+                <MobileField
+                  label="Asignado a"
+                  value={
+                    equipo.usuario_nombre ||
+                    'Disponible (Stock)'
+                  }
+                  full
+                />
 
-            <div className="equipo-card-footer">
-              <span className="equipo-card-info">
-                Gestión de equipo
-              </span>
+                <MobileField
+                  label="Fecha Asignación"
+                  value={
+                    equipo.fecha_asignacion ||
+                    'N/A'
+                  }
+                />
 
-              <Actions equipo={equipo} />
-            </div>
-          </article>
-        ))}
+                <MobileField
+                  label="Estado"
+                  value={
+                    equipo.estado ||
+                    'ASIGNADO'
+                  }
+                />
+              </div>
+
+
+              {/* FOOTER */}
+
+              <div className="equipo-card-footer">
+                <span className="equipo-card-info">
+                  Gestión de equipo
+                </span>
+
+                <Actions equipo={equipo} />
+              </div>
+            </article>
+          );
+        })}
       </div>
+
+
+      {/* =========================
+          VACÍO
+      ========================= */}
 
       {equipos.length === 0 && (
         <div className="equipos-empty">
@@ -237,6 +452,11 @@ export default function EquiposTable({
     </>
   );
 }
+
+
+/* =========================
+   CAMPO TARJETA
+========================= */
 
 function MobileField({
   label,

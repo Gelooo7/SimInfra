@@ -1,3 +1,9 @@
+import {
+  equipmentUsesHostname,
+  equipmentUsesMobileLine,
+  normalizeEquipmentFieldsByType,
+} from '../../../utils/equipmentHelpers';
+
 export default function EquipoCreateForm({
   equipo,
   onChange,
@@ -8,7 +14,7 @@ export default function EquipoCreateForm({
   const updateField = (field, value) => {
     onChange({
       ...equipo,
-      [field]: value
+      [field]: value,
     });
   };
 
@@ -18,44 +24,47 @@ export default function EquipoCreateForm({
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
     marginTop: '4px',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
   };
 
   const labelStyle = {
     fontSize: '0.8rem',
     color: '#64748b',
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   };
 
+  const tipoActual = formatEquipmentType(
+    equipo.tipo
+  );
 
-  const tipoActual = formatEquipmentType(equipo.tipo);
+  const usaHostname =
+    equipmentUsesHostname(tipoActual);
 
-  const peripheralTypes = [
-    'Monitor',
-    'Adaptador',
-    'Audífonos',
-    'Teclado',
-    'Mouse',
-    'Docking',
-    'Otro Periférico',
-  ];
+  const usaLineaMovil =
+    equipmentUsesMobileLine(tipoActual);
+
+  const esCelular =
+    tipoActual === 'Celular';
+
+  const esMac =
+    tipoActual === 'Mac';
 
   const handleTipoChange = (nuevoTipo) => {
-    const nuevoEsPeriferico = peripheralTypes.includes(nuevoTipo);
+    const nuevoEstado =
+      normalizeEquipmentFieldsByType(
+        equipo,
+        nuevoTipo
+      );
 
-    onChange({
-      ...equipo,
-      tipo: nuevoTipo,
-      hostname: nuevoEsPeriferico
-        ? ''
-        : equipo.hostname || '',
-    });
+    onChange(nuevoEstado);
   };
-
-  const esPeriferico = peripheralTypes.includes(tipoActual);
 
   return (
     <>
+      {/* =========================
+          TIPO
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Tipo de Equipo *
@@ -122,6 +131,10 @@ export default function EquipoCreateForm({
         </select>
       </div>
 
+      {/* =========================
+          MARCA
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Marca *
@@ -132,11 +145,18 @@ export default function EquipoCreateForm({
           required
           value={equipo.marca || ''}
           onChange={(e) =>
-            updateField('marca', e.target.value)
+            updateField(
+              'marca',
+              e.target.value
+            )
           }
           style={inputStyle}
         />
       </div>
+
+      {/* =========================
+          MODELO
+      ========================= */}
 
       <div>
         <label style={labelStyle}>
@@ -148,11 +168,18 @@ export default function EquipoCreateForm({
           required
           value={equipo.modelo || ''}
           onChange={(e) =>
-            updateField('modelo', e.target.value)
+            updateField(
+              'modelo',
+              e.target.value
+            )
           }
           style={inputStyle}
         />
       </div>
+
+      {/* =========================
+          NÚMERO DE SERIE
+      ========================= */}
 
       <div>
         <label style={labelStyle}>
@@ -161,7 +188,9 @@ export default function EquipoCreateForm({
 
         <input
           type="text"
-          value={equipo.numero_serie || ''}
+          value={
+            equipo.numero_serie || ''
+          }
           onChange={(e) =>
             updateField(
               'numero_serie',
@@ -173,7 +202,11 @@ export default function EquipoCreateForm({
         />
       </div>
 
-      {tipoActual === 'Celular' && (
+      {/* =========================
+          CELULAR
+      ========================= */}
+
+      {esCelular && (
         <div
           style={{
             backgroundColor: '#f0fdf4',
@@ -182,7 +215,7 @@ export default function EquipoCreateForm({
             border: '1px solid #bbf7d0',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.5rem'
+            gap: '0.5rem',
           }}
         >
           <span
@@ -190,47 +223,56 @@ export default function EquipoCreateForm({
               fontSize: '0.75rem',
               fontWeight: 'bold',
               color: '#166534',
-              textTransform: 'uppercase'
+              textTransform: 'uppercase',
             }}
           >
             Detalles de Celular
           </span>
 
+          {/* SIM */}
+
           <div>
             <label
               style={{
                 ...labelStyle,
-                color: '#166534'
+                color: '#166534',
               }}
             >
-              Número de Teléfono
+              SIM / N° Celular
             </label>
 
             <input
               type="text"
-              value={equipo.numero_telefono || ''}
+              value={
+                equipo.numero_telefono ||
+                ''
+              }
               onChange={(e) =>
                 updateField(
                   'numero_telefono',
                   e.target.value
                 )
               }
+              placeholder="+56 9 1234 5678"
               style={inputStyle}
             />
           </div>
 
+          {/* IMEI / PIN */}
+
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem'
+              gridTemplateColumns:
+                '1fr 1fr',
+              gap: '0.5rem',
             }}
           >
             <div>
               <label
                 style={{
                   ...labelStyle,
-                  color: '#166534'
+                  color: '#166534',
                 }}
               >
                 IMEI
@@ -253,7 +295,7 @@ export default function EquipoCreateForm({
               <label
                 style={{
                   ...labelStyle,
-                  color: '#166534'
+                  color: '#166534',
                 }}
               >
                 PIN
@@ -275,7 +317,51 @@ export default function EquipoCreateForm({
         </div>
       )}
 
-      {tipoActual === 'Mac' && (
+      {/* =========================
+          TABLET / BAM
+          LÍNEA MÓVIL
+      ========================= */}
+
+      {usaLineaMovil && !esCelular && (
+        <div
+          style={{
+            backgroundColor: '#f0fdf4',
+            padding: '0.8rem',
+            borderRadius: '8px',
+            border: '1px solid #bbf7d0',
+          }}
+        >
+          <label
+            style={{
+              ...labelStyle,
+              color: '#166534',
+            }}
+          >
+            SIM / N° Celular
+          </label>
+
+          <input
+            type="text"
+            value={
+              equipo.numero_telefono || ''
+            }
+            onChange={(e) =>
+              updateField(
+                'numero_telefono',
+                e.target.value
+              )
+            }
+            placeholder="Opcional"
+            style={inputStyle}
+          />
+        </div>
+      )}
+
+      {/* =========================
+          ICLOUD MAC
+      ========================= */}
+
+      {esMac && (
         <div
           style={{
             backgroundColor: '#eff6ff',
@@ -284,7 +370,7 @@ export default function EquipoCreateForm({
             border: '1px solid #bfdbfe',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.5rem'
+            gap: '0.5rem',
           }}
         >
           <span
@@ -292,7 +378,7 @@ export default function EquipoCreateForm({
               fontSize: '0.75rem',
               fontWeight: 'bold',
               color: '#1e40af',
-              textTransform: 'uppercase'
+              textTransform: 'uppercase',
             }}
           >
             Detalles de iCloud (Mac)
@@ -302,7 +388,7 @@ export default function EquipoCreateForm({
             <label
               style={{
                 ...labelStyle,
-                color: '#1e40af'
+                color: '#1e40af',
               }}
             >
               Cuenta iCloud
@@ -310,7 +396,9 @@ export default function EquipoCreateForm({
 
             <input
               type="email"
-              value={equipo.icloud_cuenta || ''}
+              value={
+                equipo.icloud_cuenta || ''
+              }
               onChange={(e) =>
                 updateField(
                   'icloud_cuenta',
@@ -325,7 +413,7 @@ export default function EquipoCreateForm({
             <label
               style={{
                 ...labelStyle,
-                color: '#1e40af'
+                color: '#1e40af',
               }}
             >
               Contraseña iCloud
@@ -333,7 +421,10 @@ export default function EquipoCreateForm({
 
             <input
               type="text"
-              value={equipo.icloud_password || ''}
+              value={
+                equipo.icloud_password ||
+                ''
+              }
               onChange={(e) =>
                 updateField(
                   'icloud_password',
@@ -346,31 +437,47 @@ export default function EquipoCreateForm({
         </div>
       )}
 
-      {!esPeriferico && (
+      {/* =========================
+          HOSTNAME
+          SOLO NOTEBOOK / MAC
+      ========================= */}
+
+      {usaHostname && (
         <div>
           <label
             style={{
               ...labelStyle,
-              color: '#0284c7'
+              color: '#0284c7',
             }}
           >
-            Hostname (Autocompleta usuario asignado)
+            Hostname
+            {' '}
+            (Autocompleta usuario asignado)
           </label>
 
           <input
             type="text"
             value={equipo.hostname || ''}
             onChange={(e) =>
-              onHostnameChange(e.target.value)
+              onHostnameChange(
+                e.target.value
+              )
             }
+            placeholder="Ej: CL-NB-001"
             style={inputStyle}
           />
         </div>
       )}
 
+      {/* =========================
+          ACTIVO FIJO
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
-          Activo Fijo (AF - Máx 12 dígitos)
+          Activo Fijo
+          {' '}
+          (AF - Máx. 12 caracteres)
         </label>
 
         <input
@@ -378,17 +485,25 @@ export default function EquipoCreateForm({
           maxLength={12}
           value={equipo.af || ''}
           onChange={(e) =>
-            updateField('af', e.target.value)
+            updateField(
+              'af',
+              e.target.value
+            )
           }
+          placeholder="Ej: 123456 o SIN AF"
           style={inputStyle}
         />
       </div>
+
+      {/* =========================
+          USUARIO
+      ========================= */}
 
       <div>
         <label
           style={{
             ...labelStyle,
-            color: '#2563eb'
+            color: '#2563eb',
           }}
         >
           Asignar a Usuario
@@ -421,6 +536,10 @@ export default function EquipoCreateForm({
         </select>
       </div>
 
+      {/* =========================
+          FECHA
+      ========================= */}
+
       <div>
         <label style={labelStyle}>
           Fecha de Asignación
@@ -428,7 +547,9 @@ export default function EquipoCreateForm({
 
         <input
           type="date"
-          value={equipo.fecha_asignacion || ''}
+          value={
+            equipo.fecha_asignacion || ''
+          }
           onChange={(e) =>
             updateField(
               'fecha_asignacion',

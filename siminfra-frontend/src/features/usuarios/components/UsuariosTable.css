@@ -1,111 +1,191 @@
 /* =========================
-   TABLA DESKTOP
+   TABLA USUARIOS
 ========================= */
 
 .usuarios-table-desktop {
   display: block;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  min-width: 0;
+
+  overflow: visible;
 }
 
 .usuarios-table {
   width: 100%;
+
   border-collapse: collapse;
+  table-layout: auto;
+
   text-align: left;
-  font-size: 0.95rem;
+
+  font-size: 0.88rem;
 }
+
+
+/* =========================
+   ENCABEZADO
+========================= */
 
 .usuarios-table thead tr {
   background-color: #f1f5f9;
+
   border-bottom: 2px solid #e2e8f0;
+
   color: #475569;
 }
 
-.usuarios-table th,
-.usuarios-table td {
-  padding: 0.9rem 1rem;
+.usuarios-table th {
+  padding: 0.78rem 0.7rem;
 
-  white-space: normal;
-  overflow-wrap: break-word;
+  color: #475569;
+
+  font-size: 0.75rem;
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+}
+
+
+/* =========================
+   FILAS
+========================= */
+
+.usuarios-table td {
+  padding: 0.82rem 0.7rem;
+
+  color: #334155;
+
+  font-size: 0.82rem;
+
+  line-height: 1.3;
 
   vertical-align: middle;
 }
 
-.usuarios-table th {
-  font-size: 0.82rem;
-  line-height: 1.25;
-}
-
-.usuarios-table td {
-  line-height: 1.3;
-}
-
 .usuarios-table tbody tr {
   border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+
   cursor: pointer;
 
   transition:
     background-color 0.15s ease;
 }
 
+.usuarios-table tbody tr:last-child {
+  border-bottom: none;
+}
+
 .usuarios-table tbody tr:hover {
   background-color: #f8fafc;
 }
 
+
+/* =========================
+   NOMBRE
+========================= */
+
 .usuario-name {
-  font-weight: 600;
+  min-width: 190px;
+
   color: #2563eb;
+
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+
+
+/* =========================
+   CARGO
+========================= */
 
 .usuario-secondary {
-  font-size: 0.85rem;
+  min-width: 130px;
+
   color: #64748b;
+
+  font-size: 0.78rem;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+
+
+/* =========================
+   HOSTNAME
+========================= */
 
 .usuario-hostname {
+  color: #0369a1;
+
   font-family: monospace;
   font-weight: 700;
+
   white-space: nowrap;
 }
 
-.usuario-ip-assigned {
-  color: #16a34a;
-  font-weight: 700;
+
+/* =========================
+   CORREO
+========================= */
+
+.usuario-correo {
+  min-width: 170px;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================
+   CELULAR
+========================= */
+
+.usuario-col-celular {
+  min-width: 105px;
+
   white-space: nowrap;
 }
 
-.usuario-unassigned {
-  color: #94a3b8;
-}
+
+/* =========================
+   ACCIONES
+========================= */
 
 .usuarios-actions-header,
 .usuarios-actions-cell {
-  text-align: center;
-  white-space: nowrap;
+  width: 105px;
+  min-width: 105px;
 
-  width: 110px;
-  min-width: 110px;
+  text-align: center;
+
+  white-space: nowrap;
 }
 
 .usuarios-actions {
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  gap: 0.4rem;
-
-  min-width: 96px;
+  gap: 0.25rem;
 }
 
 .usuario-action {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
 
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
+
+  flex-shrink: 0;
 
   padding: 0;
 
@@ -122,7 +202,7 @@
 }
 
 .usuario-action:hover {
-  background-color: #f1f5f9;
+  background-color: #e2e8f0;
 }
 
 .usuario-action:active {
@@ -141,159 +221,9 @@
   color: #ef4444;
 }
 
-/* =========================
-   TARJETAS MÓVIL
-========================= */
-
-.usuarios-cards-mobile {
-  display: none;
-}
-
-.usuario-card {
-  padding: 1rem;
-
-  background: #fff;
-
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.05);
-}
-
-.usuario-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-
-  gap: 0.75rem;
-
-  padding-bottom: 0.85rem;
-
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.usuario-card-title {
-  display: flex;
-  align-items: flex-start;
-
-  gap: 0.7rem;
-
-  min-width: 0;
-}
-
-.usuario-card-avatar {
-  width: 38px;
-  height: 38px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 10px;
-
-  background-color: #eff6ff;
-
-  font-size: 20px;
-}
-
-.usuario-card-title h3 {
-  margin: 0;
-
-  color: #0f172a;
-
-  font-size: 0.95rem;
-  font-weight: 750;
-
-  line-height: 1.3;
-}
-
-.usuario-card-subtitle {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #64748b;
-
-  font-size: 0.76rem;
-}
-
-.usuario-card-status {
-  flex-shrink: 0;
-}
-
-.usuario-card-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 0.85rem 1rem;
-
-  padding: 1rem 0;
-}
-
-.usuario-mobile-field {
-  min-width: 0;
-}
-
-.usuario-mobile-field-full {
-  grid-column: 1 / -1;
-}
-
-.usuario-mobile-label {
-  display: block;
-
-  margin-bottom: 3px;
-
-  color: #94a3b8;
-
-  font-size: 0.68rem;
-  font-weight: 700;
-
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.usuario-mobile-value {
-  display: block;
-
-  color: #334155;
-
-  font-size: 0.83rem;
-  font-weight: 600;
-
-  overflow-wrap: anywhere;
-}
-
-.usuario-mobile-monospace {
-  font-family: monospace;
-}
-
-.usuario-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 0.75rem;
-
-  padding-top: 0.8rem;
-
-  border-top: 1px solid #f1f5f9;
-}
-
-.usuario-card-hint {
-  color: #94a3b8;
-
-  font-size: 0.7rem;
-}
 
 /* =========================
-   VACÍO
+   ESTADO VACÍO
 ========================= */
 
 .usuarios-empty {
@@ -302,77 +232,142 @@
   text-align: center;
 
   color: #94a3b8;
+
   font-size: 0.9rem;
 }
+
 
 /* =========================
    RESPONSIVE
 ========================= */
 
-/* 
-   Cuando el espacio REAL disponible
-   para el módulo baja de 1700px,
-   pasamos de tabla a tarjetas.
+/*
+  En pantallas medianas quitamos
+  primero el celular.
 */
-@container module-table (max-width: 1800px) {
-  .usuarios-table-desktop {
+@container module-table (max-width: 1250px) {
+
+  .usuario-col-celular {
     display: none;
   }
 
-  .usuarios-cards-mobile {
-    display: grid;
-
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 0.8rem;
-    padding: 0.75rem;
-
-    background-color: #f8fafc;
+  .usuarios-table th,
+  .usuarios-table td {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
   }
 }
+
 
 /*
-   Cuando el contenedor es más angosto,
-   usamos una tarjeta por fila.
+  Luego ocultamos correo.
+  Sigue disponible en el detalle.
 */
-@container module-table (max-width: 700px) {
-  .usuarios-cards-mobile {
-    grid-template-columns: 1fr;
+@container module-table (max-width: 1050px) {
+
+  .usuario-correo {
+    display: none;
   }
 }
 
+
+/*
+  En un ancho menor quitamos hostname.
+*/
+@container module-table (max-width: 850px) {
+
+  .usuario-hostname {
+    display: none;
+  }
+
+  .usuario-name {
+    min-width: 160px;
+  }
+
+  .usuarios-table th {
+    font-size: 0.71rem;
+  }
+
+  .usuarios-table td {
+    font-size: 0.78rem;
+  }
+}
+
+
+/*
+  En pantallas pequeñas quitamos Cargo.
+  Queda:
+  Nombre
+  Estado
+  Usuario Red
+  Acciones
+*/
+@container module-table (max-width: 650px) {
+
+  .usuario-secondary {
+    display: none;
+  }
+
+  .usuarios-table th,
+  .usuarios-table td {
+    padding: 0.7rem 0.5rem;
+  }
+
+  .usuario-name {
+    min-width: 0;
+  }
+
+  .usuarios-actions-header,
+  .usuarios-actions-cell {
+    width: 92px;
+    min-width: 92px;
+  }
+
+  .usuario-action {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+
 /* =========================
-   MÓVILES PEQUEÑOS
+   MÓVILES MUY PEQUEÑOS
 ========================= */
 
 @media (max-width: 480px) {
-  .usuario-card {
-    padding: 0.85rem;
+
+  .usuarios-table {
+    font-size: 0.76rem;
   }
 
-  .usuario-card-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+  .usuarios-table th {
+    padding: 0.6rem 0.4rem;
+
+    font-size: 0.67rem;
   }
 
-  .usuario-mobile-field-full {
-    grid-column: auto;
+  .usuarios-table td {
+    padding: 0.65rem 0.4rem;
+
+    font-size: 0.74rem;
   }
 
-  .usuario-card-header {
-    flex-direction: column;
+  .usuario-name {
+    font-size: 0.76rem;
   }
 
-  .usuario-card-status {
-    align-self: flex-start;
+  .usuarios-actions-header,
+  .usuarios-actions-cell {
+    width: 88px;
+    min-width: 88px;
   }
 
-  .usuario-card-footer {
-    align-items: flex-end;
+  .usuarios-actions {
+    gap: 0.15rem;
   }
 
-  .usuario-card-hint {
-    max-width: 110px;
+  .usuario-action {
+    width: 26px;
+    height: 26px;
   }
 }

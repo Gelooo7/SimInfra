@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
 import {
-  Edit,
-  Trash2,
   Eye,
   EyeOff,
   Copy,
-  Check
+  Check,
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 import './PerfilesTable.css';
@@ -19,12 +19,13 @@ export default function PerfilesTable({
   onEdit,
   onDelete,
 }) {
-  const [copiedPasswords, setCopiedPasswords] = useState({});
+  const [copiedPasswords, setCopiedPasswords] =
+    useState({});
 
   const togglePassword = (id) => {
     setVisiblePasswords((prev) => ({
       ...prev,
-      [id]: !prev[id]
+      [id]: !prev[id],
     }));
   };
 
@@ -38,15 +39,15 @@ export default function PerfilesTable({
 
       setCopiedPasswords((prev) => ({
         ...prev,
-        [perfil.id]: true
+        [perfil.id]: true,
       }));
 
       setTimeout(() => {
         setCopiedPasswords((prev) => ({
           ...prev,
-          [perfil.id]: false
+          [perfil.id]: false,
         }));
-      }, 2000);
+      }, 1800);
     } catch (error) {
       console.error(
         'Error copiando contraseña:',
@@ -55,270 +56,190 @@ export default function PerfilesTable({
     }
   };
 
-  const PasswordField = ({ perfil }) => {
-    if (!perfil.password) {
-      return (
-        <span className="perfil-password-empty">
-          Sin contraseña
-        </span>
-      );
-    }
-
-    const visible =
-      !!visiblePasswords[perfil.id];
-
-    const copied =
-      !!copiedPasswords[perfil.id];
-
+  if (!perfiles || perfiles.length === 0) {
     return (
-      <div className="perfil-password-container">
-        <span className="perfil-password-value">
-          {visible
-            ? perfil.password
-            : '••••••••'}
-        </span>
-
-        {/* MOSTRAR / OCULTAR */}
-        <button
-          type="button"
-          className="perfil-password-button"
-          onClick={() =>
-            togglePassword(perfil.id)
-          }
-          title={
-            visible
-              ? 'Ocultar contraseña'
-              : 'Mostrar contraseña'
-          }
-          aria-label={
-            visible
-              ? 'Ocultar contraseña'
-              : 'Mostrar contraseña'
-          }
-        >
-          {visible ? (
-            <EyeOff size={16} />
-          ) : (
-            <Eye size={16} />
-          )}
-        </button>
-
-        {/* COPIAR */}
-        <button
-          type="button"
-          className={`perfil-password-button ${
-            copied
-              ? 'perfil-password-copied'
-              : ''
-          }`}
-          onClick={() =>
-            copyPassword(perfil)
-          }
-          title="Copiar contraseña"
-          aria-label="Copiar contraseña"
-        >
-          {copied ? (
-            <Check size={16} />
-          ) : (
-            <Copy size={16} />
-          )}
-        </button>
+      <div className="perfiles-empty">
+        No existen perfiles para mostrar.
       </div>
     );
-  };
-
-  const Actions = ({ perfil }) => (
-    <div className="perfiles-actions">
-      <button
-        type="button"
-        className="perfil-action perfil-action-edit"
-        onClick={() =>
-          onEdit(perfil)
-        }
-        title="Editar"
-        aria-label="Editar perfil"
-      >
-        <Edit size={18} />
-      </button>
-
-      <button
-        type="button"
-        className="perfil-action perfil-action-delete"
-        onClick={() =>
-          onDelete(
-            perfil.id,
-            perfil.usuario
-          )
-        }
-        title="Eliminar"
-        aria-label="Eliminar perfil"
-      >
-        <Trash2 size={18} />
-      </button>
-    </div>
-  );
+  }
 
   return (
-    <>
-      {/* TABLA DESKTOP */}
-      <div className="perfiles-table-desktop">
-        <table className="perfiles-table">
-          <thead>
-            <tr>
-              <th>Nombre / Perfil</th>
-              <th>Usuario</th>
-              <th>Contraseña</th>
-              <th>Tipo Cuenta</th>
-              <th>Correo Asignado</th>
-              <th>Área</th>
+    <div className="perfiles-table-wrapper">
+      <table className="perfiles-table">
+        <thead>
+          <tr>
+            <th className="perfil-col-nombre">
+              Nombre / Perfil
+            </th>
 
-              <th className="perfiles-actions-header">
-                Acciones
-              </th>
-            </tr>
-          </thead>
+            <th className="perfil-col-usuario">
+              Usuario
+            </th>
 
-          <tbody>
-            {perfiles.map((perfil) => (
+            <th className="perfil-col-password">
+              Contraseña
+            </th>
+
+            <th className="perfil-col-tipo">
+              Tipo Cuenta
+            </th>
+
+            <th className="perfil-col-correo">
+              Correo Asignado
+            </th>
+
+            <th className="perfil-col-area">
+              Área
+            </th>
+
+            <th className="perfiles-actions-header">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {perfiles.map((perfil) => {
+            const passwordVisible =
+              Boolean(
+                visiblePasswords?.[perfil.id]
+              );
+
+            const passwordCopied =
+              Boolean(
+                copiedPasswords?.[perfil.id]
+              );
+
+            return (
               <tr key={perfil.id}>
-                <td className="perfil-name">
+                {/* NOMBRE */}
+                <td className="perfil-col-nombre perfil-nombre">
                   {perfil.nombre || 'N/I'}
                 </td>
 
-                <td className="perfil-user">
+                {/* USUARIO */}
+                <td className="perfil-col-usuario perfil-usuario">
                   {perfil.usuario || 'N/I'}
                 </td>
 
-                <td>
-                  <PasswordField
-                    perfil={perfil}
-                  />
+                {/* CONTRASEÑA */}
+                <td className="perfil-col-password">
+                  {perfil.password ? (
+                    <div className="perfil-password">
+                      <span className="perfil-password-value">
+                        {passwordVisible
+                          ? perfil.password
+                          : '••••••••'}
+                      </span>
+
+                      <button
+                        type="button"
+                        className="perfil-password-action"
+                        onClick={() =>
+                          togglePassword(
+                            perfil.id
+                          )
+                        }
+                        title={
+                          passwordVisible
+                            ? 'Ocultar contraseña'
+                            : 'Mostrar contraseña'
+                        }
+                        aria-label={
+                          passwordVisible
+                            ? 'Ocultar contraseña'
+                            : 'Mostrar contraseña'
+                        }
+                      >
+                        {passwordVisible ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`perfil-password-action ${
+                          passwordCopied
+                            ? 'is-copied'
+                            : ''
+                        }`}
+                        onClick={() =>
+                          copyPassword(perfil)
+                        }
+                        title="Copiar contraseña"
+                        aria-label="Copiar contraseña"
+                      >
+                        {passwordCopied ? (
+                          <Check size={16} />
+                        ) : (
+                          <Copy size={16} />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="perfil-no-password">
+                      Sin contraseña
+                    </span>
+                  )}
                 </td>
 
-                <td>
+                {/* TIPO */}
+                <td className="perfil-col-tipo">
                   {renderAccountTypeBadge(
                     perfil.tipo
                   )}
                 </td>
 
-                <td>
+                {/* CORREO */}
+                <td className="perfil-col-correo perfil-correo">
                   {perfil.correo || 'N/I'}
                 </td>
 
-                <td>
+                {/* ÁREA */}
+                <td className="perfil-col-area">
                   {perfil.dpto_area || 'N/I'}
                 </td>
 
+                {/* ACCIONES */}
                 <td className="perfiles-actions-cell">
-                  <Actions perfil={perfil} />
+                  <div className="perfiles-actions">
+                    <button
+                      type="button"
+                      className="perfil-action perfil-action-edit"
+                      onClick={() =>
+                        onEdit(perfil)
+                      }
+                      title="Editar perfil"
+                      aria-label="Editar perfil"
+                    >
+                      <Edit size={17} />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="perfil-action perfil-action-delete"
+                      onClick={() =>
+                        onDelete(
+                          perfil.id,
+                          perfil.nombre ||
+                            perfil.usuario
+                        )
+                      }
+                      title="Eliminar perfil"
+                      aria-label="Eliminar perfil"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* TARJETAS MÓVIL */}
-      <div className="perfiles-cards-mobile">
-        {perfiles.map((perfil) => (
-          <article
-            key={perfil.id}
-            className="perfil-card"
-          >
-            <div className="perfil-card-header">
-              <div className="perfil-card-title">
-                <span className="perfil-card-icon">
-                  📧
-                </span>
-
-                <div>
-                  <h3>
-                    {perfil.nombre ||
-                      'Perfil sin nombre'}
-                  </h3>
-
-                  <span className="perfil-card-user">
-                    {perfil.usuario ||
-                      'Usuario no informado'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="perfil-card-type">
-                {renderAccountTypeBadge(
-                  perfil.tipo
-                )}
-              </div>
-            </div>
-
-            <div className="perfil-card-password">
-              <span className="perfil-mobile-label">
-                Contraseña
-              </span>
-
-              <PasswordField
-                perfil={perfil}
-              />
-            </div>
-
-            <div className="perfil-card-grid">
-              <MobileField
-                label="Correo Asignado"
-                value={
-                  perfil.correo || 'N/I'
-                }
-                full
-              />
-
-              <MobileField
-                label="Departamento / Área"
-                value={
-                  perfil.dpto_area || 'N/I'
-                }
-                full
-              />
-            </div>
-
-            <div className="perfil-card-footer">
-              <span className="perfil-card-info">
-                Gestión de perfil
-              </span>
-
-              <Actions perfil={perfil} />
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {perfiles.length === 0 && (
-        <div className="perfiles-empty">
-          No existen perfiles para mostrar.
-        </div>
-      )}
-    </>
-  );
-}
-
-function MobileField({
-  label,
-  value,
-  full = false,
-}) {
-  return (
-    <div
-      className={`perfil-mobile-field ${
-        full
-          ? 'perfil-mobile-field-full'
-          : ''
-      }`}
-    >
-      <span className="perfil-mobile-label">
-        {label}
-      </span>
-
-      <span className="perfil-mobile-value">
-        {value}
-      </span>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -81,8 +81,7 @@ export default function ModuleToolbar({
         </button>
 
         {/* FILTRO DEPARTAMENTO */}
-        {(activeTab === 'usuarios' ||
-          activeTab === 'perfiles' ||
+        {(activeTab === 'perfiles' ||
           activeTab === 'pcs-genericos') && (
             <div className="module-toolbar-filter">
               <Filter size={16} />
