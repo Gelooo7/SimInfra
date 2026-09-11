@@ -9,8 +9,6 @@ export default function ModuleToolbar({
   departments,
   selectedDepartment,
   onDepartmentChange,
-  selectedEquipmentCategory,
-  onEquipmentCategoryChange,
   selectedIpStatus,
   onIpStatusChange,
   selectedAnexoStatus,
@@ -110,54 +108,6 @@ export default function ModuleToolbar({
               </select>
             </div>
           )}
-
-        {/* FILTRO EQUIPOS */}
-        {activeTab === 'equipos' && (
-          <div className="module-toolbar-filter">
-            <Filter size={16} />
-
-            <select
-              value={selectedEquipmentCategory}
-              onChange={(e) =>
-                onEquipmentCategoryChange(
-                  e.target.value
-                )
-              }
-            >
-              <option value="">
-                Todas las Categorías
-              </option>
-
-              <optgroup label="Equipos principales">
-                <option value="Notebook">
-                  Notebook
-                </option>
-
-                <option value="Celular">
-                  Celular
-                </option>
-
-                <option value="Tablet">
-                  Tablet
-                </option>
-
-                <option value="Mac">
-                  Mac
-                </option>
-
-                <option value="BAM / Router">
-                  BAM / Router
-                </option>
-              </optgroup>
-
-              <optgroup label="Categorías">
-                <option value="PERIFERICOS">
-                  Periféricos
-                </option>
-              </optgroup>
-            </select>
-          </div>
-        )}
 
         {/* FILTRO IP */}
         {activeTab === 'ips' && (

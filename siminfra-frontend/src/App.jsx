@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 import './App.css';
 
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
@@ -30,6 +34,8 @@ import {
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ModuleToolbar from './components/layout/ModuleToolbar';
+import EquipmentCategoryCards
+  from './features/equipos/components/EquipmentCategoryCards';
 
 import { formatEquipmentType } from './utils/formatEquipmentType';
 
@@ -202,11 +208,35 @@ export default function App() {
   const filteredData =
     tab === 'equipos'
       ? filterEquiposByCategory(
-          data,
-          selectedCategoriaEquipo,
-          formatEquipmentType
-        )
+        data,
+        selectedCategoriaEquipo,
+        formatEquipmentType
+      )
       : data;
+
+  const equipmentResultsRef = useRef(null);
+
+  const selectedEquipmentLabel =
+    selectedCategoriaEquipo === 'PERIFERICOS'
+      ? 'Periféricos'
+      : selectedCategoriaEquipo;
+
+  useEffect(() => {
+    if (
+      tab === 'equipos' &&
+      selectedCategoriaEquipo &&
+      equipmentResultsRef.current
+    ) {
+      const timeout = setTimeout(() => {
+        equipmentResultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [tab, selectedCategoriaEquipo]);
 
   const availableIpsForUser = (currentIp) => {
     return getAvailableIpsForUser(
@@ -243,11 +273,10 @@ export default function App() {
 
       {/* CONTENIDO PRINCIPAL */}
       <main
-        className={`app-main ${
-          sidebarCollapsed
-            ? 'app-main-sidebar-collapsed'
-            : ''
-        }`}
+        className={`app-main ${sidebarCollapsed
+          ? 'app-main-sidebar-collapsed'
+          : ''
+          }`}
       >
         {/* ENCABEZADO */}
         <Header
@@ -257,97 +286,144 @@ export default function App() {
         />
 
         {/* FILTROS Y ACCIONES */}
-        <ModuleToolbar
-          activeTab={tab}
-          departments={dptosList}
-
-          selectedDepartment={selectedDpto}
-          onDepartmentChange={setSelectedDpto}
-
-          selectedEquipmentCategory={
-            selectedCategoriaEquipo
-          }
-          onEquipmentCategoryChange={
-            setSelectedCategoriaEquipo
-          }
-
-          selectedIpStatus={selectedEstadoIP}
-          onIpStatusChange={setSelectedEstadoIP}
-
-          selectedAnexoStatus={
-            selectedEstadoAnexo
-          }
-          onAnexoStatusChange={
-            setSelectedEstadoAnexo
-          }
-
-          search={search}
-          onSearchChange={setSearch}
-          onCreate={handleOpenCreateModal}
-        />
-
-        {/* TABLA PRINCIPAL */}
-        <div className="app-table-container">
-          <ModuleTable
-            tab={tab}
-            data={filteredData}
-            formatEquipmentType={
-              formatEquipmentType
-            }
-
-            visibleProfilePasswords={
-              visibleProfilePasswords
-            }
-
-            setVisibleProfilePasswords={
-              setVisibleProfilePasswords
-            }
-
-            renderUsuarioStatusBadge={
-              renderUsuarioStatusBadge
-            }
-
-            renderAccountTypeBadge={
-              renderAccountTypeBadge
-            }
-
-            renderIpStatusBadge={
-              renderIpStatusBadge
-            }
-
-            renderAnexoStatusBadge={
-              renderAnexoStatusBadge
-            }
-
-            onSelectUser={
-              setSelectedUser
-            }
-
-            onShowUserHistory={
-              setHistoryUsuario
-            }
-
-            onShowEquipmentHistory={
-              setHistoryEquipo
-            }
-
-            onShowAnexoHistory={
-              setHistoryAnexo
-            }
-
-            onShowPCGenericoHistory={
-              setHistoryPCGenerico
-            }
-
-            onEdit={
-              setEditingItem
-            }
-
-            onDelete={
-              handleDelete
-            }
+        {/* CATEGORÍAS DE EQUIPOS */}
+        {tab === 'equipos' && (
+          <EquipmentCategoryCards
+            equipos={data}
+            selectedCategory={selectedCategoriaEquipo}
+            onSelectCategory={setSelectedCategoriaEquipo}
+            formatEquipmentType={formatEquipmentType}
           />
-        </div>
+        )}
+
+        {/* RESULTADOS DEL MÓDULO */}
+        {(tab !== 'equipos' || selectedCategoriaEquipo) && (
+          <>
+            {/* ENCABEZADO DEL RESULTADO DE EQUIPOS */}
+            {tab === 'equipos' && (
+              <div
+                ref={equipmentResultsRef}
+                className="equipment-results-header"
+              >
+                <div>
+                  <span className="equipment-results-eyebrow">
+                    Categoría seleccionada
+                  </span>
+
+                  <h2>
+                    {selectedEquipmentLabel}
+                  </h2>
+                </div>
+
+                <div className="equipment-results-count">
+                  <strong>
+                    {filteredData.length}
+                  </strong>
+
+                  <span>
+                    {filteredData.length === 1
+                      ? ' equipo'
+                      : ' equipos'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* FILTROS Y ACCIONES */}
+            <ModuleToolbar
+              activeTab={tab}
+              departments={dptosList}
+
+              selectedDepartment={selectedDpto}
+              onDepartmentChange={setSelectedDpto}
+
+              selectedEquipmentCategory={
+                selectedCategoriaEquipo
+              }
+              onEquipmentCategoryChange={
+                setSelectedCategoriaEquipo
+              }
+
+              selectedIpStatus={selectedEstadoIP}
+              onIpStatusChange={setSelectedEstadoIP}
+
+              selectedAnexoStatus={
+                selectedEstadoAnexo
+              }
+              onAnexoStatusChange={
+                setSelectedEstadoAnexo
+              }
+
+              search={search}
+              onSearchChange={setSearch}
+              onCreate={handleOpenCreateModal}
+            />
+
+            {/* TABLA PRINCIPAL */}
+            <div className="app-table-container">
+              <ModuleTable
+                tab={tab}
+                data={filteredData}
+
+                formatEquipmentType={
+                  formatEquipmentType
+                }
+
+                visibleProfilePasswords={
+                  visibleProfilePasswords
+                }
+
+                setVisibleProfilePasswords={
+                  setVisibleProfilePasswords
+                }
+
+                renderUsuarioStatusBadge={
+                  renderUsuarioStatusBadge
+                }
+
+                renderAccountTypeBadge={
+                  renderAccountTypeBadge
+                }
+
+                renderIpStatusBadge={
+                  renderIpStatusBadge
+                }
+
+                renderAnexoStatusBadge={
+                  renderAnexoStatusBadge
+                }
+
+                onSelectUser={
+                  setSelectedUser
+                }
+
+                onShowUserHistory={
+                  setHistoryUsuario
+                }
+
+                onShowEquipmentHistory={
+                  setHistoryEquipo
+                }
+
+                onShowAnexoHistory={
+                  setHistoryAnexo
+                }
+
+                onShowPCGenericoHistory={
+                  setHistoryPCGenerico
+                }
+
+                onEdit={
+                  setEditingItem
+                }
+
+                onDelete={
+                  handleDelete
+                }
+              />
+            </div>
+          </>
+        )}
 
         {/* MODALES DE DETALLE / HISTORIAL */}
         <ModuleDetailModals
