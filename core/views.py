@@ -8,6 +8,7 @@ from .models import (
     IP,
     Anexo,
     PCGenerico,
+    Servidor,
 )
 
 from .serializers import (
@@ -17,13 +18,17 @@ from .serializers import (
     IPSerializer,
     AnexoSerializer,
     PCGenericoSerializer,
+    ServidorSerializer,
 )
 
 
 class IPViewSet(viewsets.ModelViewSet):
     queryset = IP.objects.all()
     serializer_class = IPSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter
+    ]
     filterset_fields = ['estado']
     search_fields = [
         'direccion_ip',
@@ -33,11 +38,41 @@ class IPViewSet(viewsets.ModelViewSet):
     ]
 
 
+# =========================================
+# SERVIDORES
+# =========================================
+
+class ServidorViewSet(viewsets.ModelViewSet):
+    queryset = Servidor.objects.all()
+    serializer_class = ServidorSerializer
+
+    filter_backends = [
+        filters.SearchFilter
+    ]
+
+    search_fields = [
+        'ip',
+        'hostname',
+        'descripcion',
+    ]
+
+
 class AnexoViewSet(viewsets.ModelViewSet):
-    queryset = Anexo.objects.select_related('usuario').all()
+    queryset = Anexo.objects.select_related(
+        'usuario'
+    ).all()
+
     serializer_class = AnexoSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['estado']
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter
+    ]
+
+    filterset_fields = [
+        'estado'
+    ]
+
     search_fields = [
         'numero_anexo',
         'exterior',
@@ -52,8 +87,17 @@ class AnexoViewSet(viewsets.ModelViewSet):
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['dpto_area', 'estado']
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter
+    ]
+
+    filterset_fields = [
+        'dpto_area',
+        'estado'
+    ]
+
     search_fields = [
         'nombre_completo',
         'usuario_red',
@@ -66,8 +110,17 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class EquipamientoViewSet(viewsets.ModelViewSet):
     queryset = Equipamiento.objects.all()
     serializer_class = EquipamientoSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['tipo', 'estado']
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter
+    ]
+
+    filterset_fields = [
+        'tipo',
+        'estado'
+    ]
+
     search_fields = [
         'marca',
         'modelo',
@@ -79,16 +132,36 @@ class EquipamientoViewSet(viewsets.ModelViewSet):
     ]
 
 
-class PerfilGenericoViewSet(viewsets.ModelViewSet):
+class PerfilGenericoViewSet(
+    viewsets.ModelViewSet
+):
     queryset = PerfilGenerico.objects.all()
     serializer_class = PerfilGenericoSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['dpto_area', 'tipo', 'estado']
-    search_fields = ['nombre', 'usuario', 'correo']
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter
+    ]
+
+    filterset_fields = [
+        'dpto_area',
+        'tipo',
+        'estado'
+    ]
+
+    search_fields = [
+        'nombre',
+        'usuario',
+        'correo'
+    ]
 
     def get_queryset(self):
         queryset = PerfilGenerico.objects.all()
-        dpto = self.request.query_params.get('dpto_area', None)
+
+        dpto = self.request.query_params.get(
+            'dpto_area',
+            None
+        )
 
         if dpto and dpto.strip():
             queryset = queryset.filter(
@@ -97,7 +170,10 @@ class PerfilGenericoViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-class PCGenericoViewSet(viewsets.ModelViewSet):
+
+class PCGenericoViewSet(
+    viewsets.ModelViewSet
+):
     queryset = PCGenerico.objects.prefetch_related(
         'historial'
     ).all()

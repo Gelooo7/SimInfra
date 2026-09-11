@@ -1,4 +1,7 @@
-export const getInitialCreateItem = (tab, dptosList = []) => {
+export const getInitialCreateItem = (
+  tab,
+  dptosList = []
+) => {
   switch (tab) {
     case 'usuarios':
       return {
@@ -76,6 +79,13 @@ export const getInitialCreateItem = (tab, dptosList = []) => {
         ram: '',
         almacenamiento: '',
         observaciones: '',
+      };
+
+    case 'servidores':
+      return {
+        ip: '',
+        hostname: '',
+        descripcion: '',
       };
 
     default:

@@ -1,10 +1,10 @@
-
 import { deleteUsuario } from '../api/usuariosApi';
 import { deleteEquipo } from '../api/equiposApi';
 import { deletePerfil } from '../api/perfilesApi';
 import { deleteIp } from '../api/ipsApi';
 import { deleteAnexo } from '../api/anexosApi';
 import { deletePcGenerico } from '../api/pcsGenericosApi';
+import { deleteServidor } from '../api/servidoresApi';
 
 export const deleteItemByTab = async (tab, id) => {
   switch (tab) {
@@ -24,9 +24,14 @@ export const deleteItemByTab = async (tab, id) => {
       return await deleteAnexo(id);
 
     case 'pcs-genericos':
-       return await deletePcGenerico(id);
+      return await deletePcGenerico(id);
+
+    case 'servidores':
+      return await deleteServidor(id);
 
     default:
-      throw new Error(`Módulo de eliminación no soportado: ${tab}`);
+      throw new Error(
+        `Módulo de eliminación no soportado: ${tab}`
+      );
   }
 };

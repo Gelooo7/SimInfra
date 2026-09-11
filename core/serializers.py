@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import (
     Usuario,
     Equipamiento,
@@ -10,6 +11,7 @@ from .models import (
     HistorialAnexo,
     PCGenerico,
     HistorialPCGenerico,
+    Servidor,
 )
 
 from .crypto import decrypt_val
@@ -20,6 +22,57 @@ class IPSerializer(serializers.ModelSerializer):
     class Meta:
         model = IP
         fields = '__all__'
+
+
+class ServidorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Servidor
+        fields = '__all__'
+
+    def validate_ip(self, value):
+        instance = getattr(
+            self,
+            'instance',
+            None
+        )
+
+        if Servidor.objects.filter(
+            ip=value
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError(
+                "Ya existe un servidor registrado con esta IP."
+            )
+
+        return value
+
+    def validate_hostname(self, value):
+        value = value.strip()
+
+        instance = getattr(
+            self,
+            'instance',
+            None
+        )
+
+        if Servidor.objects.filter(
+            hostname__iexact=value
+        ).exclude(
+            pk=getattr(instance, 'pk', None)
+        ).exists():
+            raise serializers.ValidationError(
+                "Ya existe un servidor registrado con este Hostname."
+            )
+
+        return value
+
+    def validate_descripcion(self, value):
+        if not value:
+            return value
+
+        return value.strip()
 
 class HistorialAnexoSerializer(serializers.ModelSerializer):
     class Meta:

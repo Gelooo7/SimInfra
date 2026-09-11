@@ -1,12 +1,40 @@
-export const validateItem = (tab, item, data = []) => {
-  // IPS
+const isValidIPv4 = (value = '') => {
+  const parts = value.trim().split('.');
+
+  if (parts.length !== 4) {
+    return false;
+  }
+
+  return parts.every((part) => {
+    if (!/^\d+$/.test(part)) {
+      return false;
+    }
+
+    const number = Number(part);
+
+    return (
+      number >= 0 &&
+      number <= 255
+    );
+  });
+};
+
+
+export const validateItem = (
+  tab,
+  item,
+  data = []
+) => {
+
+  /* =========================
+     IPS
+  ========================= */
+
   if (tab === 'ips') {
-    if (
-      !item.direccion_ip ||
-      !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(
-        item.direccion_ip.trim()
-      )
-    ) {
+    const direccionIp =
+      (item.direccion_ip || '').trim();
+
+    if (!isValidIPv4(direccionIp)) {
       return {
         valid: false,
         message:
@@ -18,18 +46,111 @@ export const validateItem = (tab, item, data = []) => {
       (ip) =>
         ip.id !== item.id &&
         ip.direccion_ip?.trim() ===
-        item.direccion_ip.trim()
+          direccionIp
     );
 
     if (dupIP) {
       return {
         valid: false,
-        message: `Error: La dirección IP "${item.direccion_ip}" ya existe en el sistema.`,
+        message:
+          `Error: La dirección IP "${direccionIp}" ya existe en el sistema.`,
       };
     }
   }
 
-  // ANEXOS
+
+  /* =========================
+     SERVIDORES
+  ========================= */
+
+  if (tab === 'servidores') {
+    const ip =
+      (item.ip || '').trim();
+
+    const hostname =
+      (item.hostname || '').trim();
+
+    /* IP obligatoria */
+
+    if (!ip) {
+      return {
+        valid: false,
+        message:
+          'Debe ingresar la dirección IP del servidor.',
+      };
+    }
+
+    /* IP IPv4 válida */
+
+    if (!isValidIPv4(ip)) {
+      return {
+        valid: false,
+        message:
+          'Ingrese una dirección IPv4 válida (ejemplo: 172.23.10.15).',
+      };
+    }
+
+    /* IP duplicada dentro de Servidores */
+
+    const dupIpServidor = data.find(
+      (servidor) =>
+        servidor.id !== item.id &&
+        servidor.ip?.trim() === ip
+    );
+
+    if (dupIpServidor) {
+      return {
+        valid: false,
+        message:
+          `Error: La IP "${ip}" ya está registrada en otro servidor.`,
+      };
+    }
+
+    /* Hostname obligatorio */
+
+    if (!hostname) {
+      return {
+        valid: false,
+        message:
+          'Debe ingresar el Hostname del servidor.',
+      };
+    }
+
+    /* Largo Hostname */
+
+    if (hostname.length > 100) {
+      return {
+        valid: false,
+        message:
+          'El Hostname puede tener como máximo 100 caracteres.',
+      };
+    }
+
+    /* Hostname duplicado */
+
+    const dupHostnameServidor = data.find(
+      (servidor) =>
+        servidor.id !== item.id &&
+        servidor.hostname
+          ?.trim()
+          .toLowerCase() ===
+          hostname.toLowerCase()
+    );
+
+    if (dupHostnameServidor) {
+      return {
+        valid: false,
+        message:
+          `Error: El Hostname "${hostname}" ya está registrado en otro servidor.`,
+      };
+    }
+  }
+
+
+  /* =========================
+     ANEXOS
+  ========================= */
+
   if (tab === 'anexos') {
     const numeroAnexo =
       (item.numero_anexo || '').trim();
@@ -61,7 +182,8 @@ export const validateItem = (tab, item, data = []) => {
     const dupAnexo = data.find(
       (anexo) =>
         anexo.id !== item.id &&
-        anexo.numero_anexo?.trim() === numeroAnexo
+        anexo.numero_anexo?.trim() ===
+          numeroAnexo
     );
 
     if (dupAnexo) {
@@ -77,7 +199,7 @@ export const validateItem = (tab, item, data = []) => {
         (anexo) =>
           anexo.id !== item.id &&
           Number(anexo.usuario) ===
-          Number(item.usuario)
+            Number(item.usuario)
       );
 
       if (dupUsuario) {
@@ -90,7 +212,11 @@ export const validateItem = (tab, item, data = []) => {
     }
   }
 
-  // PCS GENERICOS
+
+  /* =========================
+     PCS GENERICOS
+  ========================= */
+
   if (tab === 'pcs-genericos') {
     const usuarioLocal =
       (item.usuario_local || '').trim();
@@ -98,7 +224,6 @@ export const validateItem = (tab, item, data = []) => {
     const hostname =
       (item.hostname || '').trim();
 
-    // Usuario local obligatorio
     if (!usuarioLocal) {
       return {
         valid: false,
@@ -115,7 +240,6 @@ export const validateItem = (tab, item, data = []) => {
       };
     }
 
-    // Hostname obligatorio
     if (!hostname) {
       return {
         valid: false,
@@ -132,14 +256,13 @@ export const validateItem = (tab, item, data = []) => {
       };
     }
 
-    // Hostname duplicado
     const dupHostname = data.find(
       (pc) =>
         pc.id !== item.id &&
         pc.hostname
           ?.trim()
           .toLowerCase() ===
-        hostname.toLowerCase()
+          hostname.toLowerCase()
     );
 
     if (dupHostname) {
@@ -150,17 +273,27 @@ export const validateItem = (tab, item, data = []) => {
       };
     }
   }
-  // ACTIVO FIJO
+
+
+  /* =========================
+     ACTIVO FIJO
+  ========================= */
+
   if (item.af) {
     if (item.af.trim().length > 12) {
-      alert(
-        'El Activo Fijo (AF) puede tener máximo 12 caracteres.'
-      );
-      return false;
+      return {
+        valid: false,
+        message:
+          'El Activo Fijo (AF) puede tener máximo 12 caracteres.',
+      };
     }
   }
 
-  // USUARIOS
+
+  /* =========================
+     USUARIOS
+  ========================= */
+
   if (tab === 'usuarios') {
     const dupNombre = data.find(
       (usuario) =>
@@ -201,7 +334,11 @@ export const validateItem = (tab, item, data = []) => {
     }
   }
 
-  // EQUIPOS
+
+  /* =========================
+     EQUIPOS
+  ========================= */
+
   if (tab === 'equipos') {
     const numeroSerie =
       (item.numero_serie || '').trim();
@@ -241,6 +378,7 @@ export const validateItem = (tab, item, data = []) => {
       }
     }
   }
+
 
   return {
     valid: true,

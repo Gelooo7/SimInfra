@@ -4,9 +4,13 @@ import { getPerfiles } from '../api/perfilesApi';
 import { getIps } from '../api/ipsApi';
 import { getAnexos } from '../api/anexosApi';
 import { getPcsGenericos } from '../api/pcsGenericosApi';
+import { getServidores } from '../api/servidoresApi';
 
 
-export const getItemsByTab = async (tab, params = {}) => {
+export const getItemsByTab = async (
+  tab,
+  params = {}
+) => {
   switch (tab) {
     case 'usuarios':
       return await getUsuarios(params);
@@ -25,6 +29,9 @@ export const getItemsByTab = async (tab, params = {}) => {
 
     case 'pcs-genericos':
       return await getPcsGenericos(params);
+
+    case 'servidores':
+      return await getServidores(params);
 
     default:
       return [];

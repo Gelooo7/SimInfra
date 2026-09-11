@@ -6,6 +6,7 @@ import PerfilEditForm from '../../features/perfiles/components/PerfilEditForm';
 import IpEditForm from '../../features/ips/components/IpEditForm';
 import AnexoEditForm from '../../features/anexos/components/AnexoEditForm';
 import PCGenericoEditForm from '../../features/pcsGenericos/components/PCGenericoEditForm';
+import ServidorEditForm from '../../features/servidores/components/ServidorEditForm';
 
 const getEditTitle = (tab) => {
   switch (tab) {
@@ -20,12 +21,15 @@ const getEditTitle = (tab) => {
 
     case 'ips':
       return 'Editar Dirección IP';
-    
+
     case 'anexos':
       return 'Editar Anexo';
 
     case 'pcs-genericos':
       return 'Editar PC Genérico';
+
+    case 'servidores':
+      return 'Editar Servidor';
 
     default:
       return 'Editar Registro';
@@ -102,6 +106,13 @@ export default function ModuleEditModal({
           pc={editingItem}
           onChange={setEditingItem}
           departments={departments}
+        />
+      )}
+
+      {tab === 'servidores' && (
+        <ServidorEditForm
+          servidor={editingItem}
+          onChange={setEditingItem}
         />
       )}
     </EditModal>

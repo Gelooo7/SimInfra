@@ -198,6 +198,34 @@ class IP(models.Model):
     def __str__(self):
         return f"{self.direccion_ip} - {self.estado}"
 
+# =========================================
+# SERVIDORES
+# =========================================
+
+class Servidor(models.Model):
+    ip = models.GenericIPAddressField(
+        protocol='IPv4',
+        unique=True
+    )
+
+    hostname = models.CharField(
+        max_length=100,
+        unique=True
+    )
+
+    descripcion = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['hostname']
+        verbose_name = 'Servidor'
+        verbose_name_plural = 'Servidores'
+
+    def __str__(self):
+        return f"{self.hostname} - {self.ip}"
+
 
 class HistorialUsuario(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='historial')
@@ -226,7 +254,12 @@ class Equipamiento(models.Model):
 
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
-    numero_serie = models.CharField(max_length=100, unique=True)
+    numero_serie = models.CharField(
+    max_length=100,
+    unique=True,
+    null=True,
+    blank=True
+)
 
     hostname = models.CharField(
         max_length=50,
@@ -904,11 +937,35 @@ def track_historial_usuario(sender, instance, **kwargs):
                 "Sí" if instance.vpn_cisco else "No"
             )
             if usr_previo.password_vpn != instance.password_vpn:
-                add_cambio("Contraseña VPN", "••••••••", "••••••••")
-                add_cambio("Teléfono", usr_previo.telefono, instance.telefono)
-                add_cambio("Celular", usr_previo.celular, instance.celular)
-                add_cambio("Anexo", usr_previo.anexo, instance.anexo)
-                add_cambio("IP Asignada", usr_previo.ip_asignada, instance.ip_asignada)
+                add_cambio(
+                    "Contraseña VPN",
+                    "••••••••",
+                    "••••••••"
+                )
+
+            add_cambio(
+                "Teléfono",
+                usr_previo.telefono,
+                instance.telefono
+            )
+
+            add_cambio(
+                "Celular",
+                usr_previo.celular,
+                instance.celular
+            )
+
+            add_cambio(
+                "Anexo",
+                usr_previo.anexo,
+                instance.anexo
+            )
+
+            add_cambio(
+                "IP Asignada",
+                usr_previo.ip_asignada,
+                instance.ip_asignada
+            )
 
             if cambios:
                 HistorialUsuario.objects.create(
@@ -920,8 +977,12 @@ def track_historial_usuario(sender, instance, **kwargs):
 @receiver(post_save, sender=Usuario)
 def auto_sync_usuario(sender, instance, created, **kwargs):
 
-    # Si el usuario se da de baja, liberar sus equipos e IP
+    # =====================================
+    # USUARIO DADO DE BAJA
+    # =====================================
     if instance.estado == 'BAJA':
+
+        # Liberar todos sus equipos
         Equipamiento.objects.filter(
             usuario=instance
         ).update(
@@ -930,6 +991,7 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
             fecha_asignacion=None
         )
 
+        # Liberar su IP
         IP.objects.filter(
             usuario=instance
         ).update(
@@ -938,6 +1000,7 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
             asignado_otro=None
         )
 
+        # Liberar su anexo
         anexo = Anexo.objects.filter(
             usuario=instance
         ).first()
@@ -948,7 +1011,41 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
 
         return
 
-    # Vincular automáticamente equipamiento por hostname
+    # =====================================
+    # SINCRONIZAR CELULAR
+    # Usuario -> Equipamiento
+    # =====================================
+    nuevo_numero = (
+        instance.celular.strip()
+        if instance.celular
+        else None
+    )
+
+    celulares_asignados = Equipamiento.objects.filter(
+        usuario=instance,
+        tipo='Celular'
+    )
+
+    for equipo in celulares_asignados:
+
+        numero_actual = (
+            equipo.numero_telefono.strip()
+            if equipo.numero_telefono
+            else None
+        )
+
+        if numero_actual != nuevo_numero:
+            equipo.numero_telefono = nuevo_numero
+
+            equipo.save(
+                update_fields=[
+                    'numero_telefono'
+                ]
+            )
+
+    # =====================================
+    # VINCULAR EQUIPO POR HOSTNAME
+    # =====================================
     if instance.hostname:
         Equipamiento.objects.filter(
             hostname__iexact=instance.hostname.strip()
@@ -957,14 +1054,41 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
             estado='ASIGNADO'
         )
 
-        @receiver(pre_delete, sender=Usuario)
-        def liberar_anexo_al_eliminar_usuario(sender, instance, **kwargs):
-            anexo = Anexo.objects.filter(
+
+# =========================================
+# ELIMINACIÓN COMPLETA DE USUARIO
+# =========================================
+
+@receiver(pre_delete, sender=Usuario)
+def liberar_recursos_al_eliminar_usuario(
+    sender,
+    instance,
+    **kwargs
+):
+
+    # Liberar equipos
+    Equipamiento.objects.filter(
+        usuario=instance
+    ).update(
+        usuario=None,
+        estado='STOCK',
+        fecha_asignacion=None
+    )
+
+    # Liberar IP
+    IP.objects.filter(
+        usuario=instance
+    ).update(
+        usuario=None,
+        estado='LIBRE',
+        asignado_otro=None
+    )
+
+    # Liberar anexo
+    anexo = Anexo.objects.filter(
         usuario=instance
     ).first()
 
     if anexo:
         anexo.usuario = None
         anexo.save()
-
-    

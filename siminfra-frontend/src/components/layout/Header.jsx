@@ -21,6 +21,9 @@ export default function Header({
       case 'pcs-genericos':
         return 'PCs Genéricos';
 
+      case 'servidores':
+        return 'Servidores';
+
       case 'perfiles':
         return 'Perfiles Genéricos';
 

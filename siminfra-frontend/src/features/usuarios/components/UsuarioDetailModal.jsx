@@ -5,8 +5,35 @@ import {
   Eye,
   EyeOff,
   Copy,
-  Check
+  Check,
+  UserRound,
+  AtSign,
+  Monitor,
+  Network,
+  Mail,
+  Smartphone,
+  Phone,
+  Building2,
+  KeyRound,
+  ShieldCheck,
+  Laptop,
+  Tablet,
+  Router,
+  HardDrive,
+  Package,
+  Cloud,
+  Hash,
+  Cpu,
 } from 'lucide-react';
+
+import {
+  equipmentUsesHostname,
+  getEquipmentIdentifier,
+  getEquipmentIdentifierLabel,
+} from '../../../utils/equipmentHelpers';
+
+import './UsuarioDetailModal.css';
+
 
 export default function UsuarioDetailModal({
   usuario,
@@ -14,67 +41,74 @@ export default function UsuarioDetailModal({
   renderStatusBadge,
   formatEquipmentType,
 }) {
-  const [showPassGmail, setShowPassGmail] = useState(false);
-  const [showPassSimi, setShowPassSimi] = useState(false);
-  const [showPassVpn, setShowPassVpn] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    gmail: false,
+    simi: false,
+    vpn: false,
+  });
 
-  const [copiedGmail, setCopiedGmail] = useState(false);
-  const [copiedSimi, setCopiedSimi] = useState(false);
-  const [copiedVpn, setCopiedVpn] = useState(false);
+  const [copiedPassword, setCopiedPassword] =
+    useState(null);
 
   if (!usuario) {
     return null;
   }
 
-  /*
-    El teléfono corporativo NO se toma desde Usuario.celular.
 
-    Se obtiene automáticamente desde los equipos
-    de tipo Celular asignados al usuario.
-  */
-  const celularesAsignados = (usuario.equipos || []).filter(
-    (equipo) =>
-      formatEquipmentType(equipo.tipo) === 'Celular'
-  );
+  /* =========================
+     CELULAR CORPORATIVO
+  ========================= */
 
-  const numerosCelular = celularesAsignados
-    .map((equipo) => equipo.numero_telefono)
-    .filter(Boolean);
+  const celularesAsignados =
+    (usuario.equipos || []).filter(
+      (equipo) =>
+        formatEquipmentType(
+          equipo.tipo
+        ) === 'Celular'
+    );
+
+  const numerosCelular =
+    celularesAsignados
+      .map(
+        (equipo) =>
+          equipo.numero_telefono
+      )
+      .filter(Boolean);
 
   const celularCorporativo =
     numerosCelular.length > 0
       ? numerosCelular.join(' / ')
       : null;
 
-  const copyToClipboard = async (text, type) => {
-    if (!text) return;
+
+  /* =========================
+     PASSWORDS
+  ========================= */
+
+  const togglePassword = (type) => {
+    setVisiblePasswords((current) => ({
+      ...current,
+      [type]: !current[type],
+    }));
+  };
+
+  const copyPassword = async (
+    password,
+    type
+  ) => {
+    if (!password) return;
 
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(
+        password
+      );
 
-      if (type === 'gmail') {
-        setCopiedGmail(true);
+      setCopiedPassword(type);
 
-        setTimeout(() => {
-          setCopiedGmail(false);
-        }, 2000);
-      }
+      setTimeout(() => {
+        setCopiedPassword(null);
+      }, 2000);
 
-      if (type === 'simi') {
-        setCopiedSimi(true);
-
-        setTimeout(() => {
-          setCopiedSimi(false);
-        }, 2000);
-      }
-
-      if (type === 'vpn') {
-        setCopiedVpn(true);
-
-        setTimeout(() => {
-          setCopiedVpn(false);
-        }, 2000);
-      }
     } catch (error) {
       console.error(
         'Error copiando al portapapeles:',
@@ -83,678 +117,639 @@ export default function UsuarioDetailModal({
     }
   };
 
-  const labelStyle = {
-    display: 'block',
-    fontSize: '0.7rem',
-    fontWeight: 'bold',
-    color: '#64748b',
-    textTransform: 'uppercase',
-    marginBottom: '3px'
+
+  /* =========================
+     ICONO EQUIPO
+  ========================= */
+
+  const getEquipmentIcon = (
+    tipo
+  ) => {
+    switch (tipo) {
+      case 'Notebook':
+        return Laptop;
+
+      case 'Mac':
+        return Monitor;
+
+      case 'Celular':
+        return Smartphone;
+
+      case 'Tablet':
+        return Tablet;
+
+      case 'BAM / Router':
+        return Router;
+
+      case 'Monitor':
+        return Monitor;
+
+      case 'Docking':
+        return HardDrive;
+
+      default:
+        return Package;
+    }
   };
 
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: '#fff',
-          width: '760px',
-          maxWidth: '95%',
-          maxHeight: '90vh',
-          borderRadius: '12px',
-          overflow: 'hidden',
-          boxShadow:
-            '0 20px 25px -5px rgba(0,0,0,0.25)'
-        }}
-      >
-        {/* ENCABEZADO */}
-        <div
-          style={{
-            backgroundColor: '#0f172a',
-            color: '#fff',
-            padding: '1.25rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start'
-          }}
-        >
-          <div>
-            <div
-              style={{
-                marginBottom: '0.5rem'
-              }}
-            >
-              {renderStatusBadge(usuario.estado)}
+    <div className="user-detail-overlay">
+      <div className="user-detail-modal">
+
+        {/* HEADER */}
+
+        <div className="user-detail-header">
+          <div className="user-detail-header-user">
+
+            <div className="user-detail-avatar">
+              <UserRound size={26} />
             </div>
 
-            <p
-              style={{
-                margin: 0,
-                color: '#94a3b8',
-                fontSize: '0.8rem',
-                textTransform: 'uppercase'
-              }}
-            >
-              {usuario.cargo || 'Sin cargo'}
-              {' — '}
-              {usuario.dpto_area || 'Sin área'}
-            </p>
+            <div className="user-detail-header-info">
+
+              <div className="user-detail-header-top">
+                <h2>
+                  {usuario.nombre_completo ||
+                    'Usuario'}
+                </h2>
+
+                {renderStatusBadge(
+                  usuario.estado
+                )}
+              </div>
+
+              <div className="user-detail-subtitle">
+                <span>
+                  {usuario.cargo ||
+                    'Sin cargo'}
+                </span>
+
+                <span className="user-detail-separator">
+                  •
+                </span>
+
+                <span>
+                  {usuario.dpto_area ||
+                    'Sin área'}
+                </span>
+              </div>
+
+            </div>
           </div>
 
           <button
             type="button"
+            className="user-detail-close"
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#fff',
-              cursor: 'pointer'
-            }}
+            title="Cerrar"
           >
-            <X size={20} />
+            <X size={21} />
           </button>
         </div>
 
-        {/* CONTENIDO */}
-        <div
-          style={{
-            padding: '1.5rem',
-            maxHeight: '72vh',
-            overflowY: 'auto'
-          }}
-        >
-          {/* DATOS GENERALES */}
-          <div
-            style={{
-              backgroundColor: '#f8fafc',
-              border: '1px solid #cbd5e1',
-              borderRadius: '8px',
-              padding: '1rem',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '1rem'
-            }}
-          >
-            <div>
-              <span style={labelStyle}>
-                Usuario de Red
-              </span>
 
-              <strong
-                style={{
-                  color: '#475569'
-                }}
-              >
-                {usuario.usuario_red || 'N/I'}
-              </strong>
-            </div>
+        {/* CONTENT */}
 
-            <div>
-              <span style={labelStyle}>
-                Hostname
-              </span>
+        <div className="user-detail-content">
 
-              <strong
-                style={{
-                  color: '#0284c7'
-                }}
-              >
-                {usuario.hostname || 'Sin hostname'}
-              </strong>
-            </div>
+          {/* INFORMACIÓN GENERAL */}
 
-            <div>
-              <span style={labelStyle}>
-                IP Asignada
-              </span>
+          <SectionHeader
+            title="Información General"
+            subtitle="Datos corporativos y de conectividad"
+          />
 
-              <strong
-                style={{
-                  color: usuario.ip_actual
-                    ? '#16a34a'
-                    : '#94a3b8'
-                }}
-              >
-                {usuario.ip_actual || 'Sin IP'}
-              </strong>
-            </div>
+          <div className="user-detail-info-grid">
 
-            <div>
-              <span style={labelStyle}>
-                Correo Corp.
-              </span>
+            <InfoCard
+              icon={AtSign}
+              label="Usuario de Red"
+              value={
+                usuario.usuario_red ||
+                'N/I'
+              }
+            />
 
-              <span
-                style={{
-                  color: '#475569',
-                  fontSize: '0.85rem',
-                  wordBreak: 'break-word'
-                }}
-              >
-                {usuario.correo_corp || 'Sin correo'}
-              </span>
-            </div>
+            <InfoCard
+              icon={Monitor}
+              label="Hostname"
+              value={
+                usuario.hostname ||
+                'Sin hostname'
+              }
+              accent
+            />
 
-            {/* CELULAR AUTOMÁTICO DESDE EQUIPOS */}
-            <div>
-              <span style={labelStyle}>
-                Celular Corporativo
-              </span>
-
-              <strong
-                style={{
-                  color: celularCorporativo
-                    ? '#2563eb'
-                    : '#94a3b8'
-                }}
-              >
-                {celularCorporativo ||
-                  'Sin celular asignado'}
-              </strong>
-            </div>
-
-            {/* ANEXO AUTOMÁTICO */}
-            <div>
-              <span style={labelStyle}>
-                Anexo
-              </span>
-
-              <strong
-                style={{
-                  color: usuario.anexo_actual
-                    ? '#2563eb'
-                    : '#94a3b8'
-                }}
-              >
-                {usuario.anexo_actual?.numero_anexo ||
-                  'Sin anexo asignado'}
-              </strong>
-            </div>
-
-            {/* EXTERIOR AUTOMÁTICO */}
-            <div>
-              <span style={labelStyle}>
-                Exterior
-              </span>
-
-              <strong
-                style={{
-                  color: usuario.anexo_actual?.exterior
-                    ? '#2563eb'
-                    : '#94a3b8'
-                }}
-              >
-                {usuario.anexo_actual?.exterior ||
-                  'Sin exterior'}
-              </strong>
-            </div>
-
-            {/* GMAIL */}
-            <div
-              style={{
-                gridColumn: '1 / -1',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#fff',
-                borderRadius: '6px',
-                padding: '0.75rem'
-              }}
-            >
-              <span style={labelStyle}>
-                Gmail & Contraseña
-              </span>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: '1rem'
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: '0.85rem',
-                    color: '#475569'
-                  }}
-                >
-                  {usuario.gmail || 'Sin Gmail'}
-                </span>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'monospace',
-                      fontWeight: 'bold',
-                      backgroundColor: '#f1f5f9',
-                      padding: '0.2rem 0.5rem',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    {showPassGmail
-                      ? usuario.password_gmail ||
-                      'Sin Contraseña'
-                      : usuario.password_gmail
-                        ? '••••••••'
-                        : 'Sin Contraseña'}
-                  </span>
-
-                  {usuario.password_gmail && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPassGmail(
-                            !showPassGmail
-                          )
-                        }
-                        style={{
-                          border: 'none',
-                          background: 'none',
-                          cursor: 'pointer',
-                          color: '#64748b'
-                        }}
-                        title="Mostrar / Ocultar"
-                      >
-                        {showPassGmail ? (
-                          <EyeOff size={16} />
-                        ) : (
-                          <Eye size={16} />
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          copyToClipboard(
-                            usuario.password_gmail,
-                            'gmail'
-                          )
-                        }
-                        style={{
-                          border: 'none',
-                          background: 'none',
-                          cursor: 'pointer',
-                          color: copiedGmail
-                            ? '#16a34a'
-                            : '#64748b'
-                        }}
-                        title="Copiar Contraseña"
-                      >
-                        {copiedGmail ? (
-                          <Check size={16} />
-                        ) : (
-                          <Copy size={16} />
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* SIMI */}
-            <div
-              style={{
-                gridColumn: '1 / -1',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#fff',
-                borderRadius: '6px',
-                padding: '0.75rem'
-              }}
-            >
-              <span style={labelStyle}>
-                Contraseña Simi
-              </span>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: 'monospace',
-                    fontWeight: 'bold',
-                    backgroundColor: '#f1f5f9',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '4px'
-                  }}
-                >
-                  {showPassSimi
-                    ? usuario.password_simi ||
-                    'Sin Contraseña'
-                    : usuario.password_simi
-                      ? '••••••••'
-                      : 'Sin Contraseña'}
-                </span>
-
-                {usuario.password_simi && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowPassSimi(!showPassSimi)
-                      }
-                      style={{
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        color: '#64748b'
-                      }}
-                      title="Mostrar / Ocultar"
-                    >
-                      {showPassSimi ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        copyToClipboard(
-                          usuario.password_simi,
-                          'simi'
-                        )
-                      }
-                      style={{
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        color: copiedSimi
-                          ? '#16a34a'
-                          : '#64748b'
-                      }}
-                      title="Copiar Contraseña"
-                    >
-                      {copiedSimi ? (
-                        <Check size={16} />
-                      ) : (
-                        <Copy size={16} />
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* VPN */}
-          <div
-            style={{
-              gridColumn: '1 / -1',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#fff',
-              borderRadius: '6px',
-              padding: '0.75rem'
-            }}
-          >
-            <span style={labelStyle}>
-              Contraseña VPN
-            </span>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'monospace',
-                  fontWeight: 'bold',
-                  backgroundColor: '#f1f5f9',
-                  padding: '0.2rem 0.5rem',
-                  borderRadius: '4px'
-                }}
-              >
-                {showPassVpn
-                  ? usuario.password_vpn ||
-                  'Sin Contraseña'
-                  : usuario.password_vpn
-                    ? '••••••••'
-                    : 'Sin Contraseña'}
-              </span>
-
-              {usuario.password_vpn && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassVpn(!showPassVpn)
-                    }
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      color: '#64748b'
-                    }}
-                    title="Mostrar / Ocultar"
-                  >
-                    {showPassVpn ? (
-                      <EyeOff size={16} />
-                    ) : (
-                      <Eye size={16} />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      copyToClipboard(
-                        usuario.password_vpn,
-                        'vpn'
-                      )
-                    }
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      color: copiedVpn
-                        ? '#16a34a'
-                        : '#64748b'
-                    }}
-                    title="Copiar Contraseña"
-                  >
-                    {copiedVpn ? (
-                      <Check size={16} />
-                    ) : (
-                      <Copy size={16} />
-                    )}
-                  </button>
-                </>
+            <InfoCard
+              icon={Network}
+              label="IP Asignada"
+              value={
+                usuario.ip_actual ||
+                'Sin IP asignada'
+              }
+              accent={Boolean(
+                usuario.ip_actual
               )}
-            </div>
+            />
+
+            <InfoCard
+              icon={Mail}
+              label="Correo Corporativo"
+              value={
+                usuario.correo_corp ||
+                'Sin correo'
+              }
+            />
+
+            <InfoCard
+              icon={Smartphone}
+              label="Celular Corporativo"
+              value={
+                celularCorporativo ||
+                'Sin celular asignado'
+              }
+              accent={Boolean(
+                celularCorporativo
+              )}
+            />
+
+            <InfoCard
+              icon={Phone}
+              label="Anexo"
+              value={
+                usuario.anexo_actual
+                  ?.numero_anexo ||
+                'Sin anexo asignado'
+              }
+              accent={Boolean(
+                usuario.anexo_actual
+              )}
+            />
+
+            <InfoCard
+              icon={Building2}
+              label="Exterior"
+              value={
+                usuario.anexo_actual
+                  ?.exterior ||
+                'Sin exterior'
+              }
+            />
+
           </div>
-          
+
+
+          {/* CREDENCIALES */}
+
+          <section className="user-detail-section">
+
+            <SectionHeader
+              title="Credenciales"
+              subtitle="Accesos asociados al usuario"
+            />
+
+            <div className="user-detail-credentials-grid">
+
+              <CredentialCard
+                icon={Mail}
+                title="Cuenta Gmail"
+                account={
+                  usuario.gmail ||
+                  'Sin cuenta Gmail'
+                }
+                password={
+                  usuario.password_gmail
+                }
+                visible={
+                  visiblePasswords.gmail
+                }
+                copied={
+                  copiedPassword === 'gmail'
+                }
+                onToggle={() =>
+                  togglePassword('gmail')
+                }
+                onCopy={() =>
+                  copyPassword(
+                    usuario.password_gmail,
+                    'gmail'
+                  )
+                }
+              />
+
+              <CredentialCard
+                icon={KeyRound}
+                title="Acceso Simi"
+                password={
+                  usuario.password_simi
+                }
+                visible={
+                  visiblePasswords.simi
+                }
+                copied={
+                  copiedPassword === 'simi'
+                }
+                onToggle={() =>
+                  togglePassword('simi')
+                }
+                onCopy={() =>
+                  copyPassword(
+                    usuario.password_simi,
+                    'simi'
+                  )
+                }
+              />
+
+              <CredentialCard
+                icon={ShieldCheck}
+                title="VPN Cisco"
+                password={
+                  usuario.password_vpn
+                }
+                visible={
+                  visiblePasswords.vpn
+                }
+                copied={
+                  copiedPassword === 'vpn'
+                }
+                onToggle={() =>
+                  togglePassword('vpn')
+                }
+                onCopy={() =>
+                  copyPassword(
+                    usuario.password_vpn,
+                    'vpn'
+                  )
+                }
+              />
+
+            </div>
+          </section>
+
+
           {/* EQUIPOS */}
-          <div
-            style={{
-              marginTop: '1.25rem'
-            }}
-          >
-            <h4
-              style={{
-                margin: '0 0 0.5rem 0',
-                color: '#1e293b',
-                fontSize: '0.9rem',
-                fontWeight: 'bold'
-              }}
-            >
-              Equipos Asignados
-            </h4>
+
+          <section className="user-detail-section">
+
+            <SectionHeader
+              title="Equipos Asignados"
+              subtitle={`${usuario.equipos?.length || 0} ${
+                usuario.equipos?.length === 1
+                  ? 'equipo vinculado'
+                  : 'equipos vinculados'
+              }`}
+            />
 
             {usuario.equipos &&
-              usuario.equipos.length > 0 ? (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem'
-                }}
-              >
-                {usuario.equipos.map((equipo) => {
-                  const tipoEquipo =
-                    formatEquipmentType(
-                      equipo.tipo
-                    );
+            usuario.equipos.length > 0 ? (
 
-                  return (
-                    <div
-                      key={equipo.id}
-                      style={{
-                        backgroundColor: '#f1f5f9',
-                        padding: '0.75rem 0.8rem',
-                        borderRadius: '6px',
-                        fontSize: '0.85rem'
-                      }}
-                    >
-                      {/* CABECERA EQUIPO */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent:
-                            'space-between',
-                          alignItems: 'center',
-                          gap: '1rem'
-                        }}
+              <div className="user-detail-equipment-list">
+
+                {usuario.equipos.map(
+                  (equipo) => {
+                    const tipoEquipo =
+                      formatEquipmentType(
+                        equipo.tipo
+                      );
+
+                    const EquipmentIcon =
+                      getEquipmentIcon(
+                        tipoEquipo
+                      );
+
+                    const normalizedEquipo = {
+                      ...equipo,
+                      tipo: tipoEquipo,
+                    };
+
+                    const identifier =
+                      getEquipmentIdentifier(
+                        normalizedEquipo
+                      );
+
+                    const identifierLabel =
+                      getEquipmentIdentifierLabel(
+                        tipoEquipo
+                      );
+
+                    return (
+                      <article
+                        key={equipo.id}
+                        className="user-detail-equipment-card"
                       >
-                        <div>
-                          <strong>
-                            [{tipoEquipo}]{' '}
-                            {equipo.marca}{' '}
-                            {equipo.modelo}
-                          </strong>
 
-                          <span
-                            style={{
-                              color: '#64748b',
-                              marginLeft: '8px',
-                              fontFamily:
-                                'monospace'
-                            }}
-                          >
-                            S/N:{' '}
-                            {equipo.numero_serie}
-                          </span>
-                        </div>
+                        <div className="user-detail-equipment-header">
 
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
-                            color: '#0284c7'
-                          }}
-                        >
-                          AF: {equipo.af || 'N/I'}
-                        </span>
-                      </div>
+                          <div className="user-detail-equipment-identity">
 
-                      {/* CELULAR
-                          El número NO se repite aquí.
-                          Ya aparece arriba como
-                          Celular Corporativo.
-                      */}
-                      {tipoEquipo === 'Celular' && (
-                        <div
-                          style={{
-                            marginTop: '0.6rem',
-                            paddingTop: '0.6rem',
-                            borderTop:
-                              '1px solid #cbd5e1',
-                            display: 'grid',
-                            gridTemplateColumns:
-                              '1fr 1fr',
-                            gap: '1rem'
-                          }}
-                        >
-                          <div>
-                            <span
-                              style={labelStyle}
-                            >
-                              IMEI
-                            </span>
+                            <div className="user-detail-equipment-icon">
+                              <EquipmentIcon
+                                size={20}
+                              />
+                            </div>
 
-                            <span>
-                              {equipo.imei || 'N/I'}
-                            </span>
+                            <div>
+                              <span className="user-detail-equipment-type">
+                                {tipoEquipo}
+                              </span>
+
+                              <h4>
+                                {`${equipo.marca || ''} ${
+                                  equipo.modelo || ''
+                                }`.trim() ||
+                                  'Sin marca / modelo'}
+                              </h4>
+                            </div>
+
                           </div>
 
-                          <div>
-                            <span
-                              style={labelStyle}
-                            >
-                              PIN
-                            </span>
-
-                            <span>
-                              {equipo.pin || 'N/I'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* MAC */}
-                      {tipoEquipo === 'Mac' && (
-                        <div
-                          style={{
-                            marginTop: '0.6rem',
-                            paddingTop: '0.6rem',
-                            borderTop:
-                              '1px solid #cbd5e1'
-                          }}
-                        >
-                          <span style={labelStyle}>
-                            Cuenta iCloud
+                          <span className="user-detail-af">
+                            AF: {equipo.af || 'N/I'}
                           </span>
 
-                          <span>
-                            {equipo.icloud_cuenta ||
-                              'N/I'}
-                          </span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+
+                        <div className="user-detail-equipment-grid">
+
+                          <EquipmentField
+                            icon={Hash}
+                            label="N° Serie"
+                            value={
+                              equipo.numero_serie ||
+                              'N/I'
+                            }
+                          />
+
+                          {identifierLabel && (
+                            <EquipmentField
+                              icon={
+                                equipmentUsesHostname(
+                                  tipoEquipo
+                                )
+                                  ? Monitor
+                                  : Smartphone
+                              }
+                              label={
+                                identifierLabel
+                              }
+                              value={
+                                identifier ||
+                                'N/A'
+                              }
+                              accent
+                            />
+                          )}
+
+                          {tipoEquipo ===
+                            'Celular' && (
+                            <>
+                              <EquipmentField
+                                icon={Smartphone}
+                                label="IMEI"
+                                value={
+                                  equipo.imei ||
+                                  'N/I'
+                                }
+                              />
+
+                              <EquipmentField
+                                icon={KeyRound}
+                                label="PIN"
+                                value={
+                                  equipo.pin ||
+                                  'N/I'
+                                }
+                              />
+                            </>
+                          )}
+
+                          {tipoEquipo ===
+                            'Mac' && (
+                            <EquipmentField
+                              icon={Cloud}
+                              label="Cuenta iCloud"
+                              value={
+                                equipo
+                                  .icloud_cuenta ||
+                                'N/I'
+                              }
+                            />
+                          )}
+
+                        </div>
+
+                      </article>
+                    );
+                  }
+                )}
+
               </div>
+
             ) : (
-              <p
-                style={{
-                  fontSize: '0.85rem',
-                  color: '#94a3b8',
-                  fontStyle: 'italic',
-                  margin: 0
-                }}
-              >
-                Sin equipos vinculados actualmente.
-              </p>
+
+              <div className="user-detail-empty-equipment">
+                <Cpu size={26} />
+
+                <span>
+                  Este usuario no tiene equipos vinculados.
+                </span>
+              </div>
+
             )}
-          </div>
+
+          </section>
+
         </div>
       </div>
+    </div>
+  );
+}
+
+
+/* =========================
+   SECTION HEADER
+========================= */
+
+function SectionHeader({
+  title,
+  subtitle,
+}) {
+  return (
+    <div className="user-detail-section-header">
+      <h3>{title}</h3>
+
+      {subtitle && (
+        <p>{subtitle}</p>
+      )}
+    </div>
+  );
+}
+
+
+/* =========================
+   INFO CARD
+========================= */
+
+function InfoCard({
+  icon: Icon,
+  label,
+  value,
+  accent = false,
+}) {
+  return (
+    <div className="user-detail-info-card">
+
+      <div className="user-detail-info-icon">
+        <Icon size={18} />
+      </div>
+
+      <div className="user-detail-info-text">
+        <span className="user-detail-info-label">
+          {label}
+        </span>
+
+        <span
+          className={`user-detail-info-value ${
+            accent
+              ? 'user-detail-info-value-accent'
+              : ''
+          }`}
+        >
+          {value}
+        </span>
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================
+   CREDENTIAL CARD
+========================= */
+
+function CredentialCard({
+  icon: Icon,
+  title,
+  account,
+  password,
+  visible,
+  copied,
+  onToggle,
+  onCopy,
+}) {
+  return (
+    <div className="user-detail-credential-card">
+
+      <div className="user-detail-credential-title">
+
+        <div className="user-detail-credential-icon">
+          <Icon size={17} />
+        </div>
+
+        <span>
+          {title}
+        </span>
+
+      </div>
+
+      {account && (
+        <div className="user-detail-credential-account">
+          {account}
+        </div>
+      )}
+
+      <div className="user-detail-password-row">
+
+        <span className="user-detail-password-value">
+          {password
+            ? (
+              visible
+                ? password
+                : '••••••••'
+            )
+            : 'Sin contraseña'}
+        </span>
+
+        {password && (
+          <div className="user-detail-password-actions">
+
+            <button
+              type="button"
+              onClick={onToggle}
+              title={
+                visible
+                  ? 'Ocultar contraseña'
+                  : 'Mostrar contraseña'
+              }
+            >
+              {visible ? (
+                <EyeOff size={16} />
+              ) : (
+                <Eye size={16} />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onCopy}
+              className={
+                copied
+                  ? 'copied'
+                  : ''
+              }
+              title="Copiar contraseña"
+            >
+              {copied ? (
+                <Check size={16} />
+              ) : (
+                <Copy size={16} />
+              )}
+            </button>
+
+          </div>
+        )}
+
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================
+   EQUIPMENT FIELD
+========================= */
+
+function EquipmentField({
+  icon: Icon,
+  label,
+  value,
+  accent = false,
+}) {
+  return (
+    <div className="user-detail-equipment-field">
+
+      <Icon size={15} />
+
+      <div>
+        <span className="user-detail-equipment-field-label">
+          {label}
+        </span>
+
+        <span
+          className={`user-detail-equipment-field-value ${
+            accent
+              ? 'accent'
+              : ''
+          }`}
+        >
+          {value}
+        </span>
+      </div>
+
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { createPerfil } from '../api/perfilesApi';
 import { createIp } from '../api/ipsApi';
 import { createAnexo } from '../api/anexosApi';
 import { createPcGenerico } from '../api/pcsGenericosApi';
+import { createServidor } from '../api/servidoresApi';
 
 export const createItemByTab = async (tab, payload) => {
   switch (tab) {
@@ -20,12 +21,17 @@ export const createItemByTab = async (tab, payload) => {
       return await createIp(payload);
 
     case 'anexos':
-       return await createAnexo(payload);
+      return await createAnexo(payload);
 
     case 'pcs-genericos':
-        return await createPcGenerico(payload);
+      return await createPcGenerico(payload);
+
+    case 'servidores':
+      return await createServidor(payload);
 
     default:
-      throw new Error(`Módulo de creación no soportado: ${tab}`);
+      throw new Error(
+        `Módulo de creación no soportado: ${tab}`
+      );
   }
 };

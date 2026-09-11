@@ -2,6 +2,13 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Users,
+  Package,
+  Monitor,
+  Server,
+  Mail,
+  Globe2,
+  Phone,
 } from 'lucide-react';
 
 import './Sidebar.css';
@@ -9,32 +16,37 @@ import './Sidebar.css';
 const modules = [
   {
     id: 'usuarios',
-    icon: '👤',
+    icon: Users,
     label: 'Usuarios',
   },
   {
     id: 'equipos',
-    icon: '📦',
+    icon: Package,
     label: 'Equipos',
   },
   {
     id: 'pcs-genericos',
-    icon: '🖥️',
+    icon: Monitor,
     label: 'PCs Genéricos',
   },
   {
+    id: 'servidores',
+    icon: Server,
+    label: 'Servidores',
+  },
+  {
     id: 'perfiles',
-    icon: '📧',
+    icon: Mail,
     label: 'Perfiles Genéricos',
   },
   {
     id: 'ips',
-    icon: '🌐',
+    icon: Globe2,
     label: 'Gestión de IPs',
   },
   {
     id: 'anexos',
-    icon: '☎️',
+    icon: Phone,
     label: 'Anexos',
   },
 ];
@@ -50,10 +62,10 @@ export default function Sidebar({
 }) {
   return (
     <>
-      {/* Overlay móvil */}
       <div
-        className={`sidebar-overlay ${isOpen ? 'sidebar-overlay-open' : ''
-          }`}
+        className={`sidebar-overlay ${
+          isOpen ? 'sidebar-overlay-open' : ''
+        }`}
         onClick={onClose}
       />
 
@@ -66,7 +78,6 @@ export default function Sidebar({
           .filter(Boolean)
           .join(' ')}
       >
-        {/* CABECERA */}
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="sidebar-logo">
@@ -84,7 +95,6 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* Contraer escritorio */}
           <button
             type="button"
             className="sidebar-collapse-button"
@@ -102,7 +112,6 @@ export default function Sidebar({
             )}
           </button>
 
-          {/* Cerrar móvil */}
           <button
             type="button"
             className="sidebar-mobile-close"
@@ -113,20 +122,22 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* NAVEGACIÓN */}
         <nav className="sidebar-nav">
           {modules.map((module) => {
             const active =
               activeTab === module.id;
 
+            const Icon = module.icon;
+
             return (
               <button
                 key={module.id}
                 type="button"
-                className={`sidebar-module-button ${active
-                  ? 'sidebar-module-active'
-                  : ''
-                  }`}
+                className={`sidebar-module-button ${
+                  active
+                    ? 'sidebar-module-active'
+                    : ''
+                }`}
                 onClick={() =>
                   onSelectTab(module.id)
                 }
@@ -137,7 +148,7 @@ export default function Sidebar({
                 }
               >
                 <span className="sidebar-module-icon">
-                  {module.icon}
+                  <Icon size={18} />
                 </span>
 
                 <span className="sidebar-module-content">
@@ -157,7 +168,6 @@ export default function Sidebar({
           })}
         </nav>
 
-        {/* FOOTER */}
         <div className="sidebar-footer">
           {collapsed ? (
             <span

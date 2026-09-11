@@ -4,6 +4,7 @@ import PerfilesTable from '../../features/perfiles/components/PerfilesTable';
 import IpsTable from '../../features/ips/components/IpsTable';
 import AnexosTable from '../../features/anexos/components/AnexosTable';
 import PCsGenericosTable from '../../features/pcsGenericos/components/PCsGenericosTable';
+import ServidoresTable from '../../features/servidores/components/ServidoresTable';
 
 export default function ModuleTable({
   tab,
@@ -89,6 +90,16 @@ export default function ModuleTable({
       <PCsGenericosTable
         pcs={data}
         onShowHistory={onShowPCGenericoHistory}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    );
+  }
+
+  if (tab === 'servidores') {
+    return (
+      <ServidoresTable
+        servidores={data}
         onEdit={onEdit}
         onDelete={onDelete}
       />

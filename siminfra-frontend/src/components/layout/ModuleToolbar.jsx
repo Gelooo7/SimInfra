@@ -1,4 +1,5 @@
 import './ModuleToolbar.css';
+
 import {
   Filter,
   Plus
@@ -28,6 +29,9 @@ export default function ModuleToolbar({
       case 'pcs-genericos':
         return 'PC Genérico';
 
+      case 'servidores':
+        return 'Servidor';
+
       case 'perfiles':
         return 'Perfil';
 
@@ -50,6 +54,12 @@ export default function ModuleToolbar({
       case 'equipos':
         return 'Buscar por marca, modelo, serie, hostname, AF...';
 
+      case 'pcs-genericos':
+        return 'Buscar por usuario, hostname, marca, modelo...';
+
+      case 'servidores':
+        return 'Buscar por IP, hostname o descripción...';
+
       case 'perfiles':
         return 'Buscar por nombre, usuario o correo...';
 
@@ -67,6 +77,7 @@ export default function ModuleToolbar({
   return (
     <div className="module-toolbar">
       <div className="module-toolbar-actions">
+
         {/* BOTÓN AGREGAR */}
         <button
           type="button"
@@ -80,33 +91,41 @@ export default function ModuleToolbar({
           </span>
         </button>
 
+
         {/* FILTRO DEPARTAMENTO */}
-        {(activeTab === 'perfiles' ||
-          activeTab === 'pcs-genericos') && (
-            <div className="module-toolbar-filter">
-              <Filter size={16} />
+        {(
+          activeTab === 'perfiles' ||
+          activeTab === 'pcs-genericos'
+        ) && (
+          <div className="module-toolbar-filter">
+            <Filter size={16} />
 
-              <select
-                value={selectedDepartment}
-                onChange={(e) =>
-                  onDepartmentChange(e.target.value)
-                }
-              >
-                <option value="">
-                  Todos los Departamentos
-                </option>
+            <select
+              value={selectedDepartment}
+              onChange={(e) =>
+                onDepartmentChange(
+                  e.target.value
+                )
+              }
+            >
+              <option value="">
+                Todos los Departamentos
+              </option>
 
-                {departments.map((department, index) => (
+              {departments.map(
+                (department, index) => (
                   <option
                     key={index}
                     value={department}
                   >
                     {department}
                   </option>
-                ))}
-              </select>
-            </div>
-          )}
+                )
+              )}
+            </select>
+          </div>
+        )}
+
 
         {/* FILTRO IP */}
         {activeTab === 'ips' && (
@@ -116,7 +135,9 @@ export default function ModuleToolbar({
             <select
               value={selectedIpStatus}
               onChange={(e) =>
-                onIpStatusChange(e.target.value)
+                onIpStatusChange(
+                  e.target.value
+                )
               }
             >
               <option value="">
@@ -142,6 +163,7 @@ export default function ModuleToolbar({
           </div>
         )}
 
+
         {/* FILTRO ANEXOS */}
         {activeTab === 'anexos' && (
           <div className="module-toolbar-filter">
@@ -150,7 +172,9 @@ export default function ModuleToolbar({
             <select
               value={selectedAnexoStatus}
               onChange={(e) =>
-                onAnexoStatusChange(e.target.value)
+                onAnexoStatusChange(
+                  e.target.value
+                )
               }
             >
               <option value="">
@@ -168,19 +192,23 @@ export default function ModuleToolbar({
           </div>
         )}
 
+
         {/* BUSCADOR */}
         <div className="module-toolbar-search">
           <input
             type="text"
-            placeholder={getSearchPlaceholder()}
+            placeholder={
+              getSearchPlaceholder()
+            }
             value={search}
             onChange={(e) =>
-              onSearchChange(e.target.value)
+              onSearchChange(
+                e.target.value
+              )
             }
           />
         </div>
       </div>
     </div>
   );
-
 }

@@ -6,6 +6,7 @@ import PerfilCreateForm from '../../features/perfiles/components/PerfilCreateFor
 import IpCreateForm from '../../features/ips/components/IpCreateForm';
 import AnexoCreateForm from '../../features/anexos/components/AnexoCreateForm';
 import PCGenericoCreateForm from '../../features/pcsGenericos/components/PCGenericoCreateForm';
+import ServidorCreateForm from '../../features/servidores/components/ServidorCreateForm';
 
 const getCreateTitle = (tab) => {
   switch (tab) {
@@ -26,6 +27,9 @@ const getCreateTitle = (tab) => {
 
     case 'pcs-genericos':
       return 'Nuevo PC Genérico';
+
+    case 'servidores':
+      return 'Nuevo Servidor';
 
     default:
       return 'Nuevo Registro';
@@ -102,6 +106,13 @@ export default function ModuleCreateModal({
           pc={newItem}
           onChange={setNewItem}
           departments={departments}
+        />
+      )}
+
+      {tab === 'servidores' && (
+        <ServidorCreateForm
+          servidor={newItem}
+          onChange={setNewItem}
         />
       )}
     </CreateModal>
