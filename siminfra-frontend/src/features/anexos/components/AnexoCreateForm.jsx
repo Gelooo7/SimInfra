@@ -46,6 +46,50 @@ export default function AnexoCreateForm({
             color: '#475569'
           }}
         >
+          Número de Anexo *
+        </label>
+
+        <input
+          type="text"
+          inputMode="numeric"
+          required
+          maxLength={10}
+          value={anexo.numero_anexo || ''}
+          onChange={(e) => {
+            const value = e.target.value.replace(
+              /\D/g,
+              ''
+            );
+
+            updateField(
+              'numero_anexo',
+              value
+            );
+          }}
+          placeholder="Ej: 3055"
+          style={{
+            width: '100%',
+            padding: '0.65rem 0.75rem',
+            borderRadius: '6px',
+            border: '1px solid #cbd5e1',
+            outline: 'none',
+            boxSizing: 'border-box',
+            fontSize: '0.9rem'
+          }}
+        />
+      </div>
+
+      {/* Número Exterior */}
+      <div style={{ marginBottom: '1rem' }}>
+        <label
+          style={{
+            display: 'block',
+            marginBottom: '0.4rem',
+            fontSize: '0.8rem',
+            fontWeight: '600',
+            color: '#475569'
+          }}
+        >
           Número Exterior
         </label>
 
@@ -66,12 +110,12 @@ export default function AnexoCreateForm({
             // Máximo 12 caracteres
             value = value.slice(0, 12);
 
-            onChange({
-              ...anexo,
-              exterior: value,
-            });
+            updateField(
+              'exterior',
+              value
+            );
           }}
-          placeholder="Ej: +56912345678"
+          placeholder="Ej: +56221234567"
           style={{
             width: '100%',
             padding: '0.65rem 0.75rem',

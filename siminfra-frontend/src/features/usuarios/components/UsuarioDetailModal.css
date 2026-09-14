@@ -24,7 +24,7 @@
 ========================= */
 
 .user-detail-modal {
-    width: 860px;
+    width: 980px;
     max-width: 100%;
     max-height: 92vh;
 
@@ -295,11 +295,7 @@
 
 .user-detail-info-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(auto-fit,
-            minmax(210px, 1fr));
-
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.65rem;
 }
 
@@ -837,4 +833,25 @@
 
         padding: 0;
     }
+}
+
+/* =========================
+   TEXTOS LARGOS EN INFO CARD
+========================= */
+
+.user-detail-info-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-detail-info-value {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.25;
+}
+
+.user-detail-info-value-compact {
+  font-size: 0.78rem;
 }

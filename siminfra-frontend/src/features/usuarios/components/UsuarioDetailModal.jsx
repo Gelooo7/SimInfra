@@ -353,8 +353,8 @@ export default function UsuarioDetailModal({
                 usuario.correo_corp ||
                 'Sin correo'
               }
+              compact
             />
-
             <InfoCard
               icon={Smartphone}
               label="Celular Corporativo"
@@ -688,6 +688,7 @@ function InfoCard({
   label,
   value,
   accent = false,
+  compact = false,
 }) {
   return (
     <div className="user-detail-info-card">
@@ -696,15 +697,18 @@ function InfoCard({
         <Icon size={18} />
       </div>
 
-      <div className="user-detail-info-text">
+      <div className={`user-detail-info-text ${compact ? 'user-detail-info-text-compact' : ''}`}>
         <span className="user-detail-info-label">
           {label}
         </span>
 
         <span
           className={`user-detail-info-value ${accent
-            ? 'user-detail-info-value-accent'
-            : ''
+              ? 'user-detail-info-value-accent'
+              : ''
+            } ${compact
+              ? 'user-detail-info-value-compact'
+              : ''
             }`}
         >
           {value}
@@ -818,6 +822,7 @@ function EquipmentField({
   label,
   value,
   accent = false,
+  compact = false,
 }) {
   return (
     <div className="user-detail-equipment-field">
