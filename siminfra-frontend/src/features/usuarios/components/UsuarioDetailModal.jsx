@@ -24,7 +24,12 @@ import {
   Cloud,
   Hash,
   Cpu,
+  FileText,
 } from 'lucide-react';
+
+import {
+  getActaEntregaUsuario,
+} from '../../../api/usuariosApi';
 
 import {
   equipmentUsesHostname,
@@ -53,6 +58,81 @@ export default function UsuarioDetailModal({
   if (!usuario) {
     return null;
   }
+
+
+  const [generatingActa, setGeneratingActa] =
+    useState(false);
+
+  const handleGenerateActa = async () => {
+    if (!usuario?.id || generatingActa) {
+      return;
+    }
+
+    /*
+      Abrimos primero la pestaña porque algunos
+      navegadores bloquean window.open() si se
+      ejecuta después de un await.
+    */
+    const pdfWindow = window.open(
+      '',
+      '_blank'
+    );
+
+    try {
+      setGeneratingActa(true);
+
+      const pdfBlob =
+        await getActaEntregaUsuario(
+          usuario.id
+        );
+
+      const pdfUrl =
+        URL.createObjectURL(
+          new Blob(
+            [pdfBlob],
+            {
+              type: 'application/pdf',
+            }
+          )
+        );
+
+      if (pdfWindow) {
+        pdfWindow.location.href = pdfUrl;
+      } else {
+        window.open(
+          pdfUrl,
+          '_blank',
+          'noopener,noreferrer'
+        );
+      }
+
+      /*
+        Dejamos un tiempo antes de liberar
+        la URL para que el navegador cargue
+        correctamente el PDF.
+      */
+      setTimeout(() => {
+        URL.revokeObjectURL(pdfUrl);
+      }, 60000);
+
+    } catch (error) {
+      console.error(
+        'Error generando acta:',
+        error
+      );
+
+      if (pdfWindow) {
+        pdfWindow.close();
+      }
+
+      alert(
+        'No se pudo generar el Acta de Entrega.'
+      );
+
+    } finally {
+      setGeneratingActa(false);
+    }
+  };
 
 
   /* =========================
@@ -198,14 +278,34 @@ export default function UsuarioDetailModal({
             </div>
           </div>
 
-          <button
-            type="button"
-            className="user-detail-close"
-            onClick={onClose}
-            title="Cerrar"
-          >
-            <X size={21} />
-          </button>
+          <div className="user-detail-header-actions">
+
+            <button
+              type="button"
+              className="user-detail-acta-button"
+              onClick={handleGenerateActa}
+              disabled={generatingActa}
+              title="Crear Acta de Entrega"
+            >
+              <FileText size={17} />
+
+              <span>
+                {generatingActa
+                  ? 'Generando...'
+                  : 'Crear Acta de Entrega'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="user-detail-close"
+              onClick={onClose}
+              title="Cerrar"
+            >
+              <X size={21} />
+            </button>
+
+          </div>
         </div>
 
 
@@ -394,15 +494,14 @@ export default function UsuarioDetailModal({
 
             <SectionHeader
               title="Equipos Asignados"
-              subtitle={`${usuario.equipos?.length || 0} ${
-                usuario.equipos?.length === 1
-                  ? 'equipo vinculado'
-                  : 'equipos vinculados'
-              }`}
+              subtitle={`${usuario.equipos?.length || 0} ${usuario.equipos?.length === 1
+                ? 'equipo vinculado'
+                : 'equipos vinculados'
+                }`}
             />
 
             {usuario.equipos &&
-            usuario.equipos.length > 0 ? (
+              usuario.equipos.length > 0 ? (
 
               <div className="user-detail-equipment-list">
 
@@ -455,9 +554,8 @@ export default function UsuarioDetailModal({
                               </span>
 
                               <h4>
-                                {`${equipo.marca || ''} ${
-                                  equipo.modelo || ''
-                                }`.trim() ||
+                                {`${equipo.marca || ''} ${equipo.modelo || ''
+                                  }`.trim() ||
                                   'Sin marca / modelo'}
                               </h4>
                             </div>
@@ -504,39 +602,39 @@ export default function UsuarioDetailModal({
 
                           {tipoEquipo ===
                             'Celular' && (
-                            <>
-                              <EquipmentField
-                                icon={Smartphone}
-                                label="IMEI"
-                                value={
-                                  equipo.imei ||
-                                  'N/I'
-                                }
-                              />
+                              <>
+                                <EquipmentField
+                                  icon={Smartphone}
+                                  label="IMEI"
+                                  value={
+                                    equipo.imei ||
+                                    'N/I'
+                                  }
+                                />
 
-                              <EquipmentField
-                                icon={KeyRound}
-                                label="PIN"
-                                value={
-                                  equipo.pin ||
-                                  'N/I'
-                                }
-                              />
-                            </>
-                          )}
+                                <EquipmentField
+                                  icon={KeyRound}
+                                  label="PIN"
+                                  value={
+                                    equipo.pin ||
+                                    'N/I'
+                                  }
+                                />
+                              </>
+                            )}
 
                           {tipoEquipo ===
                             'Mac' && (
-                            <EquipmentField
-                              icon={Cloud}
-                              label="Cuenta iCloud"
-                              value={
-                                equipo
-                                  .icloud_cuenta ||
-                                'N/I'
-                              }
-                            />
-                          )}
+                              <EquipmentField
+                                icon={Cloud}
+                                label="Cuenta iCloud"
+                                value={
+                                  equipo
+                                    .icloud_cuenta ||
+                                  'N/I'
+                                }
+                              />
+                            )}
 
                         </div>
 
@@ -611,11 +709,10 @@ function InfoCard({
         </span>
 
         <span
-          className={`user-detail-info-value ${
-            accent
-              ? 'user-detail-info-value-accent'
-              : ''
-          }`}
+          className={`user-detail-info-value ${accent
+            ? 'user-detail-info-value-accent'
+            : ''
+            }`}
         >
           {value}
         </span>
@@ -740,11 +837,10 @@ function EquipmentField({
         </span>
 
         <span
-          className={`user-detail-equipment-field-value ${
-            accent
-              ? 'accent'
-              : ''
-          }`}
+          className={`user-detail-equipment-field-value ${accent
+            ? 'accent'
+            : ''
+            }`}
         >
           {value}
         </span>
