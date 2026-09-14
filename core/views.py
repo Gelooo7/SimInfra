@@ -1,5 +1,14 @@
+from django.http import HttpResponse
+from rest_framework.decorators import action
+
+from .services.acta_entrega_pdf import (
+    generar_acta_entrega_pdf
+)
+
 from rest_framework import viewsets, filters
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import (
+    DjangoFilterBackend
+)
 
 from .models import (
     Usuario,
@@ -105,6 +114,63 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         'hostname',
         'ip__direccion_ip'
     ]
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='acta-entrega'
+    )
+    def acta_entrega(self, request, pk=None):
+        usuario = self.get_object()
+
+        # Nombre de la persona logueada
+        entregado_por = ""
+
+        if request.user and request.user.is_authenticated:
+            try:
+                nombre_completo = (
+                    request.user
+                    .get_full_name()
+                    .strip()
+                )
+            except (AttributeError, TypeError):
+                nombre_completo = ""
+
+            entregado_por = (
+                nombre_completo
+                or getattr(
+                    request.user,
+                    'username',
+                    ''
+                )
+                or str(request.user)
+            )
+
+        pdf_buffer = generar_acta_entrega_pdf(
+            usuario=usuario,
+            entregado_por=entregado_por,
+        )
+
+        identificador = getattr(
+            usuario,
+            'usuario_red',
+            None
+        ) or usuario.pk
+
+        nombre_archivo = (
+            f"Acta_Entrega_{identificador}.pdf"
+        )
+
+        response = HttpResponse(
+            pdf_buffer.getvalue(),
+            content_type='application/pdf',
+        )
+
+        response['Content-Disposition'] = (
+            f'inline; filename="{nombre_archivo}"'
+        )
+
+        return response
 
 
 class EquipamientoViewSet(viewsets.ModelViewSet):

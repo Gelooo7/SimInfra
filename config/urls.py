@@ -1,10 +1,14 @@
 from django.contrib import admin
+
 from django.urls import path, include
+
 from rest_framework.routers import DefaultRouter
+
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
 from core.views import (
     UsuarioViewSet,
     EquipamientoViewSet,
@@ -12,18 +16,75 @@ from core.views import (
     IPViewSet,
     AnexoViewSet,
     PCGenericoViewSet,
+    ServidorViewSet,
 )
 
+
 router = DefaultRouter()
-router.register(r'usuarios', UsuarioViewSet, basename='usuario')
-router.register(r'equipos', EquipamientoViewSet, basename='equipo')
-router.register(r'perfiles-genericos', PerfilGenericoViewSet, basename='perfilgenerico')
-router.register(r'anexos', AnexoViewSet, basename='anexo')
-router.register(r'ips', IPViewSet, basename='ip')
-router.register(r'pcs-genericos', PCGenericoViewSet, basename='pc')
+
+router.register(
+    r'usuarios',
+    UsuarioViewSet,
+    basename='usuario'
+)
+
+router.register(
+    r'equipos',
+    EquipamientoViewSet,
+    basename='equipo'
+)
+
+router.register(
+    r'perfiles-genericos',
+    PerfilGenericoViewSet,
+    basename='perfilgenerico'
+)
+
+router.register(
+    r'anexos',
+    AnexoViewSet,
+    basename='anexo'
+)
+
+router.register(
+    r'ips',
+    IPViewSet,
+    basename='ip'
+)
+
+router.register(
+    r'pcs-genericos',
+    PCGenericoViewSet,
+    basename='pc'
+)
+
+router.register(
+    r'servidores',
+    ServidorViewSet,
+    basename='servidor'
+)
+
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/', include(router.urls)),
+    path(
+        'admin/',
+        admin.site.urls
+    ),
+
+    path(
+        'api/token/',
+        TokenObtainPairView.as_view(),
+        name='token_obtain_pair'
+    ),
+
+    path(
+        'api/token/refresh/',
+        TokenRefreshView.as_view(),
+        name='token_refresh'
+    ),
+
+    path(
+        'api/',
+        include(router.urls)
+    ),
 ]
