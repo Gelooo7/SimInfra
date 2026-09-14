@@ -260,30 +260,6 @@ export default function UsuarioEditForm({
         }
       />
 
-      {/* Celular */}
-      <div>
-        <label
-          style={{
-            ...labelStyle,
-            color: '#2563eb'
-          }}
-        >
-          Celular
-        </label>
-
-        <input
-          type="text"
-          value={usuario.celular || ''}
-          onChange={(e) =>
-            updateField(
-              'celular',
-              e.target.value
-            )
-          }
-          style={inputStyle}
-        />
-      </div>
-
       {/* IP */}
       <div>
         <label

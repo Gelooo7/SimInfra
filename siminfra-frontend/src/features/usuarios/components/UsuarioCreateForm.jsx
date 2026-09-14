@@ -265,31 +265,6 @@ export default function UsuarioCreateForm({
         }
       />
 
-      {/* Celular */}
-      <div>
-        <label
-          style={{
-            ...labelStyle,
-            color: '#2563eb'
-          }}
-        >
-          Celular
-        </label>
-
-        <input
-          type="text"
-          placeholder="Ej: +56912345678"
-          value={usuario.celular || ''}
-          onChange={(e) =>
-            updateField(
-              'celular',
-              e.target.value
-            )
-          }
-          style={inputStyle}
-        />
-      </div>
-
       {/* IP */}
       <div>
         <label

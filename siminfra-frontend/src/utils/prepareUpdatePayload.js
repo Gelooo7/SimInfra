@@ -23,6 +23,7 @@ export const prepareUpdatePayload = (
 
   if (tab === 'usuarios') {
     delete payload.ip_asignada;
+    delete payload.celular;
 
     if (payload.ip_seleccionada === '') {
       payload.ip_seleccionada = null;
