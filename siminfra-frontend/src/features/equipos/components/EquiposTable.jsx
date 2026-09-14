@@ -63,8 +63,7 @@ export default function EquiposTable({
         onClick={() =>
           onDelete(
             equipo.id,
-            `${equipo.marca || ''} ${
-              equipo.modelo || ''
+            `${equipo.marca || ''} ${equipo.modelo || ''
             }`
           )
         }
@@ -167,6 +166,44 @@ export default function EquiposTable({
     return identifier;
   };
 
+  /* =========================
+   DETALLES SEGÚN TIPO
+========================= */
+
+  const renderEquipmentDetails = (equipo) => {
+    const tipo = formatEquipmentType(equipo.tipo)
+      .trim()
+      .toLowerCase();
+
+    if (tipo === 'celular') {
+      return (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+            fontSize: '0.78rem'
+          }}
+        >
+          <span>
+            <strong>IMEI:</strong>{' '}
+            {equipo.imei || 'N/I'}
+          </span>
+
+          <span>
+            <strong>PIN:</strong>{' '}
+            {equipo.pin || 'N/I'}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <span className="equipo-unassigned">
+        N/A
+      </span>
+    );
+  };
 
   return (
     <>
@@ -196,6 +233,10 @@ export default function EquiposTable({
 
               <th>
                 {getIdentifierColumnLabel()}
+              </th>
+
+              <th>
+                Detalles
               </th>
 
               <th>
@@ -232,9 +273,8 @@ export default function EquiposTable({
                 {/* MARCA / MODELO */}
 
                 <td>
-                  {`${equipo.marca || ''} ${
-                    equipo.modelo || ''
-                  }`.trim() || 'N/I'}
+                  {`${equipo.marca || ''} ${equipo.modelo || ''
+                    }`.trim() || 'N/I'}
                 </td>
 
 
@@ -257,6 +297,13 @@ export default function EquiposTable({
 
                 <td className="equipo-identifier">
                   {renderIdentifier(equipo)}
+                </td>
+
+
+                {/* DETALLES */}
+
+                <td>
+                  {renderEquipmentDetails(equipo)}
                 </td>
 
 
@@ -336,9 +383,8 @@ export default function EquiposTable({
 
                   <div>
                     <h3>
-                      {`${equipo.marca || ''} ${
-                        equipo.modelo || ''
-                      }`.trim() ||
+                      {`${equipo.marca || ''} ${equipo.modelo || ''
+                        }`.trim() ||
                         'Equipo sin marca/modelo'}
                     </h3>
 
@@ -351,11 +397,10 @@ export default function EquiposTable({
                 </div>
 
                 <span
-                  className={`equipo-card-status ${
-                    equipo.usuario_nombre
-                      ? 'equipo-card-status-assigned'
-                      : 'equipo-card-status-stock'
-                  }`}
+                  className={`equipo-card-status ${equipo.usuario_nombre
+                    ? 'equipo-card-status-assigned'
+                    : 'equipo-card-status-stock'
+                    }`}
                 >
                   {equipo.estado ||
                     (equipo.usuario_nombre
@@ -396,6 +441,22 @@ export default function EquiposTable({
                     }
                     monospace
                   />
+                )}
+
+                {formatEquipmentType(equipo.tipo) === 'Celular' && (
+                  <>
+                    <MobileField
+                      label="IMEI"
+                      value={equipo.imei || 'N/I'}
+                      monospace
+                    />
+
+                    <MobileField
+                      label="PIN"
+                      value={equipo.pin || 'N/I'}
+                      monospace
+                    />
+                  </>
                 )}
 
                 <MobileField
@@ -466,22 +527,20 @@ function MobileField({
 }) {
   return (
     <div
-      className={`equipo-mobile-field ${
-        full
-          ? 'equipo-mobile-field-full'
-          : ''
-      }`}
+      className={`equipo-mobile-field ${full
+        ? 'equipo-mobile-field-full'
+        : ''
+        }`}
     >
       <span className="equipo-mobile-label">
         {label}
       </span>
 
       <span
-        className={`equipo-mobile-value ${
-          monospace
-            ? 'equipo-mobile-monospace'
-            : ''
-        }`}
+        className={`equipo-mobile-value ${monospace
+          ? 'equipo-mobile-monospace'
+          : ''
+          }`}
       >
         {value}
       </span>
