@@ -14,6 +14,51 @@ export default function UsuariosTable({
   onDelete,
   renderStatusBadge,
 }) {
+
+  /* =========================
+     CELULAR CORPORATIVO
+     Fuente: Equipamiento
+  ========================= */
+
+  const getCelularCorporativo = (usuario) => {
+    const celulares = (usuario.equipos || []).filter(
+      (equipo) => {
+        const tipo = String(
+          equipo.tipo || ''
+        )
+          .trim()
+          .toUpperCase();
+
+        return (
+          tipo === 'CEL' ||
+          tipo === 'CELULAR'
+        );
+      }
+    );
+
+    const numeros = celulares
+      .map(
+        (equipo) =>
+          equipo.numero_telefono
+      )
+      .filter(Boolean);
+
+    const numerosUnicos = [
+      ...new Set(numeros)
+    ];
+
+    if (numerosUnicos.length === 0) {
+      return 'N/I';
+    }
+
+    return numerosUnicos.join(' / ');
+  };
+
+
+  /* =========================
+     ACCIONES
+  ========================= */
+
   const Actions = ({ usuario }) => (
     <div className="usuarios-actions">
       <button
@@ -61,6 +106,11 @@ export default function UsuariosTable({
     </div>
   );
 
+
+  /* =========================
+     SIN RESULTADOS
+  ========================= */
+
   if (usuarios.length === 0) {
     return (
       <div className="usuarios-empty">
@@ -69,19 +119,30 @@ export default function UsuariosTable({
     );
   }
 
+
+  /* =========================
+     TABLA
+  ========================= */
+
   return (
     <div className="usuarios-table-desktop">
       <table className="usuarios-table">
         <thead>
           <tr>
             <th>Nombre Completo</th>
+
             <th>Cargo</th>
+
             <th>Estado</th>
+
             <th>Usuario Red</th>
+
             <th>Hostname</th>
+
             <th>Correo Corp.</th>
+
             <th className="usuario-col-celular">
-              Celular
+              Celular Corporativo
             </th>
 
             <th className="usuarios-actions-header">
@@ -94,10 +155,13 @@ export default function UsuariosTable({
           {usuarios.map((usuario) => (
             <tr
               key={usuario.id}
-              onClick={() => onSelectUser(usuario)}
+              onClick={() =>
+                onSelectUser(usuario)
+              }
             >
               <td className="usuario-name">
-                {usuario.nombre_completo || 'N/I'}
+                {usuario.nombre_completo ||
+                  'N/I'}
               </td>
 
               <td className="usuario-secondary">
@@ -105,11 +169,14 @@ export default function UsuariosTable({
               </td>
 
               <td>
-                {renderStatusBadge(usuario.estado)}
+                {renderStatusBadge(
+                  usuario.estado
+                )}
               </td>
 
               <td className="usuario-red">
-                {usuario.usuario_red || 'N/I'}
+                {usuario.usuario_red ||
+                  'N/I'}
               </td>
 
               <td className="usuario-hostname">
@@ -117,11 +184,14 @@ export default function UsuariosTable({
               </td>
 
               <td className="usuario-correo">
-                {usuario.correo_corp || 'N/I'}
+                {usuario.correo_corp ||
+                  'N/I'}
               </td>
 
               <td className="usuario-col-celular">
-                {usuario.celular || 'N/I'}
+                {getCelularCorporativo(
+                  usuario
+                )}
               </td>
 
               <td className="usuarios-actions-cell">
