@@ -313,24 +313,56 @@ class Equipamiento(models.Model):
         blank=True
     )
 
+
+
+    
+
     def save(self, *args, **kwargs):
-        # Equipo sin usuario no puede quedar como ASIGNADO
+
+        # =====================================
+        # COHERENCIA DE ASIGNACIÓN
+        # =====================================
+
         if not self.usuario_id:
             if self.estado == 'ASIGNADO':
                 self.estado = 'STOCK'
 
             self.fecha_asignacion = None
 
-        # Equipo con usuario no puede quedar como STOCK
         elif self.estado == 'STOCK':
             self.estado = 'ASIGNADO'
 
-        # Encriptar contraseña iCloud
-        if self.icloud_password and not self.icloud_password.startswith('ENC::'):
-            self.icloud_password = encrypt_val(self.icloud_password)
+
+        # =====================================
+        # SINCRONIZAR HOSTNAME
+        # Usuario -> Notebook / Mac
+        # =====================================
+
+        if (
+            self.usuario_id and
+            self.tipo in ['Notebook', 'Mac']
+        ):
+            self.hostname = (
+                self.usuario.hostname.strip()
+                if self.usuario.hostname
+                else None
+            )
+
+
+        # =====================================
+        # ENCRIPTAR CONTRASEÑA ICLOUD
+        # =====================================
+
+        if (
+            self.icloud_password and
+            not self.icloud_password.startswith('ENC::')
+        ):
+            self.icloud_password = encrypt_val(
+                self.icloud_password
+            )
 
         super().save(*args, **kwargs)
-
+    
     def __str__(self):
         return f"{self.tipo} - {self.marca} {self.modelo} ({self.numero_serie})"
 
@@ -1012,43 +1044,52 @@ def auto_sync_usuario(sender, instance, created, **kwargs):
         return
 
     # =====================================
-    # SINCRONIZAR CELULAR
-    # Usuario -> Equipamiento
+    # SINCRONIZAR HOSTNAME
+    # Usuario -> Notebook / Mac asignado
     # =====================================
-    nuevo_numero = (
-        instance.celular.strip()
-        if instance.celular
+    nuevo_hostname = (
+        instance.hostname.strip()
+        if instance.hostname
         else None
     )
 
-    celulares_asignados = Equipamiento.objects.filter(
+    equipos_con_hostname = Equipamiento.objects.filter(
         usuario=instance,
-        tipo='Celular'
+        tipo__in=[
+            'Notebook',
+            'Mac'
+        ]
     )
 
-    for equipo in celulares_asignados:
+    for equipo in equipos_con_hostname:
 
-        numero_actual = (
-            equipo.numero_telefono.strip()
-            if equipo.numero_telefono
+        hostname_actual = (
+            equipo.hostname.strip()
+            if equipo.hostname
             else None
         )
 
-        if numero_actual != nuevo_numero:
-            equipo.numero_telefono = nuevo_numero
+        if hostname_actual != nuevo_hostname:
+            equipo.hostname = nuevo_hostname
 
             equipo.save(
                 update_fields=[
-                    'numero_telefono'
+                    'hostname'
                 ]
             )
 
     # =====================================
-    # VINCULAR EQUIPO POR HOSTNAME
+    # VINCULAR EQUIPO DISPONIBLE
+    # POR HOSTNAME
     # =====================================
-    if instance.hostname:
+    if nuevo_hostname:
         Equipamiento.objects.filter(
-            hostname__iexact=instance.hostname.strip()
+            usuario__isnull=True,
+            tipo__in=[
+                'Notebook',
+                'Mac'
+            ],
+            hostname__iexact=nuevo_hostname
         ).update(
             usuario=instance,
             estado='ASIGNADO'
