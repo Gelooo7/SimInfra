@@ -55,24 +55,17 @@ export default function UsuarioDetailModal({
   const [copiedPassword, setCopiedPassword] =
     useState(null);
 
+  const [generatingActa, setGeneratingActa] =
+    useState(false);
+
   if (!usuario) {
     return null;
   }
-
-
-  const [generatingActa, setGeneratingActa] =
-    useState(false);
 
   const handleGenerateActa = async () => {
     if (!usuario?.id || generatingActa) {
       return;
     }
-
-    /*
-      Abrimos primero la pestaña porque algunos
-      navegadores bloquean window.open() si se
-      ejecuta después de un await.
-    */
     const pdfWindow = window.open(
       '',
       '_blank'

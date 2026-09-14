@@ -91,8 +91,11 @@ export default function UsuarioCreateForm({
           Departamento / Área *
         </label>
 
-        <select
+        <input
+          type="text"
           required
+          list="departments-create-options"
+          placeholder="Ej: Operaciones, Tecnología, Finanzas..."
           value={usuario.dpto_area || ''}
           onChange={(e) =>
             updateField(
@@ -101,20 +104,16 @@ export default function UsuarioCreateForm({
             )
           }
           style={inputStyle}
-        >
-          <option value="">
-            Selecciona un área...
-          </option>
+        />
 
+        <datalist id="departments-create-options">
           {departments.map((department, index) => (
             <option
               key={index}
               value={department}
-            >
-              {department}
-            </option>
+            />
           ))}
-        </select>
+        </datalist>
       </div>
 
       {/* Cargo */}

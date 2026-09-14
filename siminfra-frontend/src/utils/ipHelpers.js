@@ -31,31 +31,31 @@ export const IP_SEGMENTS = [
   {
     id: '172.23',
     label: '172.23.1.1/24',
-    network: 'Vlan ( )',
+    network: 'Vlan (10)',
     prefix: '172.23.',
   },
   {
     id: '172.25',
     label: '172.25.1.1/24',
-    network: 'Vlan ( )',
+    network: 'Vlan (9)',
     prefix: '172.25.',
   },
   {
     id: '192.168.10',
     label: '192.168.10.1/24',
-    network: 'Vlan ( )',
+    network: 'Vlan (12)',
     prefix: '192.168.10.',
   },
   {
     id: '192.168.20',
     label: '192.168.20.1/24',
-    network: 'Vlan ( )',
+    network: 'Vlan (20)',
     prefix: '192.168.20.',
   },
   {
     id: '192.168.90',
     label: '192.168.90.1/24',
-    network: 'Vlan ( )',
+    network: 'Vlan (90)',
     prefix: '192.168.90.',
   },
 ];

@@ -408,6 +408,38 @@ export default function App() {
           />
         )}
 
+        {/* ACCIONES DE USUARIOS SIN ÁREA SELECCIONADA */}
+        {tab === 'usuarios' && !selectedDpto && (
+          <ModuleToolbar
+            activeTab={tab}
+            departments={dptosList}
+
+            selectedDepartment={selectedDpto}
+            onDepartmentChange={setSelectedDpto}
+
+            selectedEquipmentCategory={
+              selectedCategoriaEquipo
+            }
+            onEquipmentCategoryChange={
+              setSelectedCategoriaEquipo
+            }
+
+            selectedIpStatus={selectedEstadoIP}
+            onIpStatusChange={setSelectedEstadoIP}
+
+            selectedAnexoStatus={
+              selectedEstadoAnexo
+            }
+            onAnexoStatusChange={
+              setSelectedEstadoAnexo
+            }
+
+            search={search}
+            onSearchChange={setSearch}
+            onCreate={handleOpenCreateModal}
+          />
+        )}
+
         {/* SEGMENTOS DE IP */}
         {tab === 'ips' && (
           <IpSegmentCards
@@ -416,7 +448,7 @@ export default function App() {
             onSelectSegment={setSelectedIpSegment}
           />
         )}
-
+        
         {/* RESULTADOS DEL MÓDULO */}
         {(
           (tab === 'equipos' && selectedCategoriaEquipo) ||

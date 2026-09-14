@@ -26,6 +26,10 @@ export default function IpCreateForm({
     fontWeight: 'bold'
   };
 
+  const isAssigned =
+    Boolean(ip.usuario) ||
+    Boolean(ip.asignado_otro?.trim());
+
   return (
     <>
       {/* Dirección IP */}
@@ -61,7 +65,16 @@ export default function IpCreateForm({
               e.target.value
             )
           }
-          style={inputStyle}
+          disabled={isAssigned}
+          style={{
+            ...inputStyle,
+            backgroundColor: isAssigned
+              ? '#f1f5f9'
+              : '#fff',
+            cursor: isAssigned
+              ? 'not-allowed'
+              : 'pointer'
+          }}
         >
           <option value="LIBRE">
             🟢 Libre
@@ -94,13 +107,21 @@ export default function IpCreateForm({
 
         <select
           value={ip.usuario || ''}
-          onChange={(e) =>
+          onChange={(e) => {
+            const usuarioId =
+              e.target.value || null;
+
             onChange({
               ...ip,
-              usuario: e.target.value || null,
-              asignado_otro: ''
-            })
-          }
+              usuario: usuarioId,
+              asignado_otro: '',
+              estado: usuarioId
+                ? 'RESERVADA'
+                : ip.estado === 'RESERVADA'
+                  ? 'LIBRE'
+                  : ip.estado
+            });
+          }}
           style={inputStyle}
         >
           <option value="">
@@ -136,12 +157,19 @@ export default function IpCreateForm({
             type="text"
             placeholder="Ej: Servidor DB / CCTV Piso 1"
             value={ip.asignado_otro || ''}
-            onChange={(e) =>
-              updateField(
-                'asignado_otro',
-                e.target.value
-              )
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+
+              onChange({
+                ...ip,
+                asignado_otro: value,
+                estado: value.trim()
+                  ? 'RESERVADA'
+                  : ip.estado === 'RESERVADA'
+                    ? 'LIBRE'
+                    : ip.estado
+              });
+            }}
             style={inputStyle}
           />
         </div>

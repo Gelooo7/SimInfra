@@ -60,6 +60,12 @@ export default function IpEditForm({
               e.target.value
             )
           }
+
+          disabled={
+            Boolean(ip.usuario) ||
+            Boolean(ip.asignado_otro?.trim())
+          }
+          
           style={inputStyle}
         >
           <option value="LIBRE">
@@ -93,13 +99,21 @@ export default function IpEditForm({
 
         <select
           value={ip.usuario || ''}
-          onChange={(e) =>
+          onChange={(e) => {
+            const usuarioId =
+              e.target.value || null;
+
             onChange({
               ...ip,
-              usuario: e.target.value || null,
-              asignado_otro: ''
-            })
-          }
+              usuario: usuarioId,
+              asignado_otro: '',
+              estado: usuarioId
+                ? 'RESERVADA'
+                : ip.estado === 'RESERVADA'
+                  ? 'LIBRE'
+                  : ip.estado
+            });
+          }}
           style={inputStyle}
         >
           <option value="">
@@ -135,12 +149,19 @@ export default function IpEditForm({
             type="text"
             placeholder="Ej: Servidor DB / CCTV Piso 1"
             value={ip.asignado_otro || ''}
-            onChange={(e) =>
-              updateField(
-                'asignado_otro',
-                e.target.value
-              )
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+
+              onChange({
+                ...ip,
+                asignado_otro: value,
+                estado: value.trim()
+                  ? 'RESERVADA'
+                  : ip.estado === 'RESERVADA'
+                    ? 'LIBRE'
+                    : ip.estado
+              });
+            }}
             style={inputStyle}
           />
         </div>
