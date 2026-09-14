@@ -200,11 +200,14 @@ def _get_estado_equipo(equipo):
 
 
 def _get_accesorios(equipo):
-    """
-    Por ahora se mantiene vacío, tal como conversamos.
-    Más adelante puede obtenerse desde el modelo.
-    """
-    return ""
+    return _safe(
+        getattr(
+            equipo,
+            "accesorios",
+            ""
+        ),
+        "Sin accesorios"
+    )
 
 
 # =========================================================

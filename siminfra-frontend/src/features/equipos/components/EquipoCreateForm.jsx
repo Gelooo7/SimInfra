@@ -496,6 +496,34 @@ export default function EquipoCreateForm({
       </div>
 
       {/* =========================
+          ACCESORIOS
+      ========================= */}
+
+      <div>
+        <label style={labelStyle}>
+          Accesorios incluidos
+        </label>
+
+        <textarea
+          rows={3}
+          maxLength={255}
+          value={equipo.accesorios || ''}
+          onChange={(e) =>
+            updateField(
+              'accesorios',
+              e.target.value
+            )
+          }
+          placeholder="Ej: Cargador, bolso, mouse inalámbrico"
+          style={{
+            ...inputStyle,
+            resize: 'vertical',
+            fontFamily: 'inherit'
+          }}
+        />
+      </div>
+
+      {/* =========================
           USUARIO
       ========================= */}
 

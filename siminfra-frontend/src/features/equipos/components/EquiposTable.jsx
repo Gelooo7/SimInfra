@@ -175,6 +175,13 @@ export default function EquiposTable({
       .trim()
       .toLowerCase();
 
+    const accesorios =
+      equipo.accesorios?.trim() || '';
+
+    // =========================
+    // CELULAR
+    // =========================
+
     if (tipo === 'celular') {
       return (
         <div
@@ -194,6 +201,31 @@ export default function EquiposTable({
             <strong>PIN:</strong>{' '}
             {equipo.pin || 'N/I'}
           </span>
+
+          {accesorios && (
+            <span>
+              <strong>Accesorios:</strong>{' '}
+              {accesorios}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // =========================
+    // RESTO DE EQUIPOS
+    // =========================
+
+    if (accesorios) {
+      return (
+        <div
+          style={{
+            fontSize: '0.78rem',
+            lineHeight: '1.3'
+          }}
+        >
+          <strong>Accesorios:</strong>{' '}
+          {accesorios}
         </div>
       );
     }
@@ -440,6 +472,14 @@ export default function EquiposTable({
                       'N/A'
                     }
                     monospace
+                  />
+                )}
+
+                {equipo.accesorios?.trim() && (
+                  <MobileField
+                    label="Accesorios"
+                    value={equipo.accesorios}
+                    full
                   />
                 )}
 
