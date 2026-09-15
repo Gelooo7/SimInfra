@@ -95,8 +95,8 @@ export default function PCsGenericosTable({
         <button
           type="button"
           className={`pc-password-button ${copied
-              ? 'pc-password-copied'
-              : ''
+            ? 'pc-password-copied'
+            : ''
             }`}
           onClick={() =>
             copyPassword(pc)
@@ -171,8 +171,7 @@ export default function PCsGenericosTable({
               <th>Modelo</th>
               <th>N.º de Serie</th>
               <th>Activo Fijo</th>
-              <th>RAM</th>
-              <th>Almacenamiento</th>
+              <th>ID TeamViewer</th>
               <th>Observaciones</th>
               <th className="pcs-actions-header">
                 Acciones
@@ -215,12 +214,8 @@ export default function PCsGenericosTable({
                   {pc.activo_fijo || 'N/I'}
                 </td>
 
-                <td>
-                  {pc.ram || 'N/I'}
-                </td>
-
-                <td>
-                  {pc.almacenamiento || 'N/I'}
+                <td className="pc-monospace">
+                  {pc.teamviewer_id || 'N/I'}
                 </td>
 
                 <td className="pc-observations">
@@ -307,15 +302,11 @@ export default function PCsGenericosTable({
               />
 
               <MobileField
-                label="RAM"
-                value={pc.ram || 'N/I'}
-              />
-
-              <MobileField
-                label="Almacenamiento"
+                label="ID TeamViewer"
                 value={
-                  pc.almacenamiento || 'N/I'
+                  pc.teamviewer_id || 'N/I'
                 }
+                monospace
               />
 
               <MobileField
@@ -357,8 +348,8 @@ function MobileField({
   return (
     <div
       className={`pc-mobile-field ${full
-          ? 'pc-mobile-field-full'
-          : ''
+        ? 'pc-mobile-field-full'
+        : ''
         }`}
     >
       <span className="pc-mobile-label">
@@ -367,8 +358,8 @@ function MobileField({
 
       <span
         className={`pc-mobile-value ${monospace
-            ? 'pc-mobile-monospace'
-            : ''
+          ? 'pc-mobile-monospace'
+          : ''
           }`}
       >
         {value}

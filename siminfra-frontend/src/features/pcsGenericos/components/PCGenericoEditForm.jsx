@@ -181,13 +181,15 @@ export default function PCGenericoEditForm({
 
           <input
             type="text"
+            maxLength={20}
             value={pc.numero_serie || ''}
             onChange={(e) =>
               updateField(
                 'numero_serie',
-                e.target.value
+                e.target.value.slice(0, 20)
               )
             }
+            placeholder="Máx. 20 caracteres"
             style={inputStyle}
           />
         </div>
@@ -211,49 +213,25 @@ export default function PCGenericoEditForm({
         </div>
       </div>
 
-      {/* RAM + Almacenamiento */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '0.5rem'
-        }}
-      >
-        <div>
-          <label style={labelStyle}>
-            RAM
-          </label>
+      {/* ID TeamViewer */}
+      <div>
+        <label style={labelStyle}>
+          ID TeamViewer
+        </label>
 
-          <input
-            type="text"
-            value={pc.ram || ''}
-            onChange={(e) =>
-              updateField(
-                'ram',
-                e.target.value
-              )
-            }
-            style={inputStyle}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>
-            Almacenamiento
-          </label>
-
-          <input
-            type="text"
-            value={pc.almacenamiento || ''}
-            onChange={(e) =>
-              updateField(
-                'almacenamiento',
-                e.target.value
-              )
-            }
-            style={inputStyle}
-          />
-        </div>
+        <input
+          type="text"
+          maxLength={20}
+          value={pc.teamviewer_id || ''}
+          onChange={(e) =>
+            updateField(
+              'teamviewer_id',
+              e.target.value
+            )
+          }
+          placeholder="Ej: 123 456 789"
+          style={inputStyle}
+        />
       </div>
 
       {/* Observaciones */}

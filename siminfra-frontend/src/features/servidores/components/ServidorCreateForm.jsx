@@ -40,17 +40,48 @@ export default function ServidorCreateForm({
 
         <input
           type="text"
+          inputMode="decimal"
           required
+          maxLength={15}
           value={servidor.ip || ''}
-          onChange={(e) =>
+          onChange={(e) => {
+            const value = e.target.value.replace(
+              /[^0-9.]/g,
+              ''
+            );
+
+            const partes = value.split('.');
+
+            // Máximo 4 bloques
+            if (partes.length > 4) {
+              return;
+            }
+
+            // Máximo 3 números por bloque
+            if (
+              partes.some(
+                (parte) => parte.length > 3
+              )
+            ) {
+              return;
+            }
+
+            // Cada bloque entre 0 y 255
+            if (
+              partes.some(
+                (parte) =>
+                  parte !== '' &&
+                  Number(parte) > 255
+              )
+            ) {
+              return;
+            }
+
             updateField(
               'ip',
-              e.target.value.replace(
-                /[^0-9.]/g,
-                ''
-              )
-            )
-          }
+              value
+            );
+          }}
           placeholder="Ej: 172.23.10.15"
           style={{
             ...inputStyle,

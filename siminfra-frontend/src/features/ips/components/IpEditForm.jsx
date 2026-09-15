@@ -26,6 +26,10 @@ export default function IpEditForm({
     fontWeight: 'bold'
   };
 
+  const usuariosAsignables = usuarios.filter(
+    (usuario) => usuario.estado === 'ACTIVO'
+  );
+
   return (
     <>
       {/* Dirección IP */}
@@ -65,7 +69,7 @@ export default function IpEditForm({
             Boolean(ip.usuario) ||
             Boolean(ip.asignado_otro?.trim())
           }
-          
+
           style={inputStyle}
         >
           <option value="LIBRE">
@@ -120,7 +124,7 @@ export default function IpEditForm({
             Sin Asignar (Ninguno)
           </option>
 
-          {usuarios.map((usuario) => (
+          {usuariosAsignables.map((usuario) => (
             <option
               key={usuario.id}
               value={usuario.id}

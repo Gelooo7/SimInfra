@@ -255,7 +255,7 @@ class Equipamiento(models.Model):
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
     numero_serie = models.CharField(
-    max_length=100,
+    max_length=20,
     unique=True,
     null=True,
     blank=True
@@ -461,26 +461,20 @@ class PCGenerico(models.Model):
     )
 
     numero_serie = models.CharField(
-        max_length=100,
+        max_length=20,
         unique=True,
         null=True,
         blank=True
     )
 
     activo_fijo = models.CharField(
-        max_length=100,
+        max_length=12,
         null=True,
         blank=True
     )
 
-    ram = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
-    almacenamiento = models.CharField(
-        max_length=100,
+    teamviewer_id = models.CharField(
+        max_length=20,
         null=True,
         blank=True
     )
@@ -601,22 +595,15 @@ def track_historial_pc_generico(sender, instance, **kwargs):
     )
 
     add_cambio(
-        "RAM",
-        pc_previo.ram,
-        instance.ram
+        "ID TeamViewer",
+        pc_previo.teamviewer_id,
+        instance.teamviewer_id
     )
-
     add_cambio(
-        "Almacenamiento",
-        pc_previo.almacenamiento,
-        instance.almacenamiento
-    )
-
-    add_cambio(
-        "Observaciones",
-        pc_previo.observaciones,
-        instance.observaciones
-    )
+            "Observaciones",
+            pc_previo.observaciones,
+            instance.observaciones
+        )
 
     # Comparar contraseña desencriptada para evitar
     # registrar falsos cambios por el cifrado

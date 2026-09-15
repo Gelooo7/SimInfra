@@ -93,6 +93,10 @@ export default function PerfilesTable({
               Área
             </th>
 
+            <th className="perfil-col-observaciones">
+              Observaciones
+            </th>
+
             <th className="perfiles-actions-header">
               Acciones
             </th>
@@ -161,11 +165,10 @@ export default function PerfilesTable({
 
                       <button
                         type="button"
-                        className={`perfil-password-action ${
-                          passwordCopied
-                            ? 'is-copied'
-                            : ''
-                        }`}
+                        className={`perfil-password-action ${passwordCopied
+                          ? 'is-copied'
+                          : ''
+                          }`}
                         onClick={() =>
                           copyPassword(perfil)
                         }
@@ -203,6 +206,11 @@ export default function PerfilesTable({
                   {perfil.dpto_area || 'N/I'}
                 </td>
 
+                {/* OBSERVACIONES */}
+                <td className="perfil-col-observaciones">
+                  {perfil.observaciones || 'Sin observaciones'}
+                </td>
+
                 {/* ACCIONES */}
                 <td className="perfiles-actions-cell">
                   <div className="perfiles-actions">
@@ -225,7 +233,7 @@ export default function PerfilesTable({
                         onDelete(
                           perfil.id,
                           perfil.nombre ||
-                            perfil.usuario
+                          perfil.usuario
                         )
                       }
                       title="Eliminar perfil"

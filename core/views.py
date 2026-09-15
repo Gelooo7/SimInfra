@@ -263,8 +263,7 @@ class PCGenericoViewSet(
         'modelo',
         'numero_serie',
         'activo_fijo',
-        'ram',
-        'almacenamiento',
+        'teamviewer_id',
         'observaciones',
     ]
 

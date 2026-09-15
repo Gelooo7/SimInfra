@@ -17,11 +17,36 @@ from .models import (
 from .crypto import decrypt_val
 
 class IPSerializer(serializers.ModelSerializer):
-    usuario_nombre = serializers.ReadOnlyField(source='usuario.nombre_completo')
+    usuario_nombre = serializers.ReadOnlyField(
+        source='usuario.nombre_completo'
+    )
 
     class Meta:
         model = IP
         fields = '__all__'
+
+    def validate(self, attrs):
+        usuario = attrs.get('usuario')
+
+        # =====================================
+        # VALIDAR ESTADO DEL USUARIO
+        # =====================================
+
+        if (
+            usuario and
+            usuario.estado in [
+                'BAJA',
+                'LICENCIA'
+            ]
+        ):
+            raise serializers.ValidationError({
+                "usuario":
+                    "No se puede asignar una IP "
+                    "a un usuario que se encuentra "
+                    "de baja o en licencia."
+            })
+
+        return attrs
 
 
 class ServidorSerializer(serializers.ModelSerializer):
@@ -185,9 +210,19 @@ class HistorialEquipoSerializer(serializers.ModelSerializer):
 
 
 class EquipamientoSerializer(serializers.ModelSerializer):
-    usuario_red = serializers.ReadOnlyField(source='usuario.usuario_red')
-    usuario_nombre = serializers.ReadOnlyField(source='usuario.nombre_completo')
-    historial = HistorialEquipoSerializer(many=True, read_only=True)
+    usuario_red = serializers.ReadOnlyField(
+        source='usuario.usuario_red'
+    )
+
+    usuario_nombre = serializers.ReadOnlyField(
+        source='usuario.nombre_completo'
+    )
+
+    historial = HistorialEquipoSerializer(
+        many=True,
+        read_only=True
+    )
+
     icloud_password = serializers.SerializerMethodField()
 
     class Meta:
@@ -195,20 +230,142 @@ class EquipamientoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_icloud_password(self, obj):
-        if obj.icloud_password and obj.icloud_password.startswith('ENC::'):
+        if (
+            obj.icloud_password and
+            obj.icloud_password.startswith('ENC::')
+        ):
             return decrypt_val(obj.icloud_password)
+
         return obj.icloud_password
 
     def validate(self, attrs):
-        instance = getattr(self, 'instance', None)
+        instance = getattr(
+            self,
+            'instance',
+            None
+        )
+
         serie = attrs.get('numero_serie')
         af = attrs.get('af')
 
-        if serie and Equipamiento.objects.filter(numero_serie__iexact=serie.strip()).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"numero_serie": "Ya existe un equipo registrado con este N° de Serie."})
+        tipo = attrs.get(
+            'tipo',
+            getattr(instance, 'tipo', None)
+        )
 
-        if af and Equipamiento.objects.filter(af__iexact=af.strip()).exclude(pk=getattr(instance, 'pk', None)).exists():
-            raise serializers.ValidationError({"af": "Ya existe un equipo registrado con este Activo Fijo (AF)."})
+        usuario = attrs.get(
+            'usuario',
+            getattr(instance, 'usuario', None)
+        )
+
+        hostname = attrs.get(
+            'hostname',
+            getattr(instance, 'hostname', None)
+        )
+
+        # =====================================
+        # VALIDAR FORMATO ACTIVO FIJO
+        # =====================================
+
+        if af:
+            af = af.strip()
+
+            if len(af) > 12:
+                raise serializers.ValidationError({
+                    "af":
+                        "El Activo Fijo (AF) permite "
+                        "un máximo de 12 caracteres."
+                })
+
+            if not af.isalnum():
+                raise serializers.ValidationError({
+                    "af":
+                        "El Activo Fijo (AF) solo puede "
+                        "contener letras y números."
+                })
+
+            attrs['af'] = af
+        # =====================================
+        # NÚMERO DE SERIE DUPLICADO
+        # =====================================
+
+        if (
+            serie and
+            Equipamiento.objects.filter(
+                numero_serie__iexact=serie.strip()
+            ).exclude(
+                pk=getattr(instance, 'pk', None)
+            ).exists()
+        ):
+            raise serializers.ValidationError({
+                "numero_serie":
+                    "Ya existe un equipo registrado "
+                    "con este N° de Serie."
+            })
+
+        # =====================================
+        # ACTIVO FIJO DUPLICADO
+        # =====================================
+
+        if (
+            af and
+            Equipamiento.objects.filter(
+                af__iexact=af.strip()
+            ).exclude(
+                pk=getattr(instance, 'pk', None)
+            ).exists()
+        ):
+            raise serializers.ValidationError({
+                "af":
+                    "Ya existe un equipo registrado "
+                    "con este Activo Fijo (AF)."
+            })
+
+        # =====================================
+        # HOSTNAME ÚNICO NOTEBOOK / MAC
+        # =====================================
+
+        if tipo in ['Notebook', 'Mac']:
+
+            # Si tiene usuario asignado,
+            # Usuario.hostname es la fuente de verdad
+            if usuario and usuario.hostname:
+                hostname = usuario.hostname
+
+            if hostname:
+                hostname = hostname.strip()
+
+                if (
+                    Equipamiento.objects.filter(
+                        tipo__in=['Notebook', 'Mac'],
+                        hostname__iexact=hostname
+                    ).exclude(
+                        pk=getattr(instance, 'pk', None)
+                    ).exists()
+                ):
+                    raise serializers.ValidationError({
+                        "hostname":
+                            "Ya existe un Notebook o Mac "
+                            "registrado con este Hostname."
+                    })
+
+        # =====================================
+        # ESTADO DEL USUARIO
+        # =====================================
+
+        if (
+            usuario and
+            usuario.estado in [
+                'BAJA',
+                'LICENCIA'
+            ]
+        ):
+            raise serializers.ValidationError({
+                "usuario":
+                    "No se puede asignar un equipo "
+                    "a un usuario que se encuentra "
+                    "de baja o en licencia."
+            })
 
         return attrs
 
@@ -532,12 +689,9 @@ class PCGenericoSerializer(serializers.ModelSerializer):
                 attrs['activo_fijo'].strip()
             )
 
-        if attrs.get('ram'):
-            attrs['ram'] = attrs['ram'].strip()
-
-        if attrs.get('almacenamiento'):
-            attrs['almacenamiento'] = (
-                attrs['almacenamiento'].strip()
+        if attrs.get('teamviewer_id'):
+            attrs['teamviewer_id'] = (
+                attrs['teamviewer_id'].strip()
             )
 
         if attrs.get('observaciones'):

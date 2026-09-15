@@ -49,6 +49,10 @@ export default function EquipoEditForm({
   const esMac =
     tipoActual === 'Mac';
 
+  const usuariosAsignables = usuarios.filter(
+    (usuario) => usuario.estado === 'ACTIVO'
+  );
+
   const handleTipoChange = (nuevoTipo) => {
     const nuevoEstado =
       normalizeEquipmentFieldsByType(
@@ -186,16 +190,17 @@ export default function EquipoEditForm({
 
         <input
           type="text"
+          maxLength={20}
           value={
             equipo.numero_serie || ''
           }
           onChange={(e) =>
             updateField(
               'numero_serie',
-              e.target.value
+              e.target.value.slice(0, 20)
             )
           }
-          placeholder="Opcional"
+          placeholder="Máx. 20 caracteres"
           style={inputStyle}
         />
       </div>
@@ -475,13 +480,17 @@ export default function EquipoEditForm({
           type="text"
           maxLength={12}
           value={equipo.af || ''}
-          onChange={(e) =>
+          onChange={(e) => {
+            const value = e.target.value
+              .replace(/[^a-zA-Z0-9]/g, '')
+              .slice(0, 12);
+
             updateField(
               'af',
-              e.target.value
-            )
-          }
-          placeholder="Ej: 123456 o SIN AF"
+              value
+            );
+          }}
+          placeholder="Ej: 102401000300 o SINAF"
           style={inputStyle}
         />
       </div>
@@ -542,7 +551,7 @@ export default function EquipoEditForm({
             Sin Asignar (Stock)
           </option>
 
-          {usuarios.map((usuario) => (
+          {usuariosAsignables.map((usuario) => (
             <option
               key={usuario.id}
               value={usuario.id}

@@ -30,6 +30,10 @@ export default function IpCreateForm({
     Boolean(ip.usuario) ||
     Boolean(ip.asignado_otro?.trim());
 
+  const usuariosAsignables = usuarios.filter(
+    (usuario) => usuario.estado === 'ACTIVO'
+  );
+
   return (
     <>
       {/* Dirección IP */}
@@ -128,7 +132,7 @@ export default function IpCreateForm({
             Sin Asignar (Ninguno)
           </option>
 
-          {usuarios.map((usuario) => (
+          {usuariosAsignables.map((usuario) => (
             <option
               key={usuario.id}
               value={usuario.id}
