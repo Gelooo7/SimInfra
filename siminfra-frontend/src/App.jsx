@@ -15,7 +15,19 @@ import IpSegmentCards
   from './features/ips/components/IpSegmentCards';
 
 import { getInitialCreateItem } from './utils/getInitialCreateItem';
+import {
+  exportUsuariosExcel,
+  exportEquiposExcel,
+  exportIpsExcel,
+  exportServidoresExcel,
+  exportPerfilesExcel,
+  exportAnexosExcel,
+  exportPCsGenericosExcel,
+} from './utils/moduleExporters';
+
 import { useModuleCrud } from './hooks/useModuleCrud';
+
+
 
 import LoginPage from './features/auth/components/LoginPage';
 import ModuleCreateModal from './components/modules/ModuleCreateModal';
@@ -348,6 +360,153 @@ export default function App() {
         )
         : data;
 
+  const handleExportUsuarios = () => {
+    try {
+      exportUsuariosExcel({
+        rows: filteredData,
+        selectedDpto,
+      });
+
+      showToast(
+        selectedDpto
+          ? `Excel del área ${selectedDepartmentLabel} exportado correctamente.`
+          : 'Excel general de usuarios exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
+
+  const handleExportEquipos = () => {
+    try {
+      exportEquiposExcel({
+        rows: filteredData,
+        selectedCategoriaEquipo,
+      });
+
+      showToast(
+        selectedCategoriaEquipo
+          ? `Excel de ${selectedEquipmentLabel} exportado correctamente.`
+          : 'Excel general de equipos exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
+
+  const handleExportIps = () => {
+    try {
+      exportIpsExcel({
+        rows: filteredData,
+        selectedIpSegment,
+      });
+
+      showToast(
+        selectedIpSegment
+          ? `Excel del segmento ${selectedIpSegmentLabel} exportado correctamente.`
+          : 'Excel general de IPs exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
+
+  const handleExportServidores = () => {
+    try {
+      exportServidoresExcel({
+        rows: filteredData,
+      });
+
+      showToast(
+        'Excel de servidores exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
+
+  const handleExportPerfiles = () => {
+    try {
+      exportPerfilesExcel({
+        rows: filteredData,
+        selectedDpto,
+      });
+
+      showToast(
+        selectedDpto
+          ? `Excel de perfiles del área ${selectedDpto} exportado correctamente.`
+          : 'Excel general de perfiles exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
+
+  const handleExportAnexos = () => {
+    try {
+      exportAnexosExcel({
+        rows: filteredData,
+      });
+
+      showToast(
+        'Excel de anexos exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
+
+  const handleExportPCsGenericos = () => {
+    try {
+      exportPCsGenericosExcel({
+        rows: filteredData,
+        selectedDpto,
+      });
+
+      showToast(
+        selectedDpto
+          ? `Excel de PCs Genéricos del área ${selectedDpto} exportado correctamente.`
+          : 'Excel general de PCs Genéricos exportado correctamente.',
+        'success'
+      );
+    } catch (error) {
+      showToast(
+        error.message ||
+        'No se pudo exportar el archivo Excel.',
+        'error'
+      );
+    }
+  };
   const equipmentResultsRef = useRef(null);
   const userResultsRef = useRef(null);
   const ipResultsRef = useRef(null);
@@ -542,6 +701,28 @@ export default function App() {
           />
         )}
 
+        {/* ACCIONES DE EQUIPOS SIN CATEGORÍA SELECCIONADA */}
+        {tab === 'equipos' && !selectedCategoriaEquipo && (
+          <ModuleToolbar
+            activeTab={tab}
+            departments={dptosList}
+
+            selectedDepartment={selectedDpto}
+            onDepartmentChange={setSelectedDpto}
+
+            selectedIpStatus={selectedEstadoIP}
+            onIpStatusChange={setSelectedEstadoIP}
+
+            selectedAnexoStatus={selectedEstadoAnexo}
+            onAnexoStatusChange={setSelectedEstadoAnexo}
+
+            search={search}
+            onSearchChange={setSearch}
+            onCreate={handleOpenCreateModal}
+            onExport={handleExportEquipos}
+          />
+        )}
+
         {/* ÁREAS DE USUARIOS */}
         {tab === 'usuarios' && (
           <UserDepartmentCards
@@ -580,6 +761,12 @@ export default function App() {
             search={search}
             onSearchChange={setSearch}
             onCreate={handleOpenCreateModal}
+
+            onExport={
+              tab === 'usuarios'
+                ? handleExportUsuarios
+                : undefined
+            }
           />
         )}
 
@@ -592,6 +779,28 @@ export default function App() {
             ips={ipsList}
             selectedSegment={selectedIpSegment}
             onSelectSegment={setSelectedIpSegment}
+          />
+        )}
+
+        {/* ACCIONES DE IPS SIN SEGMENTO SELECCIONADO */}
+        {tab === 'ips' && !selectedIpSegment && (
+          <ModuleToolbar
+            activeTab={tab}
+            departments={dptosList}
+
+            selectedDepartment={selectedDpto}
+            onDepartmentChange={setSelectedDpto}
+
+            selectedIpStatus={selectedEstadoIP}
+            onIpStatusChange={setSelectedEstadoIP}
+
+            selectedAnexoStatus={selectedEstadoAnexo}
+            onAnexoStatusChange={setSelectedEstadoAnexo}
+
+            search={search}
+            onSearchChange={setSearch}
+            onCreate={handleOpenCreateModal}
+            onExport={handleExportIps}
           />
         )}
 
@@ -720,10 +929,25 @@ export default function App() {
                 onAnexoStatusChange={
                   setSelectedEstadoAnexo
                 }
-
                 search={search}
                 onSearchChange={setSearch}
                 onCreate={handleOpenCreateModal}
+
+                onExport={
+                  tab === 'usuarios'
+                    ? handleExportUsuarios
+                    : tab === 'equipos'
+                      ? handleExportEquipos
+                      : tab === 'ips'
+                        ? handleExportIps
+                        : tab === 'servidores'
+                          ? handleExportServidores
+                          : tab === 'perfiles'
+                            ? handleExportPerfiles
+                            : tab === 'anexos'
+                              ? handleExportAnexos
+                              : undefined
+                }
               />
 
               {/* TABLA PRINCIPAL */}

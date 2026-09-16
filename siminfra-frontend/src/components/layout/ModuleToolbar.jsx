@@ -1,6 +1,7 @@
 import './ModuleToolbar.css';
 
 import {
+  Download,
   Filter,
   Plus
 } from 'lucide-react';
@@ -17,6 +18,7 @@ export default function ModuleToolbar({
   search,
   onSearchChange,
   onCreate,
+  onExport,
 }) {
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -90,6 +92,21 @@ export default function ModuleToolbar({
             Agregar {getCreateLabel()}
           </span>
         </button>
+
+                {/* BOTÓN EXPORTAR EXCEL */}
+        {onExport && (
+          <button
+            type="button"
+            onClick={onExport}
+            className="module-toolbar-export"
+          >
+            <Download size={18} />
+
+            <span>
+              Exportar Excel
+            </span>
+          </button>
+        )}
 
 
         {/* FILTRO DEPARTAMENTO */}

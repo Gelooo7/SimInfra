@@ -56,6 +56,45 @@
   transform: scale(0.98);
 }
 
+
+/* EXPORTAR EXCEL */
+
+.module-toolbar-export {
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.5rem;
+
+  padding: 0.65rem 1.1rem;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #2563eb;
+  color: #fff;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s,
+    transform 0.15s;
+}
+
+.module-toolbar-export:hover {
+  background-color: #1d4ed8;
+}
+
+.module-toolbar-export:active {
+  transform: scale(0.98);
+}
+
 /* FILTROS */
 
 .module-toolbar-filter {
@@ -155,6 +194,10 @@
   }
 
   .module-toolbar-create {
+    width: 100%;
+  }
+
+    .module-toolbar-export {
     width: 100%;
   }
 
