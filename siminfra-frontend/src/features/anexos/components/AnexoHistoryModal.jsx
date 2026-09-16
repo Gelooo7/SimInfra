@@ -230,7 +230,7 @@ export default function AnexoHistoryModal({
           }}
         >
           {anexo.historial &&
-          anexo.historial.length > 0 ? (
+            anexo.historial.length > 0 ? (
             <div
               style={{
                 display: 'flex',
@@ -293,6 +293,17 @@ export default function AnexoHistoryModal({
                         color: '#475569'
                       }}
                     >
+                      <div
+                        style={{
+                          marginTop: '0.5rem',
+                          fontSize: '0.78rem',
+                          color: '#475569'
+                        }}
+                      >
+                        <strong>Realizado por:</strong>{' '}
+                        {historial.modificado_por || 'No registrado'}
+                      </div>
+                      
                       <div>
                         <strong>Anterior:</strong>{' '}
                         {historial.usuario_anterior ||

@@ -229,7 +229,7 @@ export default function UsuarioHistoryModal({
           }}
         >
           {usuario.historial &&
-          usuario.historial.length > 0 ? (
+            usuario.historial.length > 0 ? (
             <div
               style={{
                 display: 'flex',
@@ -283,6 +283,17 @@ export default function UsuarioHistoryModal({
                           historial.fecha_movimiento
                         ).toLocaleString()}
                       </span>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.78rem',
+                        color: '#475569'
+                      }}
+                    >
+                      <strong>Realizado por:</strong>{' '}
+                      {historial.modificado_por || 'No registrado'}
                     </div>
 
                     <div

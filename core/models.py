@@ -3,6 +3,7 @@ from django.db.models.signals import post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from .crypto import encrypt_val, decrypt_val
+from .audit import get_current_audit_username
 
 ESTADOS = [
     ('ACTIVO', 'Activo'),
@@ -160,6 +161,12 @@ class HistorialAnexo(models.Model):
         default='MODIFICACION'
     )
 
+    modificado_por = models.CharField(
+    max_length=150,
+    null=True,
+    blank=True
+)
+
     observacion = models.TextField(
         null=True,
         blank=True
@@ -225,6 +232,7 @@ class HistorialUsuario(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='historial')
     fecha_movimiento = models.DateTimeField(auto_now_add=True)
     accion = models.CharField(max_length=50, default='MODIFICACION')
+    modificado_por = models.CharField(max_length=150,null=True,blank=True)
     observacion = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -260,6 +268,7 @@ class Equipamiento(models.Model):
         null=True,
         blank=True
     )
+
 
     af = models.CharField(
         max_length=12,
@@ -390,6 +399,12 @@ class HistorialEquipo(models.Model):
         max_length=50,
         default='MODIFICACION'
     )
+
+    modificado_por = models.CharField(
+    max_length=150,
+    null=True,
+    blank=True
+)
     observacion = models.TextField(
         null=True,
         blank=True
@@ -511,6 +526,12 @@ class HistorialPCGenerico(models.Model):
         default='MODIFICACION'
     )
 
+    modificado_por = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+
     observacion = models.TextField(
         null=True,
         blank=True
@@ -622,6 +643,7 @@ def track_historial_pc_generico(sender, instance, **kwargs):
         HistorialPCGenerico.objects.create(
             pc=instance,
             accion="MODIFICACION",
+            modificado_por=get_current_audit_username(),
             observacion="||".join(cambios)
         )
 
@@ -639,6 +661,7 @@ def registrar_creacion_pc_generico(
     HistorialPCGenerico.objects.create(
         pc=instance,
         accion="CREACION",
+        modificado_por=get_current_audit_username(),
         observacion=(
             f"PC Genérico creado - "
             f"Hostname: {instance.hostname}"
@@ -709,12 +732,13 @@ def track_historial_anexo(sender, instance, **kwargs):
 
     if cambios:
         HistorialAnexo.objects.create(
-            anexo=instance,
-            usuario_anterior=usuario_anterior,
-            usuario_nuevo=usuario_nuevo,
-            accion="MODIFICACION",
-            observacion="||".join(cambios)
-        )
+        anexo=instance,
+        usuario_anterior=usuario_anterior,
+        usuario_nuevo=usuario_nuevo,
+        accion="MODIFICACION",
+        modificado_por=get_current_audit_username(),
+        observacion="||".join(cambios)
+    )
 
 
 @receiver(post_save, sender=Anexo)
@@ -733,10 +757,11 @@ def registrar_creacion_anexo(sender, instance, created, **kwargs):
         usuario_anterior="Sin asignar",
         usuario_nuevo=usuario_nuevo,
         accion="CREACION",
+        modificado_por=get_current_audit_username(),
         observacion=(
             f"Anexo creado con estado {instance.estado}"
         )
-    )        
+    )     
 
 # --- HISTORIAL DE EQUIPAMIENTO ---
 
@@ -861,6 +886,7 @@ def track_historial_equipo(sender, instance, **kwargs):
             usuario_anterior=usuario_anterior,
             usuario_nuevo=usuario_nuevo,
             accion="MODIFICACION",
+            modificado_por=get_current_audit_username(),
             observacion="||".join(cambios)
         )
 
@@ -988,6 +1014,7 @@ def track_historial_usuario(sender, instance, **kwargs):
                 HistorialUsuario.objects.create(
                     usuario=instance,
                     accion="MODIFICACION",
+                    modificado_por=get_current_audit_username(),
                     observacion="||".join(cambios)
                 )
 

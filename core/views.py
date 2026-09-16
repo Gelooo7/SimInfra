@@ -30,6 +30,42 @@ from .serializers import (
     ServidorSerializer,
 )
 
+from .audit import (
+    set_current_audit_user,
+    reset_current_audit_user,
+)
+
+class AuditUserMixin:
+    def perform_create(self, serializer):
+        token = set_current_audit_user(
+            self.request.user
+        )
+
+        try:
+            serializer.save()
+        finally:
+            reset_current_audit_user(token)
+
+    def perform_update(self, serializer):
+        token = set_current_audit_user(
+            self.request.user
+        )
+
+        try:
+            serializer.save()
+        finally:
+            reset_current_audit_user(token)
+
+    def perform_destroy(self, instance):
+        token = set_current_audit_user(
+            self.request.user
+        )
+
+        try:
+            instance.delete()
+        finally:
+            reset_current_audit_user(token)
+
 
 class IPViewSet(viewsets.ModelViewSet):
     queryset = IP.objects.all()
@@ -65,8 +101,10 @@ class ServidorViewSet(viewsets.ModelViewSet):
         'descripcion',
     ]
 
-
-class AnexoViewSet(viewsets.ModelViewSet):
+class AnexoViewSet(
+    AuditUserMixin,
+    viewsets.ModelViewSet
+):
     queryset = Anexo.objects.select_related(
         'usuario'
     ).all()
@@ -93,7 +131,10 @@ class AnexoViewSet(viewsets.ModelViewSet):
     ]
 
 
-class UsuarioViewSet(viewsets.ModelViewSet):
+class UsuarioViewSet(
+    AuditUserMixin,
+    viewsets.ModelViewSet
+):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
 
@@ -173,7 +214,10 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         return response
 
 
-class EquipamientoViewSet(viewsets.ModelViewSet):
+class EquipamientoViewSet(
+    AuditUserMixin,
+    viewsets.ModelViewSet
+):
     queryset = Equipamiento.objects.all()
     serializer_class = EquipamientoSerializer
 
@@ -236,8 +280,8 @@ class PerfilGenericoViewSet(
 
         return queryset
 
-
 class PCGenericoViewSet(
+    AuditUserMixin,
     viewsets.ModelViewSet
 ):
     queryset = PCGenerico.objects.prefetch_related(

@@ -230,7 +230,7 @@ export default function PCGenericoHistoryModal({
           }}
         >
           {pc.historial &&
-          pc.historial.length > 0 ? (
+            pc.historial.length > 0 ? (
             <div
               style={{
                 display: 'flex',
@@ -283,6 +283,17 @@ export default function PCGenericoHistoryModal({
                           historial.fecha_movimiento
                         ).toLocaleString()}
                       </span>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.78rem',
+                        color: '#475569'
+                      }}
+                    >
+                      <strong>Realizado por:</strong>{' '}
+                      {historial.modificado_por || 'No registrado'}
                     </div>
 
                     <div
