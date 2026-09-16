@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+
+# Entorno virtual
+venv/
+.venv/
+
+# Base de datos local
+db.sqlite3
+db.sqlite3.bak_*
+
+# Variables de entorno
+.env
+.env.*
+
+# Frontend
+siminfra-frontend/node_modules/
+siminfra-frontend/dist/
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
