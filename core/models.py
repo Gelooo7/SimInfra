@@ -38,8 +38,6 @@ TIPOS_EQUIPO = [
 ESTADOS_IP = [
     ('LIBRE', 'Libre'),
     ('RESERVADA', 'Reservada'),
-    ('DUPLICADA', 'Duplicada'),
-    ('DESCONOCIDA', 'Desconocida'),
     ('ASIGNADA', 'Asignada'),
 ]
 
@@ -60,7 +58,6 @@ class Usuario(models.Model):
     
     gmail = models.EmailField(null=True, blank=True)
     password_gmail = models.CharField(max_length=255, null=True, blank=True)
-    password_simi = models.CharField(max_length=255, null=True, blank=True)
     celular = models.CharField(max_length=30, null=True, blank=True)
     telefono = models.CharField(max_length=30, null=True, blank=True)
     anexo = models.CharField(max_length=10, null=True, blank=True)
@@ -71,9 +68,6 @@ class Usuario(models.Model):
     def save(self, *args, **kwargs):
         if self.password_gmail and not self.password_gmail.startswith('ENC::'):
             self.password_gmail = encrypt_val(self.password_gmail)
-
-        if self.password_simi and not self.password_simi.startswith('ENC::'):
-            self.password_simi = encrypt_val(self.password_simi)
 
         if self.password_vpn and not self.password_vpn.startswith('ENC::'):
             self.password_vpn = encrypt_val(self.password_vpn)
@@ -948,8 +942,6 @@ def track_historial_usuario(sender, instance, **kwargs):
             if usr_previo.password_gmail != instance.password_gmail:
                 add_cambio("Contraseña Gmail", "••••••••", "••••••••")
 
-            if usr_previo.password_simi != instance.password_simi:
-                add_cambio("Contraseña Simi", "••••••••", "••••••••")
 
             add_cambio(
                 "SIF",

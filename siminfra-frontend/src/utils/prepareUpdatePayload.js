@@ -213,8 +213,8 @@ export const prepareUpdatePayload = (
       )
     );
 
-    // Solo automatizamos LIBRE y RESERVADA.
-    // DUPLICADA y DESCONOCIDA se respetan.
+    // Automatizamos LIBRE y RESERVADA
+    // según exista o no una asignación.
     if (
       payload.estado === 'LIBRE' &&
       tieneAsignacion

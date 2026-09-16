@@ -11,7 +11,6 @@ export default function UsuarioCreateForm({
 }) {
 
   const [showPasswordGmail, setShowPasswordGmail] = useState(false);
-  const [showPasswordSimi, setShowPasswordSimi] = useState(false);
   const [showPasswordVpn, setShowPasswordVpn] = useState(false);
 
   const updateField = (field, value) => {
@@ -237,19 +236,7 @@ export default function UsuarioCreateForm({
           onToggle={() =>
             setShowPasswordGmail((prev) => !prev)
           }
-        />
-
-        <PasswordInput
-          label="Contraseña Simi"
-          value={usuario.password_simi}
-          onChange={(value) =>
-            updateField('password_simi', value)
-          }
-          visible={showPasswordSimi}
-          onToggle={() =>
-            setShowPasswordSimi((prev) => !prev)
-          }
-        />
+        /> 
       </div>
 
       <PasswordInput

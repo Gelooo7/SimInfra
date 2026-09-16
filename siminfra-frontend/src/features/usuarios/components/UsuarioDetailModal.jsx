@@ -48,7 +48,6 @@ export default function UsuarioDetailModal({
 }) {
   const [visiblePasswords, setVisiblePasswords] = useState({
     gmail: false,
-    simi: false,
     vpn: false,
   });
 
@@ -430,30 +429,6 @@ export default function UsuarioDetailModal({
                   )
                 }
               />
-
-              <CredentialCard
-                icon={KeyRound}
-                title="Acceso Simi"
-                password={
-                  usuario.password_simi
-                }
-                visible={
-                  visiblePasswords.simi
-                }
-                copied={
-                  copiedPassword === 'simi'
-                }
-                onToggle={() =>
-                  togglePassword('simi')
-                }
-                onCopy={() =>
-                  copyPassword(
-                    usuario.password_simi,
-                    'simi'
-                  )
-                }
-              />
-
               <CredentialCard
                 icon={ShieldCheck}
                 title="VPN Cisco"
@@ -704,8 +679,8 @@ function InfoCard({
 
         <span
           className={`user-detail-info-value ${accent
-              ? 'user-detail-info-value-accent'
-              : ''
+            ? 'user-detail-info-value-accent'
+            : ''
             } ${compact
               ? 'user-detail-info-value-compact'
               : ''

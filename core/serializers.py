@@ -174,28 +174,45 @@ class AnexoSerializer(serializers.ModelSerializer):
 
         return value
 
+
+
     def validate_exterior(self, value):
         if not value:
             return value
 
         value = value.strip()
 
-        if len(value) > 12:
-         raise serializers.ValidationError(
-            "El exterior no puede superar los 12 caracteres."
-        )
-
-        if value.startswith('+'):
-            numero = value[1:]
-        else:
-            numero = value
-
-        if not numero.isdigit():
+        if (
+            len(value) != 12 or
+            not value.startswith('+') or
+            not value[1:].isdigit()
+        ):
             raise serializers.ValidationError(
-            "El exterior solo puede contener números y opcionalmente un + al inicio."
-        )
+                "El número exterior debe comenzar "
+                "con + y contener exactamente 11 números. "
+                "Ejemplo: +56254698789."
+            )
 
         return value
+
+def validate_exterior(self, value):
+    if not value:
+        return value
+
+    value = value.strip()
+
+    if (
+        len(value) != 12 or
+        not value.startswith('+') or
+        not value[1:].isdigit()
+    ):
+        raise serializers.ValidationError(
+            "El número exterior debe comenzar "
+            "con + y contener exactamente 11 números. "
+            "Ejemplo: +56254698789."
+        )
+
+    return value
 
 class HistorialUsuarioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -263,6 +280,12 @@ class EquipamientoSerializer(serializers.ModelSerializer):
             getattr(instance, 'hostname', None)
         )
 
+        numero_telefono = attrs.get(
+            'numero_telefono',
+            getattr(instance, 'numero_telefono', None)
+        )
+        
+
         # =====================================
         # VALIDAR FORMATO ACTIVO FIJO
         # =====================================
@@ -285,6 +308,27 @@ class EquipamientoSerializer(serializers.ModelSerializer):
                 })
 
             attrs['af'] = af
+
+        # =====================================
+        # VALIDAR NÚMERO TELEFÓNICO
+        # =====================================
+
+        if numero_telefono:
+            numero_telefono = numero_telefono.strip()
+
+            if (
+                len(numero_telefono) != 12 or
+                not numero_telefono.startswith('+') or
+                not numero_telefono[1:].isdigit()
+            ):
+                raise serializers.ValidationError({
+                    "numero_telefono":
+                        "El número telefónico debe comenzar "
+                        "con + y contener exactamente 11 números. "
+                        "Ejemplo: +56912345678."
+                })
+
+            attrs['numero_telefono'] = numero_telefono
         # =====================================
         # NÚMERO DE SERIE DUPLICADO
         # =====================================
@@ -385,12 +429,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
     )
 
     password_gmail = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        allow_null=True
-    )
-
-    password_simi = serializers.CharField(
         required=False,
         allow_blank=True,
         allow_null=True
@@ -521,9 +559,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
         if instance.password_gmail and instance.password_gmail.startswith('ENC::'):
             data['password_gmail'] = decrypt_val(instance.password_gmail)
-
-        if instance.password_simi and instance.password_simi.startswith('ENC::'):
-            data['password_simi'] = decrypt_val(instance.password_simi)
 
         if instance.password_vpn and instance.password_vpn.startswith('ENC::'):
             data['password_vpn'] = decrypt_val(instance.password_vpn)
@@ -662,6 +697,24 @@ class PCGenericoSerializer(serializers.ModelSerializer):
 
         return value
 
+    def validate_activo_fijo(self, value):
+        if not value:
+            return value
+
+        value = value.strip()
+
+        if len(value) > 12:
+            raise serializers.ValidationError(
+                "El Activo Fijo permite un máximo de 12 caracteres."
+            )
+
+        if not value.isalnum():
+            raise serializers.ValidationError(
+                "El Activo Fijo solo puede contener letras y números."
+            )
+
+        return value
+
     def validate(self, attrs):
         if attrs.get('usuario_local'):
             attrs['usuario_local'] = (
@@ -682,11 +735,6 @@ class PCGenericoSerializer(serializers.ModelSerializer):
         if attrs.get('numero_serie'):
             attrs['numero_serie'] = (
                 attrs['numero_serie'].strip()
-            )
-
-        if attrs.get('activo_fijo'):
-            attrs['activo_fijo'] = (
-                attrs['activo_fijo'].strip()
             )
 
         if attrs.get('teamviewer_id'):

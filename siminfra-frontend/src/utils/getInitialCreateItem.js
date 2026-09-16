@@ -14,7 +14,6 @@ export const getInitialCreateItem = (
         correo_corp: '',
         gmail: '',
         password_gmail: '',
-        password_simi: '',
         password_vpn: '',
         ip_seleccionada: null,
       };

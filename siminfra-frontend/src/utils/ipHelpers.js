@@ -30,31 +30,43 @@ export const getAvailableIpsForUser = (
 export const IP_SEGMENTS = [
   {
     id: '172.23',
-    label: '172.23.1.1/24',
+    label: '172.23.1.0/24',
     network: 'Vlan (10)',
-    prefix: '172.23.',
+    prefix: '172.23.1.',
+  },
+  {
+    id: '172.24',
+    label: '172.24.1.0/24',
+    network: 'Vlan (Sin definir)',
+    prefix: '172.24.1.',
   },
   {
     id: '172.25',
-    label: '172.25.1.1/24',
+    label: '172.25.1.0/24',
     network: 'Vlan (9)',
-    prefix: '172.25.',
+    prefix: '172.25.1.',
   },
   {
     id: '192.168.10',
-    label: '192.168.10.1/24',
+    label: '192.168.10.0/24',
     network: 'Vlan (12)',
     prefix: '192.168.10.',
   },
   {
     id: '192.168.20',
-    label: '192.168.20.1/24',
+    label: '192.168.20.0/24',
     network: 'Vlan (20)',
     prefix: '192.168.20.',
   },
   {
+    id: '192.168.30',
+    label: '192.168.30.0/24',
+    network: 'Vlan (Sin definir)',
+    prefix: '192.168.30.',
+  },
+  {
     id: '192.168.90',
-    label: '192.168.90.1/24',
+    label: '192.168.90.0/24',
     network: 'Vlan (90)',
     prefix: '192.168.90.',
   },
@@ -160,14 +172,9 @@ export const getIpSegmentStats = (
         ip.estado === 'RESERVADA'
     ).length,
 
-    duplicadas: segmentIps.filter(
+    asignadas: segmentIps.filter(
       (ip) =>
-        ip.estado === 'DUPLICADA'
-    ).length,
-
-    desconocidas: segmentIps.filter(
-      (ip) =>
-        ip.estado === 'DESCONOCIDA'
+        ip.estado === 'ASIGNADA'
     ).length,
   };
 };

@@ -244,16 +244,34 @@ export default function EquipoEditForm({
 
             <input
               type="text"
+              inputMode="tel"
+              maxLength={12}
               value={
                 equipo.numero_telefono || ''
               }
-              onChange={(e) =>
+              onChange={(e) => {
+                let value = e.target.value;
+
+                // Solo números y +
+                value = value.replace(/[^\d+]/g, '');
+
+                // El + solo puede estar al principio
+                value = value.replace(/(?!^)\+/g, '');
+
+                // Si comienza con números, anteponer +
+                if (value && !value.startsWith('+')) {
+                  value = `+${value}`;
+                }
+
+                // Máximo 12 caracteres: + + 11 números
+                value = value.slice(0, 12);
+
                 updateField(
                   'numero_telefono',
-                  e.target.value
-                )
-              }
-              placeholder="+56 9 1234 5678"
+                  value
+                );
+              }}
+              placeholder="+56912345678"
               style={inputStyle}
             />
           </div>

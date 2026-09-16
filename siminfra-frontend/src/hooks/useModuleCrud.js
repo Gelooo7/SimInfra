@@ -15,6 +15,8 @@ export const useModuleCrud = ({
   setNewItem,
   setEditingItem,
   refreshAllData,
+  showToast,
+  requestConfirmation,
 }) => {
   const handleCreateSave = async (e) => {
     e.preventDefault();
@@ -26,7 +28,20 @@ export const useModuleCrud = ({
     );
 
     if (!validation.valid) {
-      alert(validation.message);
+      showToast?.(
+        validation.message,
+        'error'
+      );
+      return;
+    }
+
+    const confirmed = await requestConfirmation?.({
+      title: 'Crear registro',
+      message: '¿Confirmas que deseas crear este registro?',
+      confirmText: 'Crear',
+    });
+
+    if (confirmed === false) {
       return;
     }
 
@@ -37,6 +52,11 @@ export const useModuleCrud = ({
       );
 
       await createItemByTab(tab, payload);
+
+      showToast?.(
+        'Registro creado correctamente.',
+        'success'
+      );
 
       setNewItem(null);
 
@@ -54,12 +74,9 @@ export const useModuleCrud = ({
         error.response?.data || error
       );
 
-      alert(
-        'Error al guardar: ' +
-          JSON.stringify(
-            error.response?.data ||
-              'Verifique los datos'
-          )
+      showToast?.(
+        'No se pudieron guardar los cambios. Verifique los datos ingresados.',
+        'error'
       );
     }
   };
@@ -74,7 +91,20 @@ export const useModuleCrud = ({
     );
 
     if (!validation.valid) {
-      alert(validation.message);
+      showToast?.(
+        validation.message,
+        'error'
+      );
+      return;
+    }
+
+    const confirmed = await requestConfirmation?.({
+      title: 'Guardar cambios',
+      message: '¿Confirmas que deseas guardar los cambios realizados?',
+      confirmText: 'Guardar',
+    });
+
+    if (confirmed === false) {
       return;
     }
 
@@ -89,6 +119,11 @@ export const useModuleCrud = ({
         tab,
         editingItem.id,
         payload
+      );
+
+      showToast?.(
+        'Cambios guardados correctamente.',
+        'success'
       );
 
       setEditingItem(null);
@@ -107,27 +142,32 @@ export const useModuleCrud = ({
         error.response?.data || error
       );
 
-      alert(
-        'Error al guardar: ' +
-          JSON.stringify(
-            error.response?.data ||
-              'Verifique los datos'
-          )
+      showToast?.(
+        'No se pudo crear el registro. Verifique los datos ingresados.',
+        'error'
       );
     }
   };
 
   const handleDelete = async (id, nombre) => {
-    const confirmed = window.confirm(
-      `¿Estás seguro de que deseas eliminar permanentemente "${nombre}"?`
-    );
+    const confirmed = await requestConfirmation?.({
+      title: 'Eliminar registro',
+      message: `¿Estás seguro de que deseas eliminar permanentemente "${nombre}"?`,
+      confirmText: 'Eliminar',
+      danger: true,
+    });
 
-    if (!confirmed) {
+    if (confirmed === false) {
       return;
     }
 
     try {
       await deleteItemByTab(tab, id);
+
+      showToast?.(
+        'Registro eliminado correctamente.',
+        'success'
+      );
 
       try {
         await refreshAllData();
@@ -143,12 +183,9 @@ export const useModuleCrud = ({
         error.response?.data || error
       );
 
-      alert(
-        'Error al eliminar: ' +
-          JSON.stringify(
-            error.response?.data ||
-              'No se pudo eliminar el registro'
-          )
+      showToast?.(
+        'No se pudo eliminar el registro.',
+        'error'
       );
     }
   };

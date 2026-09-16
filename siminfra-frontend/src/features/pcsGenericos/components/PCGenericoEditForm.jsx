@@ -201,13 +201,16 @@ export default function PCGenericoEditForm({
 
           <input
             type="text"
+            maxLength={12}
             value={pc.activo_fijo || ''}
-            onChange={(e) =>
-              updateField(
-                'activo_fijo',
-                e.target.value
-              )
-            }
+            onChange={(e) => {
+              const value = e.target.value
+                .replace(/[^a-zA-Z0-9]/g, '')
+                .slice(0, 12);
+
+              updateField('activo_fijo', value);
+            }}
+            placeholder="Ej: 102401000300 o SINAF"
             style={inputStyle}
           />
         </div>

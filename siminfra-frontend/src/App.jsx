@@ -4,6 +4,9 @@ import React, {
   useState
 } from 'react';
 import './App.css';
+import Toast from './components/common/Toast';
+import ConfirmModal from './components/common/ConfirmModal';
+
 
 import UserDepartmentCards
   from './features/usuarios/components/UserDepartmentCards';
@@ -57,6 +60,97 @@ import {
 export default function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  const [toast, setToast] = useState({
+    message: '',
+    type: 'success',
+  });
+
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
+    danger: false,
+  });
+
+  const confirmResolverRef = useRef(null);
+
+  const requestConfirmation = ({
+    title = 'Confirmar acción',
+    message,
+    confirmText = 'Confirmar',
+    cancelText = 'Cancelar',
+    danger = false,
+  }) => {
+    return new Promise((resolve) => {
+      confirmResolverRef.current = resolve;
+
+      setConfirmModal({
+        open: true,
+        title,
+        message,
+        confirmText,
+        cancelText,
+        danger,
+      });
+    });
+  };
+
+  const handleConfirmAction = () => {
+    confirmResolverRef.current?.(true);
+    confirmResolverRef.current = null;
+
+    setConfirmModal((prev) => ({
+      ...prev,
+      open: false,
+    }));
+  };
+
+  const handleCancelAction = () => {
+    confirmResolverRef.current?.(false);
+    confirmResolverRef.current = null;
+
+    setConfirmModal((prev) => ({
+      ...prev,
+      open: false,
+    }));
+  };
+
+  const toastTimerRef = useRef(null);
+
+  const showToast = (
+    message,
+    type = 'success'
+  ) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    setToast({
+      message,
+      type,
+    });
+
+    toastTimerRef.current = setTimeout(() => {
+      setToast({
+        message: '',
+        type: 'success',
+      });
+    }, 3500);
+  };
+
+  const closeToast = () => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    setToast({
+      message: '',
+      type: 'success',
+    });
+  };
 
   const {
     token,
@@ -169,6 +263,8 @@ export default function App() {
     setNewItem,
     setEditingItem,
     refreshAllData,
+    showToast,
+    requestConfirmation,
   });
 
   const handleLogin = async (e) => {
@@ -182,6 +278,26 @@ export default function App() {
     if (success) {
       setPassword('');
     }
+  };
+
+
+  const handleLogout = async () => {
+    const confirmed = await requestConfirmation({
+      title: 'Cerrar sesión',
+      message: '¿Confirmas que deseas cerrar la sesión actual?',
+      confirmText: 'Cerrar sesión',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    logout();
+
+    showToast(
+      'Sesión cerrada correctamente.',
+      'success'
+    );
   };
 
   const handleHostnameEquipoChange = (
@@ -350,19 +466,44 @@ export default function App() {
 
   if (!token) {
     return (
-      <LoginPage
-        username={username}
-        password={password}
-        loginError={loginError}
-        onUsernameChange={setUsername}
-        onPasswordChange={setPassword}
-        onSubmit={handleLogin}
-      />
+      <>
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={closeToast}
+        />
+
+        <LoginPage
+          username={username}
+          password={password}
+          loginError={loginError}
+          onUsernameChange={setUsername}
+          onPasswordChange={setPassword}
+          onSubmit={handleLogin}
+        />
+      </>
     );
   }
 
   return (
+
     <div className="app-shell">
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={closeToast}
+      />
+
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        danger={confirmModal.danger}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+      />
       {/* SIDEBAR */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -373,6 +514,8 @@ export default function App() {
         onToggleCollapse={toggleSidebarCollapsed}
         onSelectTab={handleSelectTab}
       />
+
+
 
       {/* CONTENIDO PRINCIPAL */}
       <main
@@ -385,7 +528,7 @@ export default function App() {
         <Header
           activeTab={tab}
           onOpenSidebar={openSidebar}
-          onLogout={logout}
+          onLogout={handleLogout}
         />
 
         {/* FILTROS Y ACCIONES */}
@@ -440,6 +583,9 @@ export default function App() {
           />
         )}
 
+
+
+
         {/* SEGMENTOS DE IP */}
         {tab === 'ips' && (
           <IpSegmentCards
@@ -448,7 +594,7 @@ export default function App() {
             onSelectSegment={setSelectedIpSegment}
           />
         )}
-        
+
         {/* RESULTADOS DEL MÓDULO */}
         {(
           (tab === 'equipos' && selectedCategoriaEquipo) ||
