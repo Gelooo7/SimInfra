@@ -151,6 +151,28 @@ export default function PerfilCreateForm({
           ))}
         </select>
       </div>
+
+      <div>
+        <label style={labelStyle}>
+          Observaciones
+        </label>
+
+        <textarea
+          value={perfil.observaciones || ''}
+          onChange={(e) =>
+            updateField(
+              'observaciones',
+              e.target.value
+            )
+          }
+          placeholder="Ej: Cuenta utilizada para soporte, sistema interno, acceso compartido, etc."
+          rows={3}
+          style={{
+            ...inputStyle,
+            resize: 'vertical'
+          }}
+        />
+      </div>
     </>
   );
 }

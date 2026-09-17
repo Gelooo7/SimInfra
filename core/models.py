@@ -427,6 +427,10 @@ class PerfilGenerico(models.Model):
         null=True,
         blank=True
     )
+    observaciones = models.TextField(
+        null=True,
+        blank=True
+    )
 
     def save(self, *args, **kwargs):
         if self.password and not self.password.startswith('ENC::'):

@@ -85,15 +85,11 @@ export default function IpCreateForm({
           </option>
 
           <option value="RESERVADA">
-            🔴 Reservada
+            🟠 Reservada
           </option>
 
-          <option value="DUPLICADA">
-            🔵 Duplicada
-          </option>
-
-          <option value="DESCONOCIDA">
-            🟡 Desconocida
+          <option value="ASIGNADA">
+            🔵 Asignada
           </option>
         </select>
       </div>
@@ -120,8 +116,8 @@ export default function IpCreateForm({
               usuario: usuarioId,
               asignado_otro: '',
               estado: usuarioId
-                ? 'RESERVADA'
-                : ip.estado === 'RESERVADA'
+                ? 'ASIGNADA'
+                : ip.estado === 'ASIGNADA'
                   ? 'LIBRE'
                   : ip.estado
             });
