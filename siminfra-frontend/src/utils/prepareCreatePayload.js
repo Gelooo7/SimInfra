@@ -112,16 +112,6 @@ export const prepareCreatePayload = (
         payload.activo_fijo.trim();
     }
 
-    if (payload.ram) {
-      payload.ram =
-        payload.ram.trim();
-    }
-
-    if (payload.almacenamiento) {
-      payload.almacenamiento =
-        payload.almacenamiento.trim();
-    }
-
     if (payload.observaciones) {
       payload.observaciones =
         payload.observaciones.trim();

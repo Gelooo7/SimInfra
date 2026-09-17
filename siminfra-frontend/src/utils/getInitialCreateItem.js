@@ -74,8 +74,6 @@ export const getInitialCreateItem = (
         modelo: '',
         numero_serie: '',
         activo_fijo: '',
-        ram: '',
-        almacenamiento: '',
         observaciones: '',
       };
 
